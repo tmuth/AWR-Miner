@@ -1,6 +1,6 @@
 set define '&'
 set concat '~'
-set pagesize 100000
+set pagesize 50000
 REPHEADER OFF
 REPFOOTER OFF
 
@@ -10,7 +10,7 @@ column cnt_dbid_1 new_value CNT_DBID noprint
 
 define NUM_DAYS = 30
 define SQL_TOP_N = 20
-define AWR_MINER_VER = 2.9
+define AWR_MINER_VER = 2.9.5
 
 
 
@@ -366,7 +366,13 @@ max(decode(metric_name,'Physical Writes Direct Per Sec',  			average,null)) "wri
 max(decode(metric_name,'Physical Writes Direct Per Sec',  			maxval,null)) "write_iops_direct_max",
 max(decode(metric_name,'Redo Generated Per Sec',                    round((average)/1024/1024,1),null)) "redo_mb_s",
 max(decode(metric_name,'DB Block Gets Per Sec',                     average,null)) "db_block_gets_s",
-max(decode(metric_name,'DB Block Changes Per Sec',                   average,null)) "db_block_changes_s"
+max(decode(metric_name,'DB Block Changes Per Sec',                   average,null)) "db_block_changes_s",
+max(decode(metric_name,'GC CR Block Received Per Second',                     average,null)) "gc_cr_rec_s",
+max(decode(metric_name,'GC Current Block Received Per Second',                     average,null)) "gc_cu_rec_s",
+max(decode(metric_name,'Global Cache Average CR Get Time',                     average,null)) "gc_cr_get_cs",
+max(decode(metric_name,'Global Cache Average Current Get Time',                     average,null)) "gc_cu_get_cs",
+max(decode(metric_name,'Global Cache Blocks Corrupted',                     average,null)) "gc_bk_corrupted",
+max(decode(metric_name,'Global Cache Blocks Lost',                     average,null)) "gc_bk_lost"
   from(
   select  snap_id,num_interval,to_char(end_time,'YY/MM/DD HH24:MI') end_time,instance_number inst,metric_name,round(average,1) average,
   round(maxval,1) maxval
@@ -379,7 +385,9 @@ where dbid = &DBID
  'Physical Read Total Bytes Per Sec','Physical Read Total IO Requests Per Sec','Physical Write Total Bytes Per Sec','Physical Write Total IO Requests Per Sec',
  'Redo Generated Per Sec','User Commits Per Sec','Current Logons Count','DB Block Gets Per Sec','DB Block Changes Per Sec',
  'Database Wait Time Ratio','Database CPU Time Ratio','SQL Service Response Time','Background Time Per Sec','Physical Writes Per Sec','Physical Writes Direct Per Sec','Physical Writes Direct Lobs Per Sec',
- 'Physical Reads Direct Per Sec','Physical Reads Direct Lobs Per Sec'))
+ 'Physical Reads Direct Per Sec','Physical Reads Direct Lobs Per Sec',
+ 'GC CR Block Received Per Second','GC Current Block Received Per Second','Global Cache Average CR Get Time','Global Cache Average Current Get Time',
+ 'Global Cache Blocks Corrupted','Global Cache Blocks Lost'))
  group by snap_id,num_interval, end_time,inst
  order by snap_id, end_time,inst;
  
