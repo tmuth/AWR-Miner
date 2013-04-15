@@ -372,13 +372,7 @@ max(decode(metric_name,'GC Current Block Received Per Second',       average,nul
 max(decode(metric_name,'Global Cache Average CR Get Time',           average,null)) "gc_cr_get_cs",
 max(decode(metric_name,'Global Cache Average Current Get Time',      average,null)) "gc_cu_get_cs",
 max(decode(metric_name,'Global Cache Blocks Corrupted',              average,null)) "gc_bk_corrupted",
-max(decode(metric_name,'Global Cache Blocks Lost',                   average,null)) "gc_bk_lost",
-max(decode(metric_name,'Active Parallel Sessions',                   average,null)) "px_sess",
-max(decode(metric_name,'Active Serial Sessions',                     average,null)) "se_sess",
-max(decode(metric_name,'Average Synchronous Single-Block Read Latency', average,null)) "s_blk_r_lat",
-max(decode(metric_name,'Cell Physical IO Interconnect Bytes',         round((average)/1024/1024,1),null)) "read_mb_s",
-max(decode(metric_name,'Cell Physical IO Interconnect Bytes',         round((maxval)/1024/1024,1),null)) "read_mb_s_max"
-max(decode(metric_name,'Cell Physical IO Interconnect Bytes', average,null)) "cell_io_int_"
+max(decode(metric_name,'Global Cache Blocks Lost',                   average,null)) "gc_bk_lost"
   from(
   select  snap_id,num_interval,to_char(end_time,'YY/MM/DD HH24:MI') end_time,instance_number inst,metric_name,round(average,1) average,
   round(maxval,1) maxval
@@ -393,10 +387,7 @@ where dbid = &DBID
  'Database Wait Time Ratio','Database CPU Time Ratio','SQL Service Response Time','Background Time Per Sec','Physical Writes Per Sec','Physical Writes Direct Per Sec','Physical Writes Direct Lobs Per Sec',
  'Physical Reads Direct Per Sec','Physical Reads Direct Lobs Per Sec',
  'GC CR Block Received Per Second','GC Current Block Received Per Second','Global Cache Average CR Get Time','Global Cache Average Current Get Time',
- 'Global Cache Blocks Corrupted','Global Cache Blocks Lost',
- 'Active Parallel Sessions','Active Serial Sessions','Average Synchronous Single-Block Read Latency','Cell Physical IO Interconnect Bytes'
-    )
- )
+ 'Global Cache Blocks Corrupted','Global Cache Blocks Lost'))
  group by snap_id,num_interval, end_time,inst
  order by snap_id, end_time,inst;
  

@@ -1,11 +1,18 @@
 library(plyr)
-
+library(futile.logger)
 library(ggplot2)
 library(gridExtra)
 library(scales)
 library(reshape)
 library(xtable)
 library(ggthemes)
+
+flog.threshold(INFO) #INFO, WARN, ERROR, FATAL
+WORK_DIR <- 'E:/Portable-AWR-Miner/CSVs'
+#WORK_DIR <- 'E:/Portable-AWR-Miner/CSVs/LAD-Cust-Help'
+#WORK_DIR <- 'M:/Dropbox/MyFiles/Accounts/S&L/NC/Public Schools/Pearson/Pearson-POV/Results/Test-H/CSVs'
+
+
 # 
 # 
  myTheme <- theme_stata() +
@@ -26,11 +33,8 @@ library(ggthemes)
 
 theme_set(myTheme)
 
-setwd("M:/Dropbox/MyFiles/Projects/AWR-Mining-Reboot/Versions/2.9")
+#setwd("M:/Dropbox/MyFiles/Projects/AWR-Mining-Reboot/Versions/2.9")
 # source(file="custom-packages.R")
-
-
-
 
 main <- new.env()
 
@@ -50,49 +54,13 @@ main$avg_max_colors <- c("Avg" = "#1F77B4", "Max" = "#D62728",
 main$gg_avg_max_fill <- scale_fill_manual("", values = main$avg_max_colors) 
 main$gg_avg_max_color <- scale_colour_manual("", values = main$avg_max_colors)
 
-#vert_line_snap_ids <- data.frame(db_name="PSPROD",snap_id=240)
-#vert_line_snap_ids <- rbind(vert_line_snap_ids, data.frame(db_name="PSPRODDB",snap_id=4798))
-#vert_line_snap_ids <- rbind(vert_line_snap_ids, data.frame(db_name="PSPRODDB",snap_id=479))
-
-
-#vert_line <- theme()
-# vert_line <- geom_vline(xintercept=c(as.vector(as.POSIXct('12/11/23 10:38', format = "%y/%m/%d %H:%M")),
-#                                      as.vector(as.POSIXct('12/11/23 14:52', format = "%y/%m/%d %H:%M"))
-#                                      ), linetype="dotted",color="#ff513a",size=0.5,alpha=0.5)
-
-vert_line <- geom_vline(xintercept=c(as.vector(as.POSIXct('13/01/15 19:59', format = "%y/%m/%d %H:%M")),
-                                     as.vector(as.POSIXct('13/01/16 16:00', format = "%y/%m/%d %H:%M")),
-                                     as.vector(as.POSIXct('13/01/17 06:00', format = "%y/%m/%d %H:%M"))
-                                     ), linetype="dotted",color="#ff513a",size=0.5,alpha=0.5)
-
-#geom_vline(xintercept=as.vector(DF_SNAP_ID_DATE[with(DF_SNAP_ID_DATE,SNAP_ID == 10795),]$end), linetype="dotted",color="#ff513a",size=0.5,alpha=0.5)
-
-# vert_line <- geom_vline(xintercept=c(as.vector(main$DF_SNAP_ID_DATE[with(main$DF_SNAP_ID_DATE,snap == 10795),]$end),
-#                                      as.vector(main$DF_SNAP_ID_DATE[with(main$DF_SNAP_ID_DATE,snap == 10815),]$end),
-#                                      as.vector(main$DF_SNAP_ID_DATE[with(main$DF_SNAP_ID_DATE,snap == 10829),]$end)
-#                                      ), linetype="dotted",color="#ff513a",size=0.5,alpha=0.5)
-
-
-#WORK_DIR <- 'M:/Dropbox/MyFiles/Code Samples/SQL Tuning/AWR Mining/AWR-Mining-Reboot/CSVs'
-#WORK_DIR <- 'M:/Dropbox/MyFiles/Accounts/S&L/NC/Public Schools/Pearson/AWRs/CSVs'
-#WORK_DIR <- 'M:/Dropbox/MyFiles/Accounts/S&L/OH/Jobs and Family Services/AWR-Miner/Dev/CSVs'
-WORK_DIR <- 'E:/Portable-AWR-Miner/CSVs'
-#WORK_DIR <- 'M:/Dropbox/MyFiles/Accounts/S&L/OH/State Teachers Retirement/AWR-Mining/CSVs'
-#WORK_DIR <- 'M:/Dropbox/MyFiles/Accounts/Federal/DLA/Accenture-SAP/AWR-Mining/CSVs'
-#WORK_DIR <- 'M:/Dropbox/MyFiles/Accounts/Federal/DLA/Accenture-SAP/AWR-Mining/awr/CSVs'
-#WORK_DIR <- 'M:/Dropbox/MyFiles/Accounts/S&L/NC/Public Schools/Pearson/Pearson-POV/Results/Test-C/raw-data/CSVs'
-#WORK_DIR <- 'M:/Dropbox/MyFiles/Accounts/S&L/NC/Public Schools/Pearson/Pearson-POV/Results/Test-H/CSVs'
-#WORK_DIR <- 'M:/Dropbox/MyFiles/Accounts/Commercial/Unknown/Kurt Vogel/CSVs'
-#WORK_DIR <- 'M:/Dropbox/MyFiles/Accounts/S&L/MN/State of Minnesota MMB/Peoplesoft-POV/CSVs'
-#WORK_DIR <- 'M:/Dropbox/MyFiles/Accounts/S&L/MI/MI Dept of Technology, Mgt and Budget/QA-DR/CSVs'
-#WORK_DIR <- 'E:/Temp/Hichwa-Exadata-Tests/CSVs'
-#WORK_DIR <- 'M:/Dropbox/MyFiles/Accounts/Federal/Census/Decennial/Decennial-POV/AWR-Miner/35-State-Run-Test2/CSVs'
 
 
 
 
 
-MAX_DAYS <- 32
+
+MAX_DAYS <- 30
 #remove(INSTANCE_FILTER)
 #INSTANCE_FILTER <- c(3,4)
 
@@ -104,7 +72,8 @@ setwd(WORK_DIR)
 
 #os_files <- list.files(pattern="EBS-2045810607-os.csv")
 os_files <- list.files(pattern="^*.*os.csv$")
-#os_files <- list.files(pattern="^PM1.+-os.csv")
+#os_files <- list.files(pattern="^PS0.+-os.csv")
+#os_files <- list.files(pattern="^PR1.+-os.csv")
 #os_files <- list.files(pattern="^EFNP.+-os.csv")
 
 # colors from Color Inspiration book, p30, "coal tar"
@@ -132,7 +101,8 @@ main$db_id <- unique(main$db_id)
 #print(db_id)
 
 log_it <- function(x){
-  print(x)
+  flog.info(x, name=main$current_db_name)
+  #print(x)
 }
 
 convert_snap_id_to_posixct <- function(snapID){
@@ -163,8 +133,10 @@ apply_current_attributes <- function(){
   if(nrow(main$current_plot_attributes) > 0){
     DF_TEMP <- NULL
     DF_TEMP <- get_attrs('snap_id_filter')
-    if(length(DF_TEMP)>0){
+    print(head(DF_TEMP))
+    if(length(DF_TEMP$value1)>1){
       if(length(DF_TEMP$value1)>0){ 
+        print(head(as.vector(DF_TEMP$value1)))
         attr$filter_snap_min <- as.vector(DF_TEMP$value1) }
       if(length(DF_TEMP$value2)>0){ 
         attr$filter_snap_max <- as.vector(DF_TEMP$value2) }
@@ -174,8 +146,8 @@ apply_current_attributes <- function(){
   
   ## Filter by date
   
-  
-  
+  #attr$filter_snap_min <- 220
+  #attr$filter_snap_max <- 228
   return(TRUE)
 }
 
@@ -187,6 +159,7 @@ add_vetical_lines <- function(){
     DF_VERT_TEXT <- data.frame()
     for (i in 1:nrow(DF_TEMP)){
       if(length(DF_TEMP[i,]$value1)>0){
+        
         theDate <- DF_TEMP[i,]$value1
         theNumbers <- grepl("^[[:digit:]]+$", theDate) 
         print(theNumbers)
@@ -195,13 +168,12 @@ add_vetical_lines <- function(){
           theDate <- convert_snap_id_to_posixct(theDate)
         }
         else{
-          #theDate <- c(as.vector(as.POSIXct(theDate, format = "%y/%m/%d %H:%M")))
           theDate <- as.POSIXct(theDate, format = "%y/%m/%d %H:%M")
         }
         
         V_VERT_VECT <- c(V_VERT_VECT, theDate)
         
-        if(length(DF_TEMP[i,]$value2)>0){
+        if(grepl("^[[:alnum:]].+$", DF_TEMP[i,]$value2)){
           DF_VERT_TEXT <- rbind(DF_VERT_TEXT,data.frame(end=theDate,label=DF_TEMP[i,]$value2))
         }
       }
@@ -209,10 +181,13 @@ add_vetical_lines <- function(){
     
     
     if(length(V_VERT_VECT)>0){
-      attr$vertical_line <- geom_vline(xintercept=V_VERT_VECT, linetype="dotted",color="#555555",size=0.2,alpha=0.5)}
+      attr$vertical_line <- geom_vline(xintercept=V_VERT_VECT, linetype="dotted",color="#00422D",size=0.3,alpha=0.7) 
+    }
+
+    if(nrow(DF_VERT_TEXT)>0){
+      attr$vertical_text <- geom_text(aes(x=end,label=label,y=0), data=DF_VERT_TEXT,angle=90,size=1.5,hjust=0,vjust=-0.2,alpha=0.7,color="#00422D")
+    }
     
-    if(length(DF_VERT_TEXT)>0){
-      attr$vertical_text <- geom_text(aes(x=end,label=label,y=0), data=DF_VERT_TEXT,angle=90,size=1.5,hjust=0,vjust=-0.2,alpha=0.5,color="#555555")}
   }
 }
 
@@ -263,12 +238,12 @@ build_data_frames <- function(dbid,dbname) {
   DF_AAS_INT <- merge(DF_AAS_INT,DF_SNAP_ID_DATE_INT)
   DF_MEMORY_INT <- merge(DF_MEMORY_INT,DF_SNAP_ID_DATE_INT)
   DF_SQL_BY_SNAPID_INT <- merge(DF_SQL_BY_SNAPID_INT,DF_SNAP_ID_DATE_INT)
-  #print(head(DF_AAS_INT))
+  print(head(DF_AAS_INT))
   DF_AAS_INT[with(DF_AAS_INT, grepl("DB CPU", WAIT_CLASS)),]$WAIT_CLASS<-"CPU"
   # due to a bug in the 2.7 sql script
   #DF_AAS_INT[with(DF_AAS_INT, grepl("Administrati", WAIT_CLASS)),]$WAIT_CLASS<-"Administrative"
 
-  min_snap_id <- min(subset(DF_MAIN_INT, end >= max(DF_MAIN_INT$end)-as.difftime(MAX_DAYS, unit="days"))$snap)
+  #min_snap_id <- min(subset(DF_MAIN_INT, end >= max(DF_MAIN_INT$end)-as.difftime(MAX_DAYS, unit="days"))$snap)
   #DF_MAIN_INT <- subset(DF_MAIN_INT, end >= max(DF_MAIN_INT$end)-as.difftime(MAX_DAYS, unit="days"))
   # tyler changed for Pearson
   
@@ -354,12 +329,13 @@ load_plot_attributes <- function(){
   if(file.exists('attributes.csv')){
     DF_ATTRIBUTES_INT <- read.csv('attributes.csv', head=TRUE,sep=",",stringsAsFactors=FALSE)
     DF_ATTRIBUTES_INT <- subset(DF_ATTRIBUTES_INT, db == main$current_db_name)
-    print(head(DF_ATTRIBUTES_INT))
+    
     
   }
   
   log_it('load_plot_attributes - end')
-  
+  DF_ATTRIBUTES_INT <- unique(DF_ATTRIBUTES_INT)
+  print(head(DF_ATTRIBUTES_INT))
   return(DF_ATTRIBUTES_INT)
 }
 
@@ -385,6 +361,7 @@ generate_plot_attributes <- function(){
   df_plot_attr_int <- add_df_row(df_plot_attr_int,'annotated_line','','')
   #print(head(df_plot_attr_int))
   
+  print(head(df_plot_attr_int))
   log_it('generate_plot_attributes - end')
   return(df_plot_attr_int)
 }
@@ -595,10 +572,16 @@ plot_aas_chart <- function(DF_AAS_INT){
   vals <- expand.grid(end = unique(DF_AAS_INT$end),
                       WAIT_CLASS = unique(DF_AAS_INT$WAIT_CLASS))
   DF_AAS_INT <- merge(vals,DF_AAS_INT)
+  #print(is.na(DF_AAS_INT))
+  print(head(DF_AAS_INT))
   
-  
-  DF_AAS_INT[is.na(DF_AAS_INT)] <- 0
-  
+  #DF_AAS_INT[is.na(DF_AAS_INT)] <- 0
+  #df[df$column_name,]
+  #DF_AAS_INT <- DF_AAS_INT[DF_AAS_INT$end,]
+  DF_AAS_INT <- subset(DF_AAS_INT,end != TRUE)
+  DF_AAS_INT <- subset(DF_AAS_INT,end != FALSE)
+  DF_AAS_INT$AVG_SESS[is.na(DF_AAS_INT$AVG_SESS)] <- 0
+  print(head(is.na(DF_AAS_INT)))
   
   
   aas_colors <- c("Administrative" = "#6c6e69", "Application" = "#bf2a05", "Cluster" = "#ccc4af", "Commit" = "#e36a05",
@@ -829,7 +812,18 @@ plot_RAC_activity <- function(DF_MAIN_INT){
   x.melt[with(x.melt, grepl("gc_cu_get_cs", variable)),]$variable<-"GC Avg Current Get cs"
   x.melt[with(x.melt, grepl("gc_bk_corrupted", variable)),]$variable<-"GC Blocks Corrupted"
   x.melt[with(x.melt, grepl("gc_bk_lost", variable)),]$variable<-"GC Blocks Lost"
+  print(paste('RAC:',''))
+  print(nrow(subset(x.melt,variable == 'GC Blocks Corrupted')))
+  print(nrow(subset(x.melt,variable == 'GC Blocks Corrupted' & value==0)))
 
+  if(nrow(subset(x.melt,variable == 'GC Blocks Corrupted')) == nrow(subset(x.melt,variable == 'GC Blocks Corrupted' & value==0))){
+    x.melt <- subset(x.melt,variable != 'GC Blocks Corrupted')
+  }
+  
+  if(nrow(subset(x.melt,variable == 'GC Blocks Lost')) == nrow(subset(x.melt,variable == 'GC Blocks Lost' & value==0))){
+    x.melt <- subset(x.melt,variable != 'GC Blocks Lost')
+  }
+  
   #x.melt[with(x.melt, grepl("db_block_gets_s", variable)),]$variable<-"Block Gets/s"
   #x.melt[with(x.melt, grepl("db_block_changes_s", variable)),]$variable<-"Block Changes/s"
   
@@ -1068,8 +1062,11 @@ plot_summary_boxplot_main <- function(){
   quant_low <- ddply(x.melt,.(variable),summarise,value=quantile(value,0.25,na.rm=TRUE))
   quant_high <- ddply(x.melt,.(variable),summarise,value=quantile(value,0.75,na.rm=TRUE))
   
-  summary_vals <- rbind(median_vals,mean_vals,quant_low,quant_high)
+  summary_vals <- rbind(quant_low,quant_high)
   summary_vals$id <- 1
+  mean_vals$id <- 1
+  median_vals$id <- 1
+  
   
   #print(summary(x.melt))
   #print(head(x.melt))
@@ -1079,9 +1076,11 @@ plot_summary_boxplot_main <- function(){
     geom_violin(aes(),fill="#4DAF4A",colour="#000000",size=0.05,alpha=0.6,adjust=0.5) +
     geom_boxplot(aes(),colour="#000000",alpha=.6,show_guide=FALSE,notch = FALSE,outlier.colour = "orange", outlier.size = 2,outlier.alpha=.5,outlier.shape=5)+
     geom_jitter(alpha=.3,size=1,position = position_jitter(width = .2,height=0),aes(colour="gray"))+
-    geom_text(data=summary_vals,aes(y=value,label=round(value,1)),size=2,vjust=-0.8,hjust=0)+
+    geom_text(data=median_vals,aes(y=value,label=round(value,1)),alpha=0.8,size=2,vjust=-0.8,hjust=0)+
+    geom_text(data=summary_vals,aes(y=value,label=round(value,1)),alpha=0.8,size=2,vjust=-0.8,hjust=0,colour="#666666")+
+    geom_text(data=mean_vals,aes(y=value,label=round(value,1)),alpha=0.8,size=2,vjust=-0.8,hjust=1.2,colour="#D62728")+
     facet_wrap( ~ variable,scales="free",nrow=1)+
-    stat_summary(fun.y=mean, geom="point", shape=5, size=4,alpha=0.7,colour="#D62728")+
+    stat_summary(fun.y=mean, geom="point", shape=5, size=2,alpha=0.7,colour="#D62728")+
     #scale_colour_brewer(palette="Set1")+scale_fill_brewer(palette="Set1")+
     #scale_y_continuous(breaks=seq(0, 8000, 500),minor=seq(0, 8000, 100))+
     theme(text =               element_text(size=5),
@@ -1109,6 +1108,7 @@ build_snap_to_date_df <- function(){
 
 
 plot_snap_id_list <- function(){
+  log_it('plot_snap_id_list - start')
   dateTable <- function(df){
     df[is.na(df)] <- ""
     return(tableGrob(df,show.rownames = FALSE, gpar.coretext = gpar(fontsize=6),gpar.coltext = gpar(fontsize=4),padding.v = unit(1, "mm"),padding.h = unit(2, "mm"),show.colnames = TRUE,col.just = "left", gpar.corefill = gpar(fill=NA,col=NA) ))
@@ -1125,10 +1125,11 @@ plot_snap_id_list <- function(){
   snapIdDateText7 <- dateTable(main$DF_SNAP_ID_DATE2[c(seq(481,560)),])
   #grid.newpage()
   grid.arrange(snapIdDateText1,snapIdDateText2,snapIdDateText3,snapIdDateText4,snapIdDateText5,snapIdDateText6,snapIdDateText7,ncol = 7, widths=c(1,1,1,1,1,1,1))
-  
+  log_it('plot_snap_id_list - end')
 }
 
 plot_sql_summary <- function(){
+  log_it('plot_sql_summary - start')
   main$DF_SQL_SUMMARY$AVG_DOP <- main$DF_SQL_SUMMARY$PX_SERVERS_EXECS / main$DF_SQL_SUMMARY$EXECS
   main$DF_SQL_SUMMARY$ELAP_PER_EXEC_M <- (main$DF_SQL_SUMMARY$ELAP / main$DF_SQL_SUMMARY$EXECS)/60
   main$DF_SQL_SUMMARY$logRsGBperExec <- ((main$DF_SQL_SUMMARY$LOG_READS* 8)/main$DF_SQL_SUMMARY$EXECS)/1024/1024
@@ -1146,6 +1147,7 @@ plot_sql_summary <- function(){
   sqlSummaryText1 <- tableGrob(subset(main$DF_SQL_SUMMARY, select=-c(PX_SERVERS_EXECS,LOG_READS)),show.rownames = FALSE, gpar.coretext = gpar(fontsize=7),gpar.coltext = gpar(fontsize=5),padding.v = unit(1, "mm"),padding.h = unit(2, "mm"),show.colnames = TRUE,col.just = "left", gpar.corefill = gpar(fill=NA,col=NA),h.even.alpha = 0 )
   #print(sqlSummaryText1)
   grid.arrange(sqlSummaryText1,ncol = 1, widths=c(1))
+  log_it('plot_sql_summary - end')
 }
 
 main$overall_summary_df <- NULL
@@ -1170,6 +1172,8 @@ main$mainFunction <- function(f){
   
   vector_element = which(main$db_id==f)
   main$current_db_name=main$db_name[which(main$db_id==f)]
+  
+  flog.appender(appender.file(paste0(main$current_db_name,'.log')), name=main$current_db_name)
   
   main$DATA_FRAME <- NULL
   main$DF_OS <- NULL
@@ -1286,9 +1290,8 @@ main$mainFunction <- function(f){
   
   #snapIdDateText1 <- tableGrob(main$DF_SNAP_ID_DATE2,show.rownames = FALSE, gpar.coretext = gpar(fontsize=6),gpar.coltext = gpar(fontsize=6),padding.v = unit(1, "mm"),padding.h = unit(2, "mm"),show.colnames = TRUE,col.just = "left")
   
- # plot_snap_id_list()
-  
-#  plot_sql_summary()
+  plot_snap_id_list()
+  plot_sql_summary()
   
   dev.off()
   main$plot_attributes <- rbind(main$plot_attributes,main$current_plot_attributes)
@@ -1300,15 +1303,15 @@ main$mainFunction <- function(f){
 main$mainLoop <- function(){
   for (f in main$db_id) {
     main$mainFunction(f)
-#     tryCatch(main$mainFunction(f), 
-#              error = function(e) {
-#               #traceback()
-#                print(paste0("Error in ",main$current_db_name,": ",e))
-#                #browser()
-#               
-#              }
-#              #,finally=print("finished")
-#     )
+    tryCatch(main$mainFunction(f), 
+             error = function(e) {
+              #traceback()
+               print(paste0("Error in ",main$current_db_name,": ",e))
+               #browser()
+              
+             }
+             #,finally=print("finished")
+    )
   }
   write.csv(main$overall_summary_df,'OverallSummary.csv')
   write.csv(main$plot_attributes,'attributes.csv',row.names=FALSE)
