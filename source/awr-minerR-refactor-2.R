@@ -2,12 +2,14 @@ library(futile.logger)
 #====================================================================================================================
 # Change Variables in this sections as needed 
 
-WORK_DIR <- 'E:/Portable-AWR-Miner/CSVs'
+#WORK_DIR <- 'E:/Portable-AWR-Miner'
+#setwd(WORK_DIR)
 #WORK_DIR <- 'E:/Portable-AWR-Miner/CSVs/LAD-Cust-Help'
 #WORK_DIR <- 'M:/Dropbox/MyFiles/Accounts/S&L/NC/Public Schools/Pearson/Pearson-POV/Results/Test-H/CSVs'
 
-#os_files <- list.files(pattern="EBS-2045810607-os.csv")
-os_files <- list.files(pattern="^*.*os.csv$")
+#filePattern <- "^awr-hist*.*(\\.out|\\.gz)$"
+filePattern <- "^awr-hist.+P01.+(\\.out|\\.gz)$"
+
 
 MAX_DAYS <- 30
 
@@ -32,8 +34,7 @@ attr$filter_snap_max <- 1000000000
 attr$vertical_line <- theme()
 attr$vertical_text <- theme()
 
-setwd(WORK_DIR)
-
+main$awrFiles <- list.files(pattern=filePattern)
 
 log_it.info <- function(x){
   #flog.info(x, name=main$current_db_name)
@@ -71,15 +72,17 @@ main$db_id = vector()
 
 get_db_names <- function(){
   log_it.debug("get_db_names - start")
-  for (f in os_files) {
-    #list(c(unlist(LL),5:9))
-    #db_name <- list(c(unlist(db_name),gsub(pattern = "awr-wl-([a-zA-Z0-9_]+).*", replacement="\\1", f)))
-    main$db_name <- c(main$db_name,gsub(pattern = "([a-zA-Z0-9_]+)-.*", replacement="\\1", f))
-    main$db_id <- c(main$db_id,gsub(pattern = "([a-zA-Z0-9_]+)-([0-9]+).*", replacement="\\2", f))
-    log_it.info(paste0('Found file for: ',main$db_name))
+  
+  namePattern <- "awr-hist-([0-9]+)-([a-zA-Z0-9_]+)-.*"
+  for (f in main$awrFiles) {
+    #main$db_name <- c(main$db_name,gsub(pattern = "([a-zA-Z0-9_]+)-.*", replacement="\\1", f))
+    main$db_name <- c(main$db_name,gsub(pattern = namePattern, replacement="\\2", f))
+    main$db_id <- c(main$db_id,gsub(pattern = namePattern, replacement="\\2", f))
+    log_it.info(paste0('Found file for: ',gsub(pattern = namePattern, replacement="\\2", f)))
     flog.trace(f)
   }
   main$db_id <- unique(main$db_id)
+  main$db_name <- unique(main$db_name)
   log_it.debug("get_db_names - stop")
 }
 
@@ -144,7 +147,7 @@ getSection <- function(inFile,blockName,searchPatternIn=NULL,replacePatternIn=NU
   numRows <- str_count(body,'\n')-1
   #numRows <- 10
   
-  dfInt = read.table(text=body,header = TRUE,skip=1,nrows=numRows,fill=TRUE,blank.lines.skip=TRUE,strip.white=TRUE)
+  dfInt = read.table(text=body,header = TRUE,skip=1,nrows=numRows,fill=TRUE,blank.lines.skip=TRUE,strip.white=TRUE,stringsAsFactors=FALSE)
   
   #remove any rows that are actually repeating headers
   index1 <- with(dfInt, grepl("--",dfInt[,1]))
@@ -163,22 +166,51 @@ build_data_frames <- function(dbid,dbname) {
   log_it.info(paste0("dbid-dbname: ",dbid,'-',dbname))
   #   dbid <- 1499932796
   #   dbname <- main$current_db_name
+  #y<-grep("^.+651066032.+$",os_files)
+  filePatternInt <- paste0("^.+",dbid,".+$")
+  fileIndex<-grep(filePatternInt,main$awrFiles)
+  #> os_files[y]
+  theFile <- readLines(main$awrFiles[fileIndex])
+  log_it.debug(length(theFile))
+  
   
   DATA_FRAME_INT <- NULL
-  file_pattern=paste(WORK_DIR,paste(dbname,dbid,sep="-"),sep="/")
-  DF_OS_INT <- read.csv(paste(file_pattern,"-os.csv",sep=""), head=TRUE,sep=",",stringsAsFactors=FALSE)
-  DF_MAIN_INT <- read.csv(paste(file_pattern,"-main.csv",sep=""), head=TRUE,sep=",",stringsAsFactors=TRUE)
-  DF_MEMORY_INT <- read.csv(paste(file_pattern,"-memory.csv",sep=""), head=TRUE,sep=",",stringsAsFactors=TRUE)
-  DF_SPACE_INT <- read.csv(paste(file_pattern,"-space.csv",sep=""), head=TRUE,sep=",",stringsAsFactors=TRUE)
-  DF_AAS_INT <- read.csv(paste(file_pattern,"-aas.csv",sep=""), head=TRUE,sep=",",stringsAsFactors=FALSE)
+  #file_pattern=paste(WORK_DIR,paste(dbname,dbid,sep="-"),sep="/")
+  DF_OS_INT <- getSection(theFile,'OS-INFORMATION')
+  DF_MEMORY_INT <- getSection(theFile,'MEMORY')
+  DF_SPACE_INT <- getSection(theFile,'SIZE-ON-DISK')
+  DF_MAIN_INT <- getSection(theFile,'MAIN-METRICS')
+  
+  
+  DF_DB_PARAMETERS_INT <- getSection(theFile,'DATABASE-PARAMETERS')
+  
+  searchPattern <- "\n([[:digit:] ]{10}) ([[:print:] ]{20}) ([[:print:] ]{10})"
+  replacePattern <- "\n'\\1' '\\2' '\\3'"
+  DF_AAS_INT <- getSection(theFile,'AVERAGE-ACTIVE-SESSIONS',searchPattern,replacePattern)
+
+  
+  searchPattern <- "\n([[:digit:] ]{10}) ([[:print:] ]{20}) ([[:print:] ]{37}) ([[:print:] ]{15}) ([[:print:] ]{10})"
+  replacePattern <- "\n'\\1' '\\2' '\\3' '\\4' '\\5' "
+  DF_IO_WAIT_HIST_INT <- getSection(theFile,'IO-WAIT-HISTOGRAM',searchPattern,replacePattern)
+  DF_IO_BY_OBJECT_TYPE_INT <- getSection(theFile,'IO-OBJECT-TYPE')
+  DF_SQL_SUMMARY_INT <- getSection(theFile,'TOP-SQL-SUMMARY')
+  DF_SQL_BY_SNAPID_INT <- getSection(theFile,'TOP-SQL-BY-SNAPID')
+  rm(theFile)
+  
+  
+#   DF_OS_INT <- read.csv(paste(file_pattern,"-os.csv",sep=""), head=TRUE,sep=",",stringsAsFactors=FALSE)
+#   DF_MAIN_INT <- read.csv(paste(file_pattern,"-main.csv",sep=""), head=TRUE,sep=",",stringsAsFactors=TRUE)
+#   DF_MEMORY_INT <- read.csv(paste(file_pattern,"-memory.csv",sep=""), head=TRUE,sep=",",stringsAsFactors=TRUE)
+#   DF_SPACE_INT <- read.csv(paste(file_pattern,"-space.csv",sep=""), head=TRUE,sep=",",stringsAsFactors=TRUE)
+#   DF_AAS_INT <- read.csv(paste(file_pattern,"-aas.csv",sep=""), head=TRUE,sep=",",stringsAsFactors=FALSE)
   
   #flog.trace('Summary',summary(DF_AAS_INT),capture=TRUE)
   
-  DF_SQL_SUMMARY_INT <- read.csv(paste(file_pattern,"-sql-summary.csv",sep=""), head=TRUE,sep=",",stringsAsFactors=TRUE)
-  DF_SQL_BY_SNAPID_INT <- read.csv(paste(file_pattern,"-sql-by-snap.csv",sep=""), head=TRUE,sep=",",stringsAsFactors=TRUE)
-  
+#   DF_SQL_SUMMARY_INT <- read.csv(paste(file_pattern,"-sql-summary.csv",sep=""), head=TRUE,sep=",",stringsAsFactors=TRUE)
+#   DF_SQL_BY_SNAPID_INT <- read.csv(paste(file_pattern,"-sql-by-snap.csv",sep=""), head=TRUE,sep=",",stringsAsFactors=TRUE)
+#   
   #DF_MAIN_INT$end <- strptime(DF_MAIN_INT$end, "%y/%m/%d %H:%M")
-  DF_MAIN_INT$end <- as.POSIXct(DF_MAIN_INT$end, format = "%y/%m/%d %H:%M")
+  #DF_MAIN_INT$end <- as.POSIXct(DF_MAIN_INT$end, format = "%y/%m/%d %H:%M")
   
   # Normalize dates by snap_id
   
@@ -303,7 +335,7 @@ main$mainLoop <- function(){
     tryCatch(main$mainFunction(f), 
              error = function(e) {
               #traceback()
-               flog.appender(appender.file(paste0(main$current_db_name,'.log')), name=main$current_db_name)
+               flog.appender(appender.file(paste0(main$current_db_name,'.err')), name=main$current_db_name)
                log_it.error(paste0("Error in ",main$current_db_name,": ",e))
                flog.remove(name=main$current_db_name)
                #browser()

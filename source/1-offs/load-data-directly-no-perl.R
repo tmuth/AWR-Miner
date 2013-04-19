@@ -32,7 +32,6 @@ getSection <- function(inFile,blockName,searchPatternIn=NULL,replacePatternIn=NU
   
   dfInt = read.table(text=body,header = TRUE,skip=1,nrows=numRows,fill=TRUE,blank.lines.skip=TRUE,strip.white=TRUE)
    
-  
   #remove any rows that are actually repeating headers
   index1 <- with(dfInt, grepl("--",dfInt[,1]))
   dfInt <- dfInt[!index1,]
