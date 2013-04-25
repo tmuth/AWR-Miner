@@ -18,14 +18,14 @@ lapply(list.of.packages, function(x) {
 #WORK_DIR <- 'E:/Portable-AWR-Miner/CSVs/LAD-Cust-Help'
 #WORK_DIR <- 'M:/Dropbox/MyFiles/Accounts/S&L/NC/Public Schools/Pearson/Pearson-POV/Results/Test-H/CSVs'
 
-#filePattern <- "^awr-hist*.*(\\.out|\\.gz)$"
+filePattern <- "^awr-hist*.*(\\.out|\\.gz)$"
 #filePattern <- "^awr-hist.+P01.+(\\.out|\\.gz)$"
-filePattern <- "^awr-hist.+(CSPRD).+(\\.out|\\.gz)$"
+#filePattern <- "^awr-hist.+(CSPRD).+(\\.out|\\.gz)$"
 
 
 MAX_DAYS <- 30
 
-outFileSuffix <- '-2'
+outFileSuffix <- '-1'
 
 flog.threshold(INFO) #TRACE, DEBUG, INFO, WARN, ERROR, FATAL
 flog.threshold(ERROR,name='plot_RAC_activity') #TRACE, DEBUG, INFO, WARN, ERROR, FATAL 
