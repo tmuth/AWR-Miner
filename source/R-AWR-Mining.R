@@ -39,10 +39,10 @@ theme_set(myTheme)
 main <- new.env()
 
 
-#date_break_major_var <- date_breaks("1 hour")
-date_break_major_var <- date_breaks("1 day")
-#date_break_minor_var <- date_breaks("1 hour")
-date_break_minor_var <- date_breaks("12 hour")
+date_break_major_var <- date_breaks("1 hour")
+#date_break_major_var <- date_breaks("1 day")
+date_break_minor_var <- date_breaks("1 hour")
+#date_break_minor_var <- date_breaks("12 hour")
 
 
 
@@ -123,7 +123,10 @@ get_attrs <- function(SEARCH_VAL){
 
 attr <- new.env()
 attr$filter_snap_min <- 1
+#attr$filter_snap_min <- 963
+
 attr$filter_snap_max <- 1000000000
+#attr$filter_snap_max <- 983
 attr$vertical_line <- theme()
 attr$vertical_text <- theme()
 

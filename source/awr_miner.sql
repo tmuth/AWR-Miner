@@ -376,9 +376,8 @@ max(decode(metric_name,'Global Cache Blocks Lost',                   average,nul
 max(decode(metric_name,'Active Parallel Sessions',                   average,null)) "px_sess",
 max(decode(metric_name,'Active Serial Sessions',                     average,null)) "se_sess",
 max(decode(metric_name,'Average Synchronous Single-Block Read Latency', average,null)) "s_blk_r_lat",
-max(decode(metric_name,'Cell Physical IO Interconnect Bytes',         round((average)/1024/1024,1),null)) "read_mb_s",
-max(decode(metric_name,'Cell Physical IO Interconnect Bytes',         round((maxval)/1024/1024,1),null)) "read_mb_s_max"
-max(decode(metric_name,'Cell Physical IO Interconnect Bytes', average,null)) "cell_io_int_"
+max(decode(metric_name,'Cell Physical IO Interconnect Bytes',         round((average)/1024/1024,1),null)) "cell_io_int_mb",
+max(decode(metric_name,'Cell Physical IO Interconnect Bytes',         round((maxval)/1024/1024,1),null)) "cell_io_int_mb_max"
   from(
   select  snap_id,num_interval,to_char(end_time,'YY/MM/DD HH24:MI') end_time,instance_number inst,metric_name,round(average,1) average,
   round(maxval,1) maxval
