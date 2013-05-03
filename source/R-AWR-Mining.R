@@ -24,15 +24,35 @@ lapply(list.of.packages, function(x) {
 
 MAX_DAYS <- 30
 
-outFileSuffix <- '-3'
+outFileSuffix <- '-1'
 
-flog.threshold(INFO) #TRACE, DEBUG, INFO, WARN, ERROR, FATAL
-flog.threshold(ERROR,name='build_data_frames') #TRACE, DEBUG, INFO, WARN, ERROR, FATAL 
-                              #name: build_data_frames, mainFunction,set_date_break_vars,plot_RAC_activity
+
 
 #====================================================================================================================
 
-awrMinerPlotVersion <- '3.0.1'
+debugMode <- FALSE
+flog.threshold(INFO) #TRACE, DEBUG, INFO, WARN, ERROR, FATAL
+flog.threshold(ERROR,name='getSection') #TRACE, DEBUG, INFO, WARN, ERROR, FATAL 
+flog.threshold(ERROR,name='build_data_frames') #TRACE, DEBUG, INFO, WARN, ERROR, FATAL 
+#name: build_data_frames, mainFunction,set_date_break_vars,plot_RAC_activity
+
+#debugModeOverride <- TRUE  | rm(debugModeOverride)
+if(exists("debugModeOverride")){
+  if(!is.null(debugModeOverride)){
+    if(debugModeOverride){
+      debugMode <- TRUE
+      print('In debug mode')
+    }
+    else{
+      debugMode <- FALSE
+    }
+  }
+}
+
+
+
+awrMinerPlotVersion <- '3.0.2'
+
 
 filePattern <- "^awr-hist*.*(\\.out|\\.gz)$"
 if(exists("filePatternOverride")){
@@ -42,7 +62,12 @@ if(exists("filePatternOverride")){
     }
   }
 }
-print(paste0('File Pattern: ',filePattern))
+
+ 
+print('Looking in this directory:')
+print(getwd())
+print(paste0('for files that match the pattern: ',filePattern))
+Sys.sleep(2)
 
 
 #library(plyr)
@@ -69,6 +94,11 @@ if(interactive()){
 
 
 main <- new.env()
+awrM <- new.env()
+awrM$debug <- new.env()
+
+awrM$debug.plotSummary <- data.frame()
+awrM$debug.lastFunction <- NULL
 
 attr <- new.env()
 attr$filter_snap_min <- 1
@@ -144,6 +174,7 @@ main$db_id = vector()
 
 get_db_names <- function(){
   flog.debug("get_db_names - start")
+
   
   namePattern <- "awr-hist-([0-9]+)-([a-zA-Z0-9_]+)-.*"
   for (f in main$awrFiles) {
@@ -324,25 +355,54 @@ getSection <- function(inFile,blockName,decSep='.',searchPatternIn=NULL,replaceP
     return(dfInt)
   }
   
-  #headerSep <- str_extract(paste(body, collapse='\n'), '\n[- ]+\n')
+  
   
   body <- gsub('\n\n', '\n', body)
-  #body <- gsub('\n[- ]+\n', '\n', body)
+  #
   body <- gsub('~~.+~~\n','\n', body)
   body <- gsub('\n~~.+~~','\n', body)
   
-  body <- gsub("([0-9]{2}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2})","'\\1'", body) # find dates and enclose in quotes so it doesn't break into 2 columns
   
-  if(!is.null(searchPatternIn)){
-    body <- gsub(searchPatternIn,replacePatternIn, body)
-  }
+  # Get the dashes which we'll use to get a vector of column lengths
+  dashesLine <- str_extract(body, '\n[- ]+\n')
+  #print(dashesLine)
+  dashesLine <- gsub('\n', '', dashesLine)
+  dashesVector <- str_split(dashesLine,' ')
+  #print(dashesVector)
+  #dashesVectorLengths <- lapply(dashesVector, nchar)
+  
+  #print(str(dashesVector))
+  dashesVectorLengths <- lapply(dashesVector,function(x){return(nchar(x)+1)})
+  
+  #extract the titles separately as read.fwf + header=TRUE requires a separator, which we don't have
+  theTitles <- str_extract(body, perl("^\n([[:alnum:]_ ])+\n"))
+  theTitlesOrig <- theTitles
+  #print(theTitles)
+  theTitles <- str_replace_all(theTitles,'\n','')
+  theTitles <- str_replace_all(theTitles,'^[ ]+','')
+  #print(theTitles)
+  theTitles <- str_split(theTitles,' +')
+  #print(theTitles)
+  #theColNames <- unlist(theTitles[[1]])
+  theColNames <- unlist(theTitles)
+  
+  
+  #body <- gsub("([0-9]{2}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2})","'\\1'", body) # find dates and enclose in quotes so it doesn't break into 2 columns
+  
+  #   if(!is.null(searchPatternIn)){
+  #     body <- gsub(searchPatternIn,replacePatternIn, body)
+  #   }
   #print(body)
+  body <- gsub('\n[- ]+\n', '\n', body)
+  
+  body <- str_replace_all(body,theTitlesOrig,'')
   
   numRows <- str_count(body,'\n')-1
   #numRows <- 10
   
-  dfInt = read.table(text=body,header = TRUE,skip=0,nrows=numRows,fill=TRUE,blank.lines.skip=TRUE,strip.white=TRUE,stringsAsFactors=FALSE,dec=decSep)
-  # trim leading and trailing spaces from every column in the data frame
+  #dfInt = read.table(text=body,header = TRUE,skip=0,nrows=numRows,fill=TRUE,blank.lines.skip=TRUE,strip.white=TRUE,stringsAsFactors=FALSE,dec=decSep)
+  dfInt = read.fwf(file=textConnection(body),skip=0,nrows=numRows,col.names=theColNames,fill=TRUE,blank.lines.skip=TRUE,strip.white=TRUE,stringsAsFactors=FALSE,widths=unlist(dashesVectorLengths[[1]]),dec=decSep)
+  #trim leading and trailing spaces from every column in the data frame
   #dfInt2 <- dfInt
   #dfInt<-colwise(str_trim)(dfInt2)
   
@@ -358,9 +418,9 @@ getSection <- function(inFile,blockName,decSep='.',searchPatternIn=NULL,replaceP
   
   
   flog.debug(paste0("getSection - end - ",blockName),name="getSection")
+  #dfInt <- na.omit(dfInt)
   return(dfInt)
 }
-
 
 build_data_frames <- function(dbid,dbname) {
   flog.debug("build_data_frames - start",name="build_data_frames")
@@ -389,25 +449,33 @@ build_data_frames <- function(dbid,dbname) {
   DATA_FRAME_INT <- NULL
   #file_pattern=paste(WORK_DIR,paste(dbname,dbid,sep="-"),sep="/")
   DF_OS_INT <- getSection(theFile,'OS-INFORMATION',computedDecSep)
+
+  flog.trace('DF_OS_INT',DF_OS_INT,name="build_data_frames",capture=TRUE)
   DF_MEMORY_INT <- getSection(theFile,'MEMORY',computedDecSep)
   flog.trace('DF_MEMORY_INT',DF_MEMORY_INT,name="build_data_frames",capture=TRUE)
   DF_SPACE_INT <- getSection(theFile,'SIZE-ON-DISK',computedDecSep)
   DF_MAIN_INT <- getSection(theFile,'MAIN-METRICS',computedDecSep)
   
   DF_MAIN_INT <- data.table(DF_MAIN_INT)
-  
+  flog.trace("YEP0.1",name="build_data_frames")
   DF_DB_PARAMETERS_INT <- getSection(theFile,'DATABASE-PARAMETERS',computedDecSep)
-  
+  flog.trace("YEP0.2",name="build_data_frames")
   index1 <- with(DF_DB_PARAMETERS_INT, grepl("(log_archive|db_create|user_dump_dest|dg_broke)",DF_DB_PARAMETERS_INT$PARAMETER_NAME))
   index2 <- with(DF_DB_PARAMETERS_INT, grepl("DESCRIPTION",DF_DB_PARAMETERS_INT$VALUE))
   DF_DB_PARAMETERS_INT <- DF_DB_PARAMETERS_INT[!index1,]
   DF_DB_PARAMETERS_INT <- DF_DB_PARAMETERS_INT[!index2,]
-  DF_DB_PARAMETERS_INT <-  subset(DF_DB_PARAMETERS_INT,nchar(VALUE)>1)
+  DF_DB_PARAMETERS_INT <- na.omit(DF_DB_PARAMETERS_INT)
+  flog.trace("YEP0.3",name="build_data_frames")
+  flog.trace('DF_DB_PARAMETERS_INT',DF_DB_PARAMETERS_INT,name="build_data_frames",capture=TRUE)
+  #DF_DB_PARAMETERS_INT <-  subset(DF_DB_PARAMETERS_INT,nchar(VALUE)>1)
+  flog.trace("YEP0.4",name="build_data_frames")
   DF_DB_PARAMETERS_INT$VALUE <- str_sub(DF_DB_PARAMETERS_INT$VALUE,1,25)
-  
+  flog.trace("YEP1",name="build_data_frames")
   searchPattern <- "\n([[:digit:] ]{10}) ([[:print:] ]{20}) ([[:print:] ]{10})"
   replacePattern <- "\n'\\1' '\\2' '\\3'"
-  DF_AAS_INT <- getSection(theFile,'AVERAGE-ACTIVE-SESSIONS',computedDecSep,searchPattern,replacePattern)
+  #DF_AAS_INT <- getSection(theFile,'AVERAGE-ACTIVE-SESSIONS',computedDecSep,searchPattern,replacePattern)
+  DF_AAS_INT <- getSection(theFile,'AVERAGE-ACTIVE-SESSIONS',computedDecSep)
+  flog.trace("YEP2",name="build_data_frames")
   DF_AAS_INT$SNAP_ID <- as.numeric(DF_AAS_INT$SNAP_ID)
   DF_AAS_INT$AVG_SESS <- as.numeric(DF_AAS_INT$AVG_SESS)
   DF_AAS_INT <- data.table(DF_AAS_INT)
@@ -1118,6 +1186,7 @@ plot_io <- function(DF_MAIN_BY_SNAP_INT){
 
 plot_io_histograms <- function(DF_IO_WAIT_HIST_INT){
   flog.debug('plot_io_histograms - start',name='plot_io_histograms')
+  awrM$debug.lastFunction <- 'plot_io_histograms - start'
   DF_IO_WAIT_HIST_INT<- merge(DF_IO_WAIT_HIST_INT,main$DF_SNAP_ID_DATE,by="SNAP_ID")
   DF_IO_WAIT_HIST_INT <- data.table(DF_IO_WAIT_HIST_INT)
   flog.trace('DF_IO_WAIT_HIST_INT:',DF_IO_WAIT_HIST_INT,name='plot_io_histograms',capture=TRUE)
@@ -1184,6 +1253,7 @@ plot_io_histograms <- function(DF_IO_WAIT_HIST_INT){
   
   
   flog.debug('plot_io_histograms - end',name='plot_io_histograms')
+  awrM$debug.lastFunction <- 'plot_io_histograms - end'
   return(list(io_hist_plot,io_hist_area_plot))
 }
 
@@ -1619,16 +1689,20 @@ main$mainFunction <- function(f){
   #x <- grid.arrange(tblText ,box_plots, ncol = 1, heights=c(1,1))
   #x <- grid.arrange(tblText,tblText2,tblText3, box_plots, ncol = 1, heights=c(1,1,1,8))
   #x <- grid.arrange(tblText,tblText2,tblText3, aas_plot2_line,box_plots, ncol = 1, heights=c(1,1,1,8,8))
-  
-  tryCatch(x <- grid.arrange(tblText,tblText2,tblText3, aas_plot2_line,box_plots, ncol = 1, heights=c(1,1,1,8,8)), 
-           error = function(e) {
-             tryCatch(x <- grid.arrange(tblText,tblText2,tblText3, box_plots, ncol = 1, heights=c(1,1,1,8)), 
-                      error = function(e) {
-                        x <- grid.arrange(tblText ,tblText2,tblText3, ncol = 1, heights=c(1,1,1))
-                      }
-             )
-           }
-  )
+  if(debugMode){
+    x <- grid.arrange(tblText,tblText2,tblText3, aas_plot2_line,box_plots, ncol = 1, heights=c(1,1,1,8,8))
+  }
+  else{
+    tryCatch(x <- grid.arrange(tblText,tblText2,tblText3, aas_plot2_line,box_plots, ncol = 1, heights=c(1,1,1,8,8)), 
+             error = function(e) {
+               tryCatch(x <- grid.arrange(tblText,tblText2,tblText3, box_plots, ncol = 1, heights=c(1,1,1,8)), 
+                        error = function(e) {
+                          x <- grid.arrange(tblText ,tblText2,tblText3, ncol = 1, heights=c(1,1,1))
+                        }
+               )
+             }
+    )
+  }
   
   #flog.remove(main$current_db_name)
   
@@ -1669,7 +1743,7 @@ main$mainFunction <- function(f){
   if( nrow(main$DF_IO_WAIT_HIST)>10){
     x <- grid.arrange(io_hist_plot,io_hist_area_plot , ncol = 1, heights=c(1,4))
   }
-  
+  head(main$DF_IO_WAIT_HIST)
   grid.newpage()
   
   grid.draw(aas_plot)
@@ -1742,23 +1816,28 @@ main$mainFunction <- function(f){
 
 main$mainLoop <- function(){
   for (f in main$db_id) {
-    #main$mainFunction(f)
+    if(debugMode){
+      print('Running without tryCatch as we are in debug mode')
+      main$mainFunction(f)
+    }
+    else{
+      tryCatch(main$mainFunction(f), 
+               error = function(e) {
+                 traceback()
+                 flog.appender(appender.file(paste0(main$current_db_name,'.err')), name=main$current_db_name)
+                 flog.error(paste0("Error in ",main$current_db_name,": ",e),name=main$current_db_name)
+                 print(e)
+                 flog.error(traceback(),name=main$current_db_name)
+                 flog.remove(main$current_db_name)
+                 #browser()
+                 
+               }
+               #,finally=print("finished")
+      )
+      
+    } #end else
     
-    tryCatch(main$mainFunction(f), 
-             error = function(e) {
-              traceback()
-               flog.appender(appender.file(paste0(main$current_db_name,'.err')), name=main$current_db_name)
-               flog.error(paste0("Error in ",main$current_db_name,": ",e),name=main$current_db_name)
-               print(e)
-               flog.error(traceback(),name=main$current_db_name)
-               flog.remove(main$current_db_name)
-               #browser()
-              
-             }
-             #,finally=print("finished")
-    )
-#     
-  }
+  } #end for loop
   write.csv(main$overall_summary_df,'OverallSummary.csv')
   if(length(main$plot_attributes) > 0){
     write.csv(main$plot_attributes,'attributes.csv',row.names=FALSE)
