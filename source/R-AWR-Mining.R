@@ -327,7 +327,7 @@ getSection <- function(inFile,blockName,decSep='.',searchPatternIn=NULL,replaceP
   #headerSep <- str_extract(paste(body, collapse='\n'), '\n[- ]+\n')
   
   body <- gsub('\n\n', '\n', body)
-  body <- gsub('\n[- ]+\n', '\n', body)
+  #body <- gsub('\n[- ]+\n', '\n', body)
   body <- gsub('~~.+~~\n','\n', body)
   body <- gsub('\n~~.+~~','\n', body)
   
@@ -341,7 +341,7 @@ getSection <- function(inFile,blockName,decSep='.',searchPatternIn=NULL,replaceP
   numRows <- str_count(body,'\n')-1
   #numRows <- 10
   
-  dfInt = read.table(text=body,header = TRUE,skip=1,nrows=numRows,fill=TRUE,blank.lines.skip=TRUE,strip.white=TRUE,stringsAsFactors=FALSE,dec=decSep)
+  dfInt = read.table(text=body,header = TRUE,skip=0,nrows=numRows,fill=TRUE,blank.lines.skip=TRUE,strip.white=TRUE,stringsAsFactors=FALSE,dec=decSep)
   # trim leading and trailing spaces from every column in the data frame
   #dfInt2 <- dfInt
   #dfInt<-colwise(str_trim)(dfInt2)
@@ -398,6 +398,13 @@ build_data_frames <- function(dbid,dbname) {
   
   DF_DB_PARAMETERS_INT <- getSection(theFile,'DATABASE-PARAMETERS',computedDecSep)
   
+  index1 <- with(DF_DB_PARAMETERS_INT, grepl("(log_archive|db_create|user_dump_dest|dg_broke)",DF_DB_PARAMETERS_INT$PARAMETER_NAME))
+  index2 <- with(DF_DB_PARAMETERS_INT, grepl("DESCRIPTION",DF_DB_PARAMETERS_INT$VALUE))
+  DF_DB_PARAMETERS_INT <- DF_DB_PARAMETERS_INT[!index1,]
+  DF_DB_PARAMETERS_INT <- DF_DB_PARAMETERS_INT[!index2,]
+  DF_DB_PARAMETERS_INT <-  subset(DF_DB_PARAMETERS_INT,nchar(VALUE)>1)
+  DF_DB_PARAMETERS_INT$VALUE <- str_sub(DF_DB_PARAMETERS_INT$VALUE,1,25)
+  
   searchPattern <- "\n([[:digit:] ]{10}) ([[:print:] ]{20}) ([[:print:] ]{10})"
   replacePattern <- "\n'\\1' '\\2' '\\3'"
   DF_AAS_INT <- getSection(theFile,'AVERAGE-ACTIVE-SESSIONS',computedDecSep,searchPattern,replacePattern)
@@ -431,6 +438,7 @@ build_data_frames <- function(dbid,dbname) {
   #names(DF_SNAP_ID_DATE_INT)[names(DF_SNAP_ID_DATE_INT)=="snap"] <- "SNAP_ID"
   
   setnames(DF_SNAP_ID_DATE_INT,"snap","SNAP_ID")
+  DF_SNAP_ID_DATE_INT$SNAP_ID <- as.numeric(DF_SNAP_ID_DATE_INT$SNAP_ID)
   # Tyler just added to fix issue with hours_bars
   #DF_MAIN_INT$end <- as.POSIXct(strptime(DF_MAIN_INT$end,format="%y/%m/%d %H:%M",tz=""),tz="")
   #DF_MAIN_INT$end <- as.POSIXct(strptime(DF_MAIN_INT$end,format="%y/%m/%d %H:%M",tz=""),tz="")
@@ -509,7 +517,7 @@ build_data_frames <- function(dbid,dbname) {
   
   #print(head(DF_OS_INT))
   flog.debug("build_data_frames - end",name="build_data_frames")
-  return(list(DF_OS_INT,DF_MAIN_INT,DF_MEMORY_INT,DF_SPACE_INT,DF_AAS_INT,DF_SQL_SUMMARY_INT,DF_SQL_BY_SNAPID_INT,DF_SNAP_ID_DATE_INT,DF_IO_WAIT_HIST_INT))
+  return(list(DF_OS_INT,DF_MAIN_INT,DF_MEMORY_INT,DF_SPACE_INT,DF_AAS_INT,DF_SQL_SUMMARY_INT,DF_SQL_BY_SNAPID_INT,DF_SNAP_ID_DATE_INT,DF_IO_WAIT_HIST_INT,DF_DB_PARAMETERS_INT))
 }
 
 
@@ -739,7 +747,7 @@ generate_hours_bars <- function(DF_MAIN_INT){
   
   DF_NIGHT_HOURS_INT_A$value <- 0
   
-  hour_bars <- geom_rect(data=DF_NIGHT_HOURS_INT_A,aes(xmin=work_start,xmax=work_stop,ymin=-Inf,ymax=Inf),alpha=0.1,fill="#bdd1e6")
+  hour_bars <- geom_rect(data=DF_NIGHT_HOURS_INT_A,aes(xmin=work_start,xmax=work_stop,ymin=-Inf,ymax=Inf),alpha=0.2,fill="#bdd1e6")
   flog.debug('generate_hours_bars - end')
   return(hour_bars)
 }
@@ -1534,6 +1542,7 @@ main$DF_SNAP_ID_DATE <- NULL
 main$DF_SNAP_ID_SUBSET <- NULL
 main$DF_SNAP_ID_DATE2 <- NULL
 main$DF_IO_WAIT_HIST <- NULL
+main$DF_DB_PARAMETERS <- NULL
 main$gg_hour_bars <- NULL
 main$cpu_cores <- NULL
 main$current_db_name=""
@@ -1575,7 +1584,7 @@ main$mainFunction <- function(f){
   
   
   
-  c(main$DF_OS, main$DF_MAIN,main$DF_MEMORY,main$DF_SPACE,main$DF_AAS,main$DF_SQL_SUMMARY,main$DF_SQL_BY_SNAPID,main$DF_SNAP_ID_DATE,main$DF_IO_WAIT_HIST) := build_data_frames(f,main$current_db_name)
+  c(main$DF_OS, main$DF_MAIN,main$DF_MEMORY,main$DF_SPACE,main$DF_AAS,main$DF_SQL_SUMMARY,main$DF_SQL_BY_SNAPID,main$DF_SNAP_ID_DATE,main$DF_IO_WAIT_HIST,main$DF_DB_PARAMETERS) := build_data_frames(f,main$current_db_name)
   c(main$DF_MAIN_BY_SNAP) := summarise_dfs_by_snap()
   main$DF_SNAP_ID_DATE2 <- build_snap_to_date_df()
   add_vetical_lines()
@@ -1691,6 +1700,39 @@ main$mainFunction <- function(f){
     }
   }
   print(memory_plot)
+  
+  
+  parTable <- function(df){
+    df[is.na(df)] <- ""
+    return(tableGrob(df,show.rownames = FALSE, gpar.coretext = gpar(fontsize=6),gpar.coltext = gpar(fontsize=4),padding.v = unit(1, "mm"),padding.h = unit(2, "mm"),show.colnames = TRUE,core.just="left", gpar.corefill = gpar(fill=NA,col=NA) ))
+  }
+  
+  dbParameters1 <- parTable(main$DF_DB_PARAMETERS[c(seq(1,80)),])
+  dbParameters2 <- parTable(main$DF_DB_PARAMETERS[c(seq(81,160)),])
+  dbParameters3 <- parTable(main$DF_DB_PARAMETERS[c(seq(161,240)),])
+  #dbParameters <- tableGrob(main$DF_DB_PARAMETERS,show.rownames = FALSE, gpar.coretext = gpar(fontsize=5),gpar.coltext = gpar(fontsize=5),padding.v = unit(1, "mm"),padding.h = unit(1, "mm"),show.colnames = TRUE,col.just = "left")
+  
+  grid.arrange(dbParameters1,dbParameters2,dbParameters3,ncol = 3, widths=c(1,1,1))
+  
+  
+  
+  main$DF_SQL_SUMMARY$AVG_DOP <- main$DF_SQL_SUMMARY$PX_SERVERS_EXECS / main$DF_SQL_SUMMARY$EXECS
+  main$DF_SQL_SUMMARY$ELAP_PER_EXEC_M <- (main$DF_SQL_SUMMARY$ELAP / main$DF_SQL_SUMMARY$EXECS)/60
+  main$DF_SQL_SUMMARY$logRsGBperExec <- ((main$DF_SQL_SUMMARY$LOG_READS* 8)/main$DF_SQL_SUMMARY$EXECS)/1024/1024
+  main$DF_SQL_SUMMARY$ELAP <-  formatC(main$DF_SQL_SUMMARY$ELAP, digits=2,format="fg", big.mark=",")
+  main$DF_SQL_SUMMARY$EXECS <-  formatC(main$DF_SQL_SUMMARY$EXECS, digits=2,format="fg", big.mark=",")
+  main$DF_SQL_SUMMARY$LOG_READS <-  formatC(main$DF_SQL_SUMMARY$LOG_READS, digits=2,format="fg", big.mark=",")
+  main$DF_SQL_SUMMARY$ELAP_PER_EXEC_M <-  formatC(main$DF_SQL_SUMMARY$ELAP_PER_EXEC_M, digits=2,format="fg", big.mark=",")
+  main$DF_SQL_SUMMARY$AVG_DOP <-  formatC(main$DF_SQL_SUMMARY$AVG_DOP, digits=0,format="fg", big.mark=",")
+  main$DF_SQL_SUMMARY$logRsGBperExec <-  formatC(main$DF_SQL_SUMMARY$logRsGBperExec, digits=2,format="fg", big.mark=",")
+  
+  names(main$DF_SQL_SUMMARY)[names(main$DF_SQL_SUMMARY)=="PARSING_SCHEMA_NAME"] <- "PARSING_SCHEMA"
+  names(main$DF_SQL_SUMMARY)[names(main$DF_SQL_SUMMARY)=="LOG_READS_RANK"] <- "logRsRank"
+  names(main$DF_SQL_SUMMARY)[names(main$DF_SQL_SUMMARY)=="PHYS_READS_RANK"] <- "physRsRank"
+  #subset(df, select=-c(z,u))
+  sqlSummaryText1 <- tableGrob(subset(main$DF_SQL_SUMMARY, select=-c(PX_SERVERS_EXECS,LOG_READS)),show.rownames = FALSE, gpar.coretext = gpar(fontsize=7),gpar.coltext = gpar(fontsize=5),padding.v = unit(1, "mm"),padding.h = unit(2, "mm"),show.colnames = TRUE,col.just = "left", gpar.corefill = gpar(fill=NA,col=NA),h.even.alpha = 0 )
+  #print(sqlSummaryText1)
+  grid.arrange(sqlSummaryText1,ncol = 1, widths=c(1))
   
   dev.off()
   
