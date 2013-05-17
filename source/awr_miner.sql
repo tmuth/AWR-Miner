@@ -9,8 +9,8 @@ set verify off
 column cnt_dbid_1 new_value CNT_DBID noprint
 
 define NUM_DAYS = 30
-define SQL_TOP_N = 20
-define AWR_MINER_VER = 2.9.6
+define SQL_TOP_N = 30
+define AWR_MINER_VER = 3.0.2
 
 
 
@@ -579,7 +579,7 @@ REPHEADER PAGE LEFT '~~BEGIN-TOP-SQL-SUMMARY~~'
 REPFOOTER PAGE LEFT '~~END-TOP-SQL-SUMMARY~~'	
 
 SELECT * FROM(
-SELECT s.sql_id,
+SELECT s.module,s.action,s.sql_id,avg(s.optimizer_cost) optimizer_cost,
 decode(t.command_type,11,'ALTERINDEX',15,'ALTERTABLE',170,'CALLMETHOD',9,'CREATEINDEX',1,'CREATETABLE',
 7,'DELETE',50,'EXPLAIN',2,'INSERT',26,'LOCKTABLE',47,'PL/SQLEXECUTE',
 3,'SELECT',6,'UPDATE',189,'UPSERT') command_name,
@@ -604,7 +604,7 @@ round(sum(disk_reads_delta * &DB_BLOCK_SIZE)/1024/1024/1024) phy_read_gb,
    AND s.dbid = t.dbid
   AND s.sql_id = t.sql_id
   AND PARSING_SCHEMA_NAME NOT IN ('SYS','DBSNMP','SYSMAN')
-  GROUP BY s.sql_id,t.command_type,PARSING_SCHEMA_NAME,px_servers_execs_delta)
+  GROUP BY s.module,s.action,s.sql_id,t.command_type,PARSING_SCHEMA_NAME)
 WHERE elap_rank <= &SQL_TOP_N
  OR phys_reads_rank <= &SQL_TOP_N
  or log_reads_rank <= &SQL_TOP_N
@@ -628,7 +628,7 @@ DENSE_RANK() OVER
 WHERE elap_rank <= &SQL_TOP_N * 1.5 
 or exec_rank <= &SQL_TOP_N * 1.5 ) 
 select * from(
-SELECT s.snap_id,PARSING_SCHEMA_NAME,s.sql_id,
+SELECT s.snap_id,PARSING_SCHEMA_NAME,s.module,s.action,s.sql_id,avg(s.optimizer_cost) optimizer_cost,
 decode(t.command_type,11,'ALTERINDEX',15,'ALTERTABLE',170,'CALLMETHOD',9,'CREATEINDEX',1,'CREATETABLE',
 7,'DELETE',50,'EXPLAIN',2,'INSERT',26,'LOCKTABLE',47,'PL/SQLEXECUTE',
 3,'SELECT',6,'UPDATE',189,'UPSERT') command_name,
@@ -649,7 +649,7 @@ DENSE_RANK() OVER       (PARTITION BY s.snap_id ORDER BY sum(disk_reads_delta) D
   and s.sql_id = topn.sql_id
   AND s.snap_id BETWEEN &SNAP_ID_MIN and &SNAP_ID_MAX
   AND PARSING_SCHEMA_NAME NOT IN ('SYS','DBSNMP','SYSMAN') 
-  GROUP BY s.snap_id, t.command_type,PARSING_SCHEMA_NAME, s.sql_id)
+  GROUP BY s.snap_id, t.command_type,PARSING_SCHEMA_NAME,s.module,s.action, s.sql_id)
   WHERE elap_rank <= &SQL_TOP_N
   order by snap_id,elap_rank asc nulls last;
 

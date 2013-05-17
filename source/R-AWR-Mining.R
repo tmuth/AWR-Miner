@@ -24,7 +24,7 @@ lapply(list.of.packages, function(x) {
 
 MAX_DAYS <- 30
 
-outFileSuffix <- '-1'
+outFileSuffix <- '1'
 
 
 
@@ -361,6 +361,7 @@ getSection <- function(inFile,blockName,decSep='.',searchPatternIn=NULL,replaceP
   #
   body <- gsub('~~.+~~\n','\n', body)
   body <- gsub('\n~~.+~~','\n', body)
+  body <- gsub('\n\n', '\n', body)
   
   
   # Get the dashes which we'll use to get a vector of column lengths
@@ -397,7 +398,7 @@ getSection <- function(inFile,blockName,decSep='.',searchPatternIn=NULL,replaceP
   
   body <- str_replace_all(body,theTitlesOrig,'')
   
-  numRows <- str_count(body,'\n')-1
+  numRows <- str_count(body,'\n')
   #numRows <- 10
   
   #dfInt = read.table(text=body,header = TRUE,skip=0,nrows=numRows,fill=TRUE,blank.lines.skip=TRUE,strip.white=TRUE,stringsAsFactors=FALSE,dec=decSep)
@@ -421,6 +422,8 @@ getSection <- function(inFile,blockName,decSep='.',searchPatternIn=NULL,replaceP
   #dfInt <- na.omit(dfInt)
   return(dfInt)
 }
+
+
 
 build_data_frames <- function(dbid,dbname) {
   flog.debug("build_data_frames - start",name="build_data_frames")
@@ -452,7 +455,7 @@ build_data_frames <- function(dbid,dbname) {
 
   flog.trace('DF_OS_INT',DF_OS_INT,name="build_data_frames",capture=TRUE)
   DF_MEMORY_INT <- getSection(theFile,'MEMORY',computedDecSep)
-  flog.trace('DF_MEMORY_INT',DF_MEMORY_INT,name="build_data_frames",capture=TRUE)
+  #flog.trace('DF_MEMORY_INT',DF_MEMORY_INT,name="build_data_frames",capture=TRUE)
   DF_SPACE_INT <- getSection(theFile,'SIZE-ON-DISK',computedDecSep)
   DF_MAIN_INT <- getSection(theFile,'MAIN-METRICS',computedDecSep)
   
@@ -489,6 +492,8 @@ build_data_frames <- function(dbid,dbname) {
   DF_IO_WAIT_HIST_INT$WAIT_COUNT <- as.numeric(DF_IO_WAIT_HIST_INT$WAIT_COUNT)
   DF_IO_BY_OBJECT_TYPE_INT <- getSection(theFile,'IO-OBJECT-TYPE',computedDecSep)
   DF_SQL_SUMMARY_INT <- getSection(theFile,'TOP-SQL-SUMMARY',computedDecSep)
+  DF_SQL_SUMMARY_INT$MODULE <- str_sub(DF_SQL_SUMMARY_INT$MODULE,1,10)
+  DF_SQL_SUMMARY_INT[with(DF_SQL_SUMMARY_INT, grepl("PL/SQLEXECUTE", COMMAND_NAME)),]$COMMAND_NAME<-"PL/SQL"
   DF_SQL_BY_SNAPID_INT <- getSection(theFile,'TOP-SQL-BY-SNAPID',computedDecSep)
   rm(theFile)
 
@@ -520,7 +525,8 @@ build_data_frames <- function(dbid,dbname) {
   }
   apply_current_attributes()
   flog.trace(paste0('Snaps:',attr$filter_snap_min,' - ',attr$filter_snap_max))
-  
+  attr$filter_snap_min <- as.numeric(attr$filter_snap_min)
+  attr$filter_snap_max <- as.numeric(attr$filter_snap_max)
   
   
   setkey(DF_SNAP_ID_DATE_INT,SNAP_ID,end)
@@ -530,12 +536,21 @@ build_data_frames <- function(dbid,dbname) {
   
   filter_n_days <- function(DF_IN){
     #    filter_snap_min 
-    flog.trace(attr$filter_snap_min,name="build_data_frames")
-    flog.trace(attr$filter_snap_max,name="build_data_frames")
-    if(inherits(main$DF_MAIN,what='data.table')){
-      return(DF_IN[SNAP_ID >= attr$filter_snap_min & SNAP_ID <= attr$filter_snap_max])
+    flog.trace(str(attr$filter_snap_min),name="build_data_frames")
+    flog.trace(str(attr$filter_snap_max),name="build_data_frames")
+    if(inherits(DF_IN,what='data.table')){
+      flog.trace('Its a data.table',name="build_data_frames")
+      
+      DF_IN_TMP <- DF_IN
+      setkey(DF_IN_TMP,SNAP_ID)
+      flog.trace(nrow(DF_IN_TMP),name="build_data_frames")
+      
+      DF_IN_TMP <- DF_IN_TMP[SNAP_ID >= attr$filter_snap_min & SNAP_ID <= attr$filter_snap_max]
+      flog.trace(nrow(DF_IN_TMP),name="build_data_frames")
+      return(DF_IN_TMP)
     }
     else{
+      flog.trace('Its a data.frame',name="build_data_frames")
       return(subset(DF_IN, SNAP_ID >= attr$filter_snap_min & SNAP_ID <= attr$filter_snap_max))  
     }
     
@@ -543,8 +558,8 @@ build_data_frames <- function(dbid,dbname) {
   
   
   
-  
-  DF_SNAP_ID_DATE_INT <- subset(DF_SNAP_ID_DATE_INT, SNAP_ID >= attr$filter_snap_min & SNAP_ID <= attr$filter_snap_max)
+  DF_SNAP_ID_DATE_INT<-filter_n_days(DF_SNAP_ID_DATE_INT)
+  #DF_SNAP_ID_DATE_INT <- subset(DF_SNAP_ID_DATE_INT, SNAP_ID >= attr$filter_snap_min & SNAP_ID <= attr$filter_snap_max)
   
   numDaysTotal <- difftime(max(DF_MAIN_INT$end), min(DF_MAIN_INT$end), unit="days")
   DF_MAIN_INT <- subset(DF_MAIN_INT, snap >= attr$filter_snap_min & snap <= attr$filter_snap_max)
@@ -552,10 +567,11 @@ build_data_frames <- function(dbid,dbname) {
   DF_OS_INT <- rbind(DF_OS_INT,data.frame(STAT_NAME='DAYS',STAT_VALUE=round(numDaysTotal,1)))
   DF_OS_INT <- rbind(DF_OS_INT,data.frame(STAT_NAME='DAYS_FILTERED',STAT_VALUE=round(numDaysFiltered,1)))
   
-#   flog.trace("DF_AAS_INT2.1",head(DF_AAS_INT),name="build_data_frames",capture=TRUE)
+   flog.trace("DF_AAS_INT2.1",head(DF_AAS_INT),name="build_data_frames",capture=TRUE)
+
 #   DF_AAS_INT<-data.frame(DF_AAS_INT)
   DF_AAS_INT<-filter_n_days(DF_AAS_INT)
-#   flog.trace("DF_AAS_INT2.2",head(DF_AAS_INT),name="build_data_frames",capture=TRUE)
+   flog.trace("DF_AAS_INT2.2",head(DF_AAS_INT),name="build_data_frames",capture=TRUE)
   DF_MEMORY_INT<-filter_n_days(DF_MEMORY_INT)
   DF_SQL_BY_SNAPID_INT<-filter_n_days(DF_SQL_BY_SNAPID_INT)
   
@@ -567,6 +583,7 @@ build_data_frames <- function(dbid,dbname) {
   
   #DF_AAS_INT<-data.frame(DF_AAS_INT)
   #DF_SNAP_ID_DATE_INT<-data.frame(DF_SNAP_ID_DATE_INT)
+  flog.trace("DF_AAS_INT2.4",head(DF_AAS_INT),name="build_data_frames",capture=TRUE)
   DF_AAS_INT <- merge(DF_AAS_INT,DF_SNAP_ID_DATE_INT)
   DF_MEMORY_INT <- merge(DF_MEMORY_INT,DF_SNAP_ID_DATE_INT)
   DF_SQL_BY_SNAPID_INT <- merge(DF_SQL_BY_SNAPID_INT,DF_SNAP_ID_DATE_INT)
@@ -585,7 +602,7 @@ build_data_frames <- function(dbid,dbname) {
   
   #print(head(DF_OS_INT))
   flog.debug("build_data_frames - end",name="build_data_frames")
-  return(list(DF_OS_INT,DF_MAIN_INT,DF_MEMORY_INT,DF_SPACE_INT,DF_AAS_INT,DF_SQL_SUMMARY_INT,DF_SQL_BY_SNAPID_INT,DF_SNAP_ID_DATE_INT,DF_IO_WAIT_HIST_INT,DF_DB_PARAMETERS_INT))
+  return(list(DF_OS_INT,DF_MAIN_INT,DF_MEMORY_INT,DF_SPACE_INT,DF_AAS_INT,DF_SQL_SUMMARY_INT,DF_SQL_BY_SNAPID_INT,DF_SNAP_ID_DATE_INT,DF_IO_WAIT_HIST_INT,DF_DB_PARAMETERS_INT,DF_IO_BY_OBJECT_TYPE_INT))
 }
 
 
@@ -682,7 +699,7 @@ gen_summary_data <- function(){
                           mem=(get_os_stat("PHYSICAL_MEMORY_GB") * num_instances),
                           days=get_os_stat("DAYS"),
                           "days shown"=get_os_stat("DAYS_FILTERED"),
-                          AWR.Miner.Capture=get_os_stat("AWR_MINER_VER"),
+                          AWR.Miner.Capture=get_os_stat_string("AWR_MINER_VER"),
                           AWR.Miner.Graph=awrMinerPlotVersion
   )
   
@@ -1613,6 +1630,7 @@ main$DF_SNAP_ID_SUBSET <- NULL
 main$DF_SNAP_ID_DATE2 <- NULL
 main$DF_IO_WAIT_HIST <- NULL
 main$DF_DB_PARAMETERS <- NULL
+main$DF_IO_BY_OBJECT_TYPE <- NULL
 main$gg_hour_bars <- NULL
 main$cpu_cores <- NULL
 main$current_db_name=""
@@ -1652,9 +1670,10 @@ main$mainFunction <- function(f){
            #,finally=print("finished")
   )
   
+  attr$filter_snap_min <<- as.numeric(attr$filter_snap_min)
+  attr$filter_snap_max <<- as.numeric(attr$filter_snap_max)
   
-  
-  c(main$DF_OS, main$DF_MAIN,main$DF_MEMORY,main$DF_SPACE,main$DF_AAS,main$DF_SQL_SUMMARY,main$DF_SQL_BY_SNAPID,main$DF_SNAP_ID_DATE,main$DF_IO_WAIT_HIST,main$DF_DB_PARAMETERS) := build_data_frames(f,main$current_db_name)
+  c(main$DF_OS, main$DF_MAIN,main$DF_MEMORY,main$DF_SPACE,main$DF_AAS,main$DF_SQL_SUMMARY,main$DF_SQL_BY_SNAPID,main$DF_SNAP_ID_DATE,main$DF_IO_WAIT_HIST,main$DF_DB_PARAMETERS,main$DF_IO_BY_OBJECT_TYPE) := build_data_frames(f,main$current_db_name)
   c(main$DF_MAIN_BY_SNAP) := summarise_dfs_by_snap()
   main$DF_SNAP_ID_DATE2 <- build_snap_to_date_df()
   add_vetical_lines()
@@ -1683,7 +1702,9 @@ main$mainFunction <- function(f){
   flog.trace(str(tblText3),name='mainFunction')
   c(aas_plot, aas_plot2_gt,aas_plot2_line) := plot_aas_chart(main$DF_AAS)
   
-  pdf(paste(main$current_db_name,outFileSuffix,"-plot.pdf",sep=""), width = 11, height = 8.5,useDingbats=FALSE)
+  outFileName <- paste(main$current_db_name,min(main$DF_MAIN$snap),max(main$DF_MAIN$snap),outFileSuffix,sep='-')
+  
+  pdf(paste(outFileName,"-plot.pdf",sep=""), width = 11, height = 8.5,useDingbats=FALSE)
   
   #x <- grid.arrange(box_plots, ncol = 1, heights=c(1))
   #x <- grid.arrange(tblText ,box_plots, ncol = 1, heights=c(1,1))
@@ -1789,7 +1810,7 @@ main$mainFunction <- function(f){
   grid.arrange(dbParameters1,dbParameters2,dbParameters3,ncol = 3, widths=c(1,1,1))
   
   
-  
+  main$DF_SQL_SUMMARY$ELAP <-  main$DF_SQL_SUMMARY$ELAP / 1000000 # convert microseconds to seconds
   main$DF_SQL_SUMMARY$AVG_DOP <- main$DF_SQL_SUMMARY$PX_SERVERS_EXECS / main$DF_SQL_SUMMARY$EXECS
   main$DF_SQL_SUMMARY$ELAP_PER_EXEC_M <- (main$DF_SQL_SUMMARY$ELAP / main$DF_SQL_SUMMARY$EXECS)/60
   main$DF_SQL_SUMMARY$logRsGBperExec <- ((main$DF_SQL_SUMMARY$LOG_READS* 8)/main$DF_SQL_SUMMARY$EXECS)/1024/1024
@@ -1800,11 +1821,15 @@ main$mainFunction <- function(f){
   main$DF_SQL_SUMMARY$AVG_DOP <-  formatC(main$DF_SQL_SUMMARY$AVG_DOP, digits=0,format="fg", big.mark=",")
   main$DF_SQL_SUMMARY$logRsGBperExec <-  formatC(main$DF_SQL_SUMMARY$logRsGBperExec, digits=2,format="fg", big.mark=",")
   
-  names(main$DF_SQL_SUMMARY)[names(main$DF_SQL_SUMMARY)=="PARSING_SCHEMA_NAME"] <- "PARSING_SCHEMA"
+  names(main$DF_SQL_SUMMARY)[names(main$DF_SQL_SUMMARY)=="ELAP"] <- "ELAP_S"
+  names(main$DF_SQL_SUMMARY)[names(main$DF_SQL_SUMMARY)=="PARSING_SCHEMA_NAME"] <- "SCHEMA"
+  names(main$DF_SQL_SUMMARY)[names(main$DF_SQL_SUMMARY)=="OPTIMIZER_COST"] <- "COST"
+  names(main$DF_SQL_SUMMARY)[names(main$DF_SQL_SUMMARY)=="PLAN_COUNT"] <- "PLANS"
+  names(main$DF_SQL_SUMMARY)[names(main$DF_SQL_SUMMARY)=="PX_SERVERS_EXECS"] <- "PX_EXEC"
   names(main$DF_SQL_SUMMARY)[names(main$DF_SQL_SUMMARY)=="LOG_READS_RANK"] <- "logRsRank"
   names(main$DF_SQL_SUMMARY)[names(main$DF_SQL_SUMMARY)=="PHYS_READS_RANK"] <- "physRsRank"
   #subset(df, select=-c(z,u))
-  sqlSummaryText1 <- tableGrob(subset(main$DF_SQL_SUMMARY, select=-c(PX_SERVERS_EXECS,LOG_READS)),show.rownames = FALSE, gpar.coretext = gpar(fontsize=7),gpar.coltext = gpar(fontsize=5),padding.v = unit(1, "mm"),padding.h = unit(2, "mm"),show.colnames = TRUE,col.just = "left", gpar.corefill = gpar(fill=NA,col=NA),h.even.alpha = 0 )
+  sqlSummaryText1 <- tableGrob(subset(main$DF_SQL_SUMMARY, select=-c(PX_EXEC,LOG_READS)),show.rownames = FALSE, gpar.coretext = gpar(fontsize=5),gpar.coltext = gpar(fontsize=5),padding.v = unit(1, "mm"),padding.h = unit(1, "mm"),show.colnames = TRUE,col.just = "left", gpar.corefill = gpar(fill=NA,col=NA),h.even.alpha = 0 )
   #print(sqlSummaryText1)
   grid.arrange(sqlSummaryText1,ncol = 1, widths=c(1))
   
