@@ -1,0 +1,1649 @@
+~~BEGIN-OS-INFORMATION~~
+STAT_NAME                                                    STAT_VALUE
+------------------------------------------------------------ ------------------------------------------------------------
+NUM_CPUS                                                     8
+NUM_CPU_CORES                                                4
+NUM_CPU_SOCKETS                                              1
+PHYSICAL_MEMORY_GB                                           31.96
+PLATFORM_NAME                                                Microsoft_Windows_x86_64-bit
+VERSION                                                      11.2.0.3.0
+DB_NAME                                                      ORCL
+INSTANCES                                                    1
+HOSTS                                                        TMUTH-LAP2
+AWR_MINER_VER                                                3.0.2
+~~END-OS-INFORMATION~~
+
+
+
+~~BEGIN-MEMORY~~
+
+   SNAP_ID INSTANCE_NUMBER        SGA        PGA      TOTAL
+---------- --------------- ---------- ---------- ----------
+       384               1        1.1         .1        1.2
+       385               1        1.1         .1        1.2
+       386               1        1.1         .1        1.2
+       387               1        1.1         .1        1.2
+       388               1        1.1         .1        1.2
+       389               1        1.1         .1        1.2
+       390               1        1.1         .1        1.2
+       391               1        1.1         .1        1.2
+       392               1        1.1         .3        1.4
+       393               1        1.1         .2        1.3
+       394               1        1.1         .2        1.3
+       395               1        1.1         .2        1.3
+       396               1        1.1         .2        1.3
+       397               1        1.1         .2        1.3
+       398               1        1.1         .2        1.3
+       399               1        1.1         .2        1.3
+       400               1        1.1         .2        1.3
+       401               1        1.1         .2        1.3
+       402               1        1.1         .2        1.3
+       403               1        1.1         .2        1.3
+       404               1        1.1         .2        1.3
+       405               1        1.1         .2        1.3
+       406               1        1.1         .2        1.3
+       407               1        1.1         .2        1.3
+       408               1        1.1         .2        1.3
+       409               1        1.1         .2        1.3
+       410               1        1.1         .2        1.3
+       411               1        1.1         .2        1.3
+       412               1        1.1         .2        1.3
+       413               1        1.1         .2        1.3
+       414               1        1.1         .2        1.3
+       415               1        1.1         .2        1.3
+
+~~END-MEMORY~~
+
+
+
+~~BEGIN-SIZE-ON-DISK~~
+
+   SNAP_ID    SIZE_GB
+---------- ----------
+       393       1.86
+       415       1.86
+
+~~END-SIZE-ON-DISK~~
+
+
+
+~~BEGIN-MAIN-METRICS~~
+
+      snap      dur_m end                  inst     os_cpu os_cpu_max db_wait_ratio db_cpu_ratio        aas    aas_max sql_res_t_cs bkgd_t_per_s   logons_s logons_total     exec_s   hard_p_s  l_reads_s  commits_s  read_mb_s read_mb_s_max  read_iops read_iops_max read_iops_direct read_iops_direct_max write_mb_s write_mb_s_max write_iops write_iops_max write_iops_direct write_iops_direct_max  redo_mb_s db_block_gets_s db_block_changes_s gc_cr_rec_s gc_cu_rec_s gc_cr_get_cs gc_cu_get_cs gc_bk_corrupted gc_bk_lost    px_sess    se_sess s_blk_r_lat cell_io_int_mb cell_io_int_mb_max
+---------- ---------- -------------- ---------- ---------- ---------- ------------- ------------ ---------- ---------- ------------ ------------ ---------- ------------ ---------- ---------- ---------- ---------- ---------- ------------- ---------- ------------- ---------------- -------------------- ---------- -------------- ---------- -------------- ----------------- --------------------- ---------- --------------- ------------------ ----------- ----------- ------------ ------------ --------------- ---------- ---------- ---------- ----------- -------------- ------------------
+       384         10 13/05/09 13:52          1        8.2       11.6          65.8         38.1         .2        1.5            0            0         .1           25       22.3        1.3      252.9         .1         .2            .8       11.9          55.1                0                    0          0              0        1.3            2.2                 0                     0          0             7.3                  9           0           0            0            0               0          0          0          1         3.2           10.1               49.4
+       385         61 13/05/09 15:00          1        9.3       16.7          60.8         41.7          0          0            0            0         .1         26.3        6.2         .2      170.3         .1          0           1.2        2.1          23.9                0                   .1         .1            2.2        1.8           19.9                 0                    .1          0           104.8              114.6           0           0            0            0               0          0          0        1.1         1.8            7.1              202.5
+       386         59 13/05/09 15:59          1       10.2       16.7          61.6         42.6          0          0            0            0         .1         26.2        3.3          0       16.8         .1          0            .1          1           5.3                0                   .1          0             .1        1.2            5.3                 0                    .2          0             3.1                3.3           0           0            0            0               0          0          0          1          .9            1.9                8.1
+       387         60 13/05/09 16:59          1        7.6         17            54         49.5          0          0            0            0         .1           27        3.3          0       16.4         .1          0             0          1           3.1                0                    0          0             .1        1.1            5.7                 0                     0          0             2.8                2.9           0           0            0            0               0          0          0          1          .9            1.9                5.9
+       388         60 13/05/09 17:59          1        8.1       16.6          56.7         44.6          0          0            0            0         .1         27.2        3.1          0       15.9         .1          0            .1          1           3.4                0                    0          0             .1        1.2            6.5                 0                     0          0             3.1                3.2           0           0            0            0               0          0          0          1           1            1.9                7.2
+       389         61 13/05/09 19:00          1       10.2       16.5          63.4           37          0          0            0            0         .1         27.3        3.1          0       15.8         .1          0             0          1             3                0                    0          0             .1        1.1            5.6                 0                     0          0             2.7                2.7           0           0            0            0               0          0          0          1           1            1.8                5.8
+       390         59 13/05/09 19:59          1        7.5       16.5          48.8         57.7          0          0            0            0         .1         27.2        3.2          0       15.9         .1          0             0          1           3.1                0                    0          0             .1        1.2            5.6                 0                     0          0             2.9                2.9           0           0            0            0               0          0          0          1           1            1.8                6.1
+       391         60 13/05/09 20:59          1        8.6       22.9          60.1         41.6          0          0            0            0         .1         27.2        3.1          0       15.6         .1          0             0          1           2.9                0                    0          0             .1        1.1            5.8                 0                     0          0             2.8                2.9           0           0            0            0               0          0          0          1           1            1.8                  6
+       392         60 13/05/09 21:59          1        8.9       17.1          60.9         39.8          0          0            0            0         .1         27.2        3.1          0       15.8         .1          0            .1          1           4.1                0                    0          0             .1        1.1            4.9                 0                     0          0             2.9                  3           0           0            0            0               0          0          0          1          .9            1.8                7.4
+       393         60 13/05/09 22:59          1        8.6       16.8          57.3         50.4          0        1.4            0            0         .1         29.9       22.6         .4      203.9         .2         .1           2.6        2.1          66.8                0                   .1          0            1.7        1.9           30.6                .6                  38.1          0            36.7               41.2           0           0            0            0               0          0          0          1           1            6.4              257.1
+       394         60 13/05/09 23:59          1        5.5       16.4            58         43.9          0          0            0            0         .1         30.3        3.3          0         17         .1          0             0          1           2.8                0                    0          0             .1        1.2              6                 0                     0          0               3                3.1           0           0            0            0               0          0          0          1          .9            1.8                5.8
+       395         60 13/05/10 00:59          1        2.8       12.5          43.7         59.5          0          0            0            0         .1         30.3        3.8          0       20.5         .1          0            .1        1.1           6.8                0                    0          0             .1        1.2            6.5                 0                     0          0             3.3                3.4           0           0            0            0               0          0          0          1           1            1.9                8.4
+       396         60 13/05/10 01:59          1        6.3        9.1          47.6         58.4          0          0            0            0         .1         30.3        3.4          0       20.5         .1          0             0          1           3.1                0                    0          0             .1        1.2            6.4                 0                     0          0             3.3                3.5           0           0            0            0               0          0          0          1          .8            1.8                6.1
+       397         60 13/05/10 02:59          1        3.7        4.1          50.3         55.3          0          0            0            0         .1         29.3        3.3          0       16.5         .1          0             0          1           3.2                0                    0          0             .1        1.2            6.5                 0                     0          0             3.2                3.3           0           0            0            0               0          0          0          1         1.2            1.8                6.3
+       398         60 13/05/10 03:59          1        3.8       14.5            46         56.5          0          0            0            0         .1         29.3        3.3          0         16         .1          0             0          1           2.9                0                    0          0             .1        1.1            6.2                 0                     0          0             3.1                3.2           0           0            0            0               0          0          0          1          .9            1.8                  6
+       399         60 13/05/10 04:59          1        9.4       16.9          61.6         41.5          0          0            0            0         .1         29.3        3.1          0       15.6         .1          0             0          1           2.7                0                    0          0             .1        1.1            6.2                 0                     0          0             2.9                  3           0           0            0            0               0          0          0          1          .9            1.8                5.8
+       400         60 13/05/10 05:59          1         13       25.3          48.7         61.2          0          0            0            0         .1         29.3        3.1          0       15.4         .1          0             0          1           2.7                0                    0          0             .1        1.1              6                 0                     0          0             2.9                  3           0           0            0            0               0          0          0          1         1.3            1.8                5.6
+       401         60 13/05/10 06:59          1       15.1       23.1          47.8         55.8          0          0            0            0         .1         29.3        3.1          0       15.4         .1          0            .7          1           3.1                0                   .1          0             .7        1.2            5.9                 0                    .1          0             2.9                  3           0           0            0            0               0          0          0          1          .9            3.2               82.9
+       402         60 13/05/10 07:59          1       13.3       20.1          65.6         35.5          0          0            0            0         .1         29.4        3.2          0       16.8         .1          0             0          1           2.7                0                    0          0             .1        1.1            6.5                 0                     0          0             3.1                3.2           0           0            0            0               0          0          0          1         1.1            1.8                  6
+       403         60 13/05/10 08:59          1         10       18.4          70.4         30.7          0          0            0            0         .1         29.3        3.1          0       15.4         .1          0             0          1           2.7                0                    0          0             .1        1.1            5.4                 0                     0          0             2.9                  3           0           0            0            0               0          0          0          1         1.3            1.8                5.8
+       404         60 13/05/10 09:59          1        9.1       18.7          61.6         41.4          0          0            0            0         .1         29.5        3.1          0       15.3         .1          0             0          1           2.8                0                    0          0             .1        1.1            6.1                 0                     0          0             2.9                  3           0           0            0            0               0          0          0          1         1.3            1.8                5.9
+       405         60 13/05/10 10:59          1       10.6       17.9          60.7           42          0          0            0            0         .1         29.3        3.1          0       15.4         .1          0             0          1           2.7                0                    0          0             .1        1.1              6                 0                     0          0             2.9                  3           0           0            0            0               0          0          0          1         1.5            1.8                5.9
+       406         60 13/05/10 11:59          1        8.6       17.3          52.3           50          0          0            0            0         .1         29.3        3.1          0       15.2         .1          0             0          1           2.7                0                    0          0             .1        1.1              6                 0                     0          0             2.9                  3           0           0            0            0               0          0          0          1         1.2            1.8                5.7
+       407         60 13/05/10 12:59          1        8.7       18.3          60.2         43.1          0          0            0            0         .1         29.3        3.1          0       15.3         .1          0             0          1           3.1                0                    0          0             .1        1.1            5.3                 0                     0          0             2.9                2.9           0           0            0            0               0          0          0          1           1            1.8                5.8
+       408         60 13/05/10 13:59          1       10.3       18.2          67.8         36.2          0          0            0            0         .1         28.3        3.2          0       18.6         .1          0             0          1           2.7                0                    0          0             .1        1.1            5.9                 0                     0          0             3.2                3.3           0           0            0            0               0          0          0        1.3         1.1            1.8                6.1
+       409         60 13/05/10 14:59          1       13.6       20.2          71.2         31.8          0          0            0            0         .1         27.5        3.1          0       15.4         .1          0             0          1           2.7                0                    0          0             .1        1.1            6.2                 0                     0          0             2.9                  3           0           0            0            0               0          0          0          1         1.2            1.8                5.7
+       410         60 13/05/10 15:59          1       12.2       24.7          63.6         40.5          0          0            0            0         .1         27.4        3.1          0       15.3         .1          0             0          1           3.2                0                    0          0             .1        1.1            6.1                 0                     0          0             2.9                3.1           0           0            0            0               0          0          0          1          .9            1.8                6.1
+       411         60 13/05/10 16:59          1       12.1       22.6          66.8         34.9          0          0            0            0         .1         27.2        3.1          0       15.7         .1          0             0          1           2.7                0                    0          0             .1        1.1            6.6                 0                     0          0             3.1                3.2           0           0            0            0               0          0          0          1           1            1.9                6.3
+       412         60 13/05/10 17:59          1        9.6       21.3          66.9         33.5          0          0            0            0         .1         27.5        3.1          0       15.4         .1          0             0          1           3.1                0                    0          0             .1        1.1            6.4                 0                     0          0               3                3.1           0           0            0            0               0          0          0          1         1.1            1.8                6.1
+       413         60 13/05/10 18:59          1       11.2       19.5          68.7           34          0          0            0            0         .1         27.2        3.1          0       15.4         .1          0             0          1           2.8                0                    0          0             .1        1.1            5.8                 0                     0          0               3                3.1           0           0            0            0               0          0          0          1           1            1.8                6.2
+       414         60 13/05/10 19:59          1        6.2       19.3          56.3         49.8          0          0            0            0         .1         27.3        3.2          0       16.1         .1          0             0          1           2.7                0                    0          0             .1        1.1              6                 0                     0          0             3.1                3.3           0           0            0            0               0          0          0          1         1.1            1.8                  6
+       415         60 13/05/10 20:59          1       10.6       19.4          65.5         38.4          0          0            0            0         .1         27.4        3.1          0       15.5         .1          0             0          1           2.7                0                    0          0             .1        1.2            6.2                 0                     0          0             3.1                3.2           0           0            0            0               0          0          0          1          .9            1.8                  6
+
+~~END-MAIN-METRICS~~
+
+
+
+~~BEGIN-DATABASE-PARAMETERS~~
+
+PARAMETER_NAME                                                   VALUE
+---------------------------------------------------------------- --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+O7_DICTIONARY_ACCESSIBILITY                                      FALSE
+__db_cache_size                                                  771751936
+__dg_broker_service_names
+__java_pool_size                                                 16777216
+__large_pool_size                                                16777216
+__oracle_base                                                    E:\Oracle
+__pga_aggregate_target                                           872415232
+__sga_target                                                     1275068416
+__shared_io_pool_size                                            0
+__shared_pool_size                                               419430400
+__streams_pool_size                                              33554432
+active_instance_count
+aq_tm_processes                                                  1
+archive_lag_target                                               0
+asm_diskgroups
+asm_diskstring
+asm_power_limit                                                  1
+asm_preferred_read_failure_groups
+audit_file_dest                                                  E:\ORACLE\ADMIN\ORCL\ADUMP
+audit_sys_operations                                             FALSE
+audit_trail                                                      DB
+awr_snapshot_time_offset                                         0
+background_core_dump                                             partial
+background_dump_dest                                             E:\Oracle\diag\rdbms\orcl\orcl\trace
+backup_tape_io_slaves                                            FALSE
+bitmap_merge_area_size                                           1048576
+blank_trimming                                                   FALSE
+buffer_pool_keep
+buffer_pool_recycle
+cell_offload_compaction                                          ADAPTIVE
+cell_offload_decryption                                          TRUE
+cell_offload_parameters
+cell_offload_plan_display                                        AUTO
+cell_offload_processing                                          TRUE
+circuits
+client_result_cache_lag                                          3000
+client_result_cache_size                                         0
+clonedb                                                          FALSE
+cluster_database                                                 FALSE
+cluster_database_instances                                       1
+cluster_interconnects
+commit_logging
+commit_point_strength                                            1
+commit_wait
+commit_write
+compatible                                                       11.2.0.0.0
+control_file_record_keep_time                                    7
+control_files                                                    E:\ORACLE\ORADATA\ORCL\CONTROLFILE\O1_MF_8JFJFHRC_.CTL, E:\ORACLE\FAST_RECOVERY_AREA\ORCL\CONTROLFILE\O1_MF_8JFJFHT5_.CTL
+control_management_pack_access                                   DIAGNOSTIC+TUNING
+core_dump_dest                                                   E:\Oracle\diag\rdbms\orcl\orcl\cdump
+cpu_count                                                        8
+create_bitmap_area_size                                          8388608
+create_stored_outlines
+cursor_bind_capture_destination                                  memory+disk
+cursor_sharing                                                   EXACT
+cursor_space_for_time                                            FALSE
+db_16k_cache_size                                                0
+db_2k_cache_size                                                 0
+db_32k_cache_size                                                0
+db_4k_cache_size                                                 0
+db_8k_cache_size                                                 0
+db_block_buffers                                                 0
+db_block_checking                                                FALSE
+db_block_checksum                                                TYPICAL
+db_block_size                                                    8192
+db_cache_advice                                                  ON
+db_cache_size                                                    0
+db_create_file_dest                                              E:\Oracle\oradata
+db_create_online_log_dest_1
+db_create_online_log_dest_2
+db_create_online_log_dest_3
+db_create_online_log_dest_4
+db_create_online_log_dest_5
+db_domain
+db_file_multiblock_read_count                                    128
+db_file_name_convert
+db_files                                                         200
+db_flash_cache_file
+db_flash_cache_size                                              0
+db_flashback_retention_target                                    1440
+db_keep_cache_size                                               0
+db_lost_write_protect                                            NONE
+db_name                                                          orcl
+db_recovery_file_dest                                            E:\Oracle\fast_recovery_area
+db_recovery_file_dest_size                                       8438939648
+db_recycle_cache_size                                            0
+db_securefile                                                    PERMITTED
+db_ultra_safe                                                    OFF
+db_unique_name                                                   orcl
+db_unrecoverable_scn_tracking                                    TRUE
+db_writer_processes                                              1
+dbwr_io_slaves                                                   0
+ddl_lock_timeout                                                 0
+deferred_segment_creation                                        TRUE
+dg_broker_config_file1                                           E:\ORACLE\PRODUCT\11.2.0\DBHOME_1\DATABASE\DR1ORCL.DAT
+dg_broker_config_file2                                           E:\ORACLE\PRODUCT\11.2.0\DBHOME_1\DATABASE\DR2ORCL.DAT
+dg_broker_start                                                  FALSE
+diagnostic_dest                                                  E:\ORACLE
+disk_asynch_io                                                   TRUE
+dispatchers                                                      (PROTOCOL=TCP) (SERVICE=orclXDB)
+distributed_lock_timeout                                         60
+dml_locks                                                        1088
+dst_upgrade_insert_conv                                          TRUE
+enable_ddl_logging                                               FALSE
+event
+fal_client
+fal_server
+fast_start_io_target                                             0
+fast_start_mttr_target                                           0
+fast_start_parallel_rollback                                     LOW
+file_mapping                                                     FALSE
+fileio_network_adapters
+filesystemio_options
+fixed_date
+gcs_server_processes                                             0
+global_context_pool_size
+global_names                                                     FALSE
+global_txn_processes                                             1
+hash_area_size                                                   131072
+hi_shared_memory_address                                         0
+hs_autoregister                                                  TRUE
+ifile
+instance_groups
+instance_name                                                    orcl
+instance_number                                                  0
+instance_type                                                    RDBMS
+java_jit_enabled                                                 TRUE
+java_max_sessionspace_size                                       0
+java_pool_size                                                   0
+java_soft_sessionspace_limit                                     0
+job_queue_processes                                              1000
+large_pool_size                                                  0
+ldap_directory_access                                            NONE
+ldap_directory_sysauth                                           no
+license_max_sessions                                             0
+license_max_users                                                0
+license_sessions_warning                                         0
+listener_networks
+local_listener                                                   LISTENER_ORCL
+lock_name_space
+lock_sga                                                         FALSE
+log_archive_config
+log_archive_dest
+log_archive_dest_1
+log_archive_dest_10
+log_archive_dest_11
+log_archive_dest_12
+log_archive_dest_13
+log_archive_dest_14
+log_archive_dest_15
+log_archive_dest_16
+log_archive_dest_17
+log_archive_dest_18
+log_archive_dest_19
+log_archive_dest_2
+log_archive_dest_20
+log_archive_dest_21
+log_archive_dest_22
+log_archive_dest_23
+log_archive_dest_24
+log_archive_dest_25
+log_archive_dest_26
+log_archive_dest_27
+log_archive_dest_28
+log_archive_dest_29
+log_archive_dest_3
+log_archive_dest_30
+log_archive_dest_31
+log_archive_dest_4
+log_archive_dest_5
+log_archive_dest_6
+log_archive_dest_7
+log_archive_dest_8
+log_archive_dest_9
+log_archive_dest_state_1                                         enable
+log_archive_dest_state_10                                        enable
+log_archive_dest_state_11                                        enable
+log_archive_dest_state_12                                        enable
+log_archive_dest_state_13                                        enable
+log_archive_dest_state_14                                        enable
+log_archive_dest_state_15                                        enable
+log_archive_dest_state_16                                        enable
+log_archive_dest_state_17                                        enable
+log_archive_dest_state_18                                        enable
+log_archive_dest_state_19                                        enable
+log_archive_dest_state_2                                         enable
+log_archive_dest_state_20                                        enable
+log_archive_dest_state_21                                        enable
+log_archive_dest_state_22                                        enable
+log_archive_dest_state_23                                        enable
+log_archive_dest_state_24                                        enable
+log_archive_dest_state_25                                        enable
+log_archive_dest_state_26                                        enable
+log_archive_dest_state_27                                        enable
+log_archive_dest_state_28                                        enable
+log_archive_dest_state_29                                        enable
+log_archive_dest_state_3                                         enable
+log_archive_dest_state_30                                        enable
+log_archive_dest_state_31                                        enable
+log_archive_dest_state_4                                         enable
+log_archive_dest_state_5                                         enable
+log_archive_dest_state_6                                         enable
+log_archive_dest_state_7                                         enable
+log_archive_dest_state_8                                         enable
+log_archive_dest_state_9                                         enable
+log_archive_duplex_dest
+log_archive_format                                               ARC%S_%R.%T
+log_archive_local_first                                          TRUE
+log_archive_max_processes                                        4
+log_archive_min_succeed_dest                                     1
+log_archive_start                                                FALSE
+log_archive_trace                                                0
+log_buffer                                                       4669440
+log_checkpoint_interval                                          0
+log_checkpoint_timeout                                           1800
+log_checkpoints_to_alert                                         FALSE
+log_file_name_convert
+max_dispatchers
+max_dump_file_size                                               unlimited
+max_enabled_roles                                                150
+max_shared_servers
+memory_max_target                                                2147483648
+memory_target                                                    2147483648
+nls_calendar
+nls_comp                                                         BINARY
+nls_currency
+nls_date_format
+nls_date_language
+nls_dual_currency
+nls_iso_currency
+nls_language                                                     AMERICAN
+nls_length_semantics                                             BYTE
+nls_nchar_conv_excp                                              FALSE
+nls_numeric_characters
+nls_sort
+nls_territory                                                    AMERICA
+nls_time_format
+nls_time_tz_format
+nls_timestamp_format
+nls_timestamp_tz_format
+object_cache_max_size_percent                                    10
+object_cache_optimal_size                                        102400
+olap_page_pool_size                                              0
+open_cursors                                                     300
+open_links                                                       4
+open_links_per_instance                                          4
+optimizer_capture_sql_plan_baselines                             FALSE
+optimizer_dynamic_sampling                                       2
+optimizer_features_enable                                        11.2.0.3
+optimizer_index_caching                                          0
+optimizer_index_cost_adj                                         100
+optimizer_mode                                                   ALL_ROWS
+optimizer_secure_view_merging                                    TRUE
+optimizer_use_invisible_indexes                                  FALSE
+optimizer_use_pending_statistics                                 FALSE
+optimizer_use_sql_plan_baselines                                 TRUE
+os_authent_prefix                                                OPS$
+os_roles                                                         FALSE
+parallel_adaptive_multi_user                                     TRUE
+parallel_automatic_tuning                                        FALSE
+parallel_degree_limit                                            CPU
+parallel_degree_policy                                           MANUAL
+parallel_execution_message_size                                  16384
+parallel_force_local                                             FALSE
+parallel_instance_group
+parallel_io_cap_enabled                                          FALSE
+parallel_max_servers                                             135
+parallel_min_percent                                             0
+parallel_min_servers                                             0
+parallel_min_time_threshold                                      AUTO
+parallel_server                                                  FALSE
+parallel_server_instances                                        1
+parallel_servers_target                                          128
+parallel_threads_per_cpu                                         2
+permit_92_wrap_format                                            TRUE
+pga_aggregate_target                                             0
+plscope_settings                                                 IDENTIFIERS:NONE
+plsql_ccflags
+plsql_code_type                                                  INTERPRETED
+plsql_debug                                                      FALSE
+plsql_optimize_level                                             2
+plsql_v2_compatibility                                           FALSE
+plsql_warnings                                                   DISABLE:ALL
+pre_page_sga                                                     FALSE
+processes                                                        150
+processor_group_name
+query_rewrite_enabled                                            TRUE
+query_rewrite_integrity                                          enforced
+rdbms_server_dn
+read_only_open_delayed                                           FALSE
+recovery_parallelism                                             0
+recyclebin                                                       on
+redo_transport_user
+remote_dependencies_mode                                         TIMESTAMP
+remote_listener
+remote_login_passwordfile                                        EXCLUSIVE
+remote_os_authent                                                FALSE
+remote_os_roles                                                  FALSE
+replication_dependency_tracking                                  TRUE
+resource_limit                                                   FALSE
+resource_manager_cpu_allocation                                  8
+resource_manager_plan
+result_cache_max_result                                          5
+result_cache_max_size                                            5373952
+result_cache_mode                                                MANUAL
+result_cache_remote_expiration                                   0
+resumable_timeout                                                0
+rollback_segments
+sec_case_sensitive_logon                                         TRUE
+sec_max_failed_login_attempts                                    10
+sec_protocol_error_further_action                                CONTINUE
+sec_protocol_error_trace_action                                  TRACE
+sec_return_server_release_banner                                 FALSE
+serial_reuse                                                     disable
+service_names                                                    orcl
+session_cached_cursors                                           50
+session_max_open_files                                           10
+sessions                                                         248
+sga_max_size                                                     2147483648
+sga_target                                                       0
+shadow_core_dump                                                 none
+shared_memory_address                                            0
+shared_pool_reserved_size                                        20971520
+shared_pool_size                                                 0
+shared_server_sessions
+shared_servers                                                   1
+skip_unusable_indexes                                            TRUE
+smtp_out_server
+sort_area_retained_size                                          0
+sort_area_size                                                   65536
+spfile                                                           E:\ORACLE\PRODUCT\11.2.0\DBHOME_1\DATABASE\SPFILEORCL.ORA
+sql92_security                                                   FALSE
+sql_trace                                                        FALSE
+sqltune_category                                                 DEFAULT
+standby_archive_dest                                             %ORACLE_HOME%\RDBMS
+standby_file_management                                          MANUAL
+star_transformation_enabled                                      FALSE
+statistics_level                                                 TYPICAL
+streams_pool_size                                                0
+tape_asynch_io                                                   TRUE
+thread                                                           0
+timed_os_statistics                                              0
+timed_statistics                                                 TRUE
+trace_enabled                                                    TRUE
+tracefile_identifier
+transactions                                                     272
+transactions_per_rollback_segment                                5
+undo_management                                                  AUTO
+undo_retention                                                   900
+undo_tablespace                                                  UNDOTBS1
+use_indirect_data_buffers                                        FALSE
+use_large_pages                                                  TRUE
+user_dump_dest                                                   E:\Oracle\diag\rdbms\orcl\orcl\trace
+utl_file_dir
+workarea_size_policy                                             AUTO
+xml_db_events                                                    enable
+
+~~END-DATABASE-PARAMETERS~~
+
+
+
+~~BEGIN-AVERAGE-ACTIVE-SESSIONS~~
+
+   SNAP_ID WAIT_CLASS             AVG_SESS
+---------- -------------------- ----------
+       384 Administrative                0
+       384 Commit                        0
+       384 Concurrency                 .02
+       384 Configuration                 0
+       384 DB CPU                      .01
+       384 Network                       0
+       384 Other                       .03
+       384 System I/O                    0
+       384 User I/O                    .07
+       385 Administrative                0
+       385 Commit                        0
+       385 Concurrency                   0
+       385 Configuration                 0
+       385 DB CPU                        0
+       385 Network                       0
+       385 Other                         0
+       385 System I/O                    0
+       385 User I/O                      0
+       386 Administrative                0
+       386 Application                   0
+       386 Commit                        0
+       386 Concurrency                   0
+       386 Configuration                 0
+       386 DB CPU                        0
+       386 Network                       0
+       386 Other                         0
+       386 System I/O                    0
+       386 User I/O                      0
+       387 Administrative                0
+       387 Application                   0
+       387 Commit                        0
+       387 Concurrency                   0
+       387 Configuration                 0
+       387 DB CPU                        0
+       387 Network                       0
+       387 Other                         0
+       387 System I/O                    0
+       387 User I/O                      0
+       388 Administrative                0
+       388 Application                   0
+       388 Commit                        0
+       388 Concurrency                   0
+       388 Configuration                 0
+       388 DB CPU                        0
+       388 Network                       0
+       388 Other                         0
+       388 System I/O                    0
+       388 User I/O                      0
+       389 Administrative                0
+       389 Application                   0
+       389 Commit                        0
+       389 Concurrency                   0
+       389 Configuration                 0
+       389 DB CPU                        0
+       389 Network                       0
+       389 Other                         0
+       389 System I/O                    0
+       389 User I/O                      0
+       390 Administrative                0
+       390 Application                   0
+       390 Commit                        0
+       390 Concurrency                   0
+       390 Configuration                 0
+       390 DB CPU                        0
+       390 Network                       0
+       390 Other                         0
+       390 System I/O                    0
+       390 User I/O                      0
+       391 Administrative                0
+       391 Application                   0
+       391 Commit                        0
+       391 Concurrency                   0
+       391 Configuration                 0
+       391 DB CPU                        0
+       391 Network                       0
+       391 Other                         0
+       391 System I/O                    0
+       391 User I/O                      0
+       392 Administrative                0
+       392 Application                   0
+       392 Commit                        0
+       392 Concurrency                   0
+       392 Configuration                 0
+       392 DB CPU                      .01
+       392 Network                       0
+       392 Other                         0
+       392 System I/O                    0
+       392 User I/O                    .01
+       393 Administrative                0
+       393 Application                   0
+       393 Commit                        0
+       393 Concurrency                   0
+       393 Configuration                 0
+       393 DB CPU                        0
+       393 Network                       0
+       393 Other                         0
+       393 System I/O                    0
+       393 User I/O                      0
+       394 Administrative                0
+       394 Application                   0
+       394 Commit                        0
+       394 Concurrency                   0
+       394 Configuration                 0
+       394 DB CPU                        0
+       394 Network                       0
+       394 Other                         0
+       394 System I/O                    0
+       394 User I/O                      0
+       395 Administrative                0
+       395 Application                   0
+       395 Commit                        0
+       395 Concurrency                   0
+       395 Configuration                 0
+       395 DB CPU                        0
+       395 Network                       0
+       395 Other                         0
+       395 System I/O                    0
+       395 User I/O                      0
+       396 Administrative                0
+       396 Application                   0
+       396 Commit                        0
+       396 Concurrency                   0
+       396 Configuration                 0
+       396 DB CPU                        0
+       396 Network                       0
+       396 Other                         0
+       396 System I/O                    0
+       396 User I/O                      0
+       397 Administrative                0
+       397 Application                   0
+       397 Commit                        0
+       397 Concurrency                   0
+       397 Configuration                 0
+       397 DB CPU                        0
+       397 Network                       0
+       397 Other                         0
+       397 System I/O                    0
+       397 User I/O                      0
+       398 Administrative                0
+       398 Application                   0
+       398 Commit                        0
+       398 Concurrency                   0
+       398 Configuration                 0
+       398 DB CPU                        0
+       398 Network                       0
+       398 Other                         0
+       398 System I/O                    0
+       398 User I/O                      0
+       399 Administrative                0
+       399 Application                   0
+       399 Commit                        0
+       399 Concurrency                   0
+       399 Configuration                 0
+       399 DB CPU                        0
+       399 Network                       0
+       399 Other                         0
+       399 System I/O                    0
+       399 User I/O                      0
+       400 Administrative                0
+       400 Application                   0
+       400 Commit                        0
+       400 Concurrency                   0
+       400 Configuration                 0
+       400 DB CPU                        0
+       400 Network                       0
+       400 Other                         0
+       400 System I/O                    0
+       400 User I/O                      0
+       401 Administrative                0
+       401 Application                   0
+       401 Commit                        0
+       401 Concurrency                   0
+       401 Configuration                 0
+       401 DB CPU                        0
+       401 Network                       0
+       401 Other                         0
+       401 System I/O                    0
+       401 User I/O                      0
+       402 Administrative                0
+       402 Application                   0
+       402 Commit                        0
+       402 Concurrency                   0
+       402 Configuration                 0
+       402 DB CPU                        0
+       402 Network                       0
+       402 Other                         0
+       402 System I/O                    0
+       402 User I/O                      0
+       403 Administrative                0
+       403 Application                   0
+       403 Commit                        0
+       403 Concurrency                   0
+       403 Configuration                 0
+       403 DB CPU                        0
+       403 Network                       0
+       403 Other                         0
+       403 System I/O                    0
+       403 User I/O                      0
+       404 Administrative                0
+       404 Application                   0
+       404 Commit                        0
+       404 Concurrency                   0
+       404 Configuration                 0
+       404 DB CPU                        0
+       404 Network                       0
+       404 Other                         0
+       404 System I/O                    0
+       404 User I/O                      0
+       405 Administrative                0
+       405 Application                   0
+       405 Commit                        0
+       405 Concurrency                   0
+       405 Configuration                 0
+       405 DB CPU                        0
+       405 Network                       0
+       405 Other                         0
+       405 System I/O                    0
+       405 User I/O                      0
+       406 Administrative                0
+       406 Application                   0
+       406 Commit                        0
+       406 Concurrency                   0
+       406 Configuration                 0
+       406 DB CPU                        0
+       406 Network                       0
+       406 Other                         0
+       406 System I/O                    0
+       406 User I/O                      0
+       407 Administrative                0
+       407 Application                   0
+       407 Commit                        0
+       407 Concurrency                   0
+       407 Configuration                 0
+       407 DB CPU                        0
+       407 Network                       0
+       407 Other                         0
+       407 System I/O                    0
+       407 User I/O                      0
+       408 Administrative                0
+       408 Application                   0
+       408 Commit                        0
+       408 Concurrency                   0
+       408 Configuration                 0
+       408 DB CPU                        0
+       408 Network                       0
+       408 Other                         0
+       408 System I/O                    0
+       408 User I/O                      0
+       409 Administrative                0
+       409 Application                   0
+       409 Commit                        0
+       409 Concurrency                   0
+       409 Configuration                 0
+       409 DB CPU                        0
+       409 Network                       0
+       409 Other                         0
+       409 System I/O                    0
+       409 User I/O                      0
+       410 Administrative                0
+       410 Application                   0
+       410 Commit                        0
+       410 Concurrency                   0
+       410 Configuration                 0
+       410 DB CPU                        0
+       410 Network                       0
+       410 Other                         0
+       410 System I/O                    0
+       410 User I/O                      0
+       411 Administrative                0
+       411 Application                   0
+       411 Commit                        0
+       411 Concurrency                   0
+       411 Configuration                 0
+       411 DB CPU                        0
+       411 Network                       0
+       411 Other                         0
+       411 System I/O                    0
+       411 User I/O                      0
+       412 Administrative                0
+       412 Application                   0
+       412 Commit                        0
+       412 Concurrency                   0
+       412 Configuration                 0
+       412 DB CPU                        0
+       412 Network                       0
+       412 Other                         0
+       412 System I/O                    0
+       412 User I/O                      0
+       413 Administrative                0
+       413 Application                   0
+       413 Commit                        0
+       413 Concurrency                   0
+       413 Configuration                 0
+       413 DB CPU                        0
+       413 Network                       0
+       413 Other                         0
+       413 System I/O                    0
+       413 User I/O                      0
+       414 Administrative                0
+       414 Application                   0
+       414 Commit                        0
+       414 Concurrency                   0
+       414 Configuration                 0
+       414 DB CPU                        0
+       414 Network                       0
+       414 Other                         0
+       414 System I/O                    0
+       414 User I/O                      0
+       415 Administrative                0
+       415 Application                   0
+       415 Commit                        0
+       415 Concurrency                   0
+       415 Configuration                 0
+       415 DB CPU                        0
+       415 Network                       0
+       415 Other                         0
+       415 System I/O                    0
+       415 User I/O                      0
+
+~~END-AVERAGE-ACTIVE-SESSIONS~~
+
+
+
+
+
+
+~~BEGIN-IO-WAIT-HISTOGRAM~~
+
+   SNAP_ID WAIT_CLASS           EVENT_NAME                            WAIT_TIME_MILLI WAIT_COUNT
+---------- -------------------- ------------------------------------- --------------- ----------
+       384 User I/O             db file scattered read                              1        165
+       384 User I/O             db file scattered read                              2         21
+       384 User I/O             db file scattered read                              4         19
+       384 User I/O             db file scattered read                              8         42
+       384 User I/O             db file scattered read                             16         60
+       384 User I/O             db file scattered read                             32         38
+       384 User I/O             db file scattered read                             64         22
+       384 User I/O             db file scattered read                            128          4
+       384 User I/O             db file scattered read                            256          2
+       384 User I/O             db file sequential read                             1       2733
+       384 User I/O             db file sequential read                             2         88
+       384 User I/O             db file sequential read                             4        131
+       384 User I/O             db file sequential read                             8        368
+       384 User I/O             db file sequential read                            16        540
+       384 User I/O             db file sequential read                            32        464
+       384 User I/O             db file sequential read                            64        230
+       384 User I/O             db file sequential read                           128        103
+       384 User I/O             db file sequential read                           256         31
+       384 User I/O             db file sequential read                           512          5
+       384 User I/O             db file sequential read                          1024          5
+       384 User I/O             db file sequential read                          2048          1
+       384 System I/O           log file parallel write                             1         56
+       384 System I/O           log file parallel write                             2         27
+       384 System I/O           log file parallel write                             8          1
+       384 System I/O           log file parallel write                            16         16
+       384 System I/O           log file parallel write                            32         15
+       384 System I/O           log file parallel write                            64         21
+       384 System I/O           log file parallel write                           128         21
+       384 System I/O           log file parallel write                           256          2
+       384 System I/O           log file parallel write                          2048          1
+       384 Commit               log file sync                                       1          4
+       384 Commit               log file sync                                       2          2
+       384 Commit               log file sync                                       8          1
+       384 Commit               log file sync                                      64          3
+       384 Commit               log file sync                                     128          9
+       384 Commit               log file sync                                     256          7
+       385 User I/O             db file scattered read                              1        868
+       385 User I/O             db file scattered read                              2         29
+       385 User I/O             db file scattered read                              4         42
+       385 User I/O             db file scattered read                              8         52
+       385 User I/O             db file scattered read                             16         56
+       385 User I/O             db file scattered read                             32         24
+       385 User I/O             db file scattered read                             64         25
+       385 User I/O             db file scattered read                            128         12
+       385 User I/O             db file scattered read                            256          3
+       385 User I/O             db file sequential read                             1       1918
+       385 User I/O             db file sequential read                             2         53
+       385 User I/O             db file sequential read                             4        154
+       385 User I/O             db file sequential read                             8        267
+       385 User I/O             db file sequential read                            16        256
+       385 User I/O             db file sequential read                            32        103
+       385 User I/O             db file sequential read                            64         79
+       385 User I/O             db file sequential read                           128         42
+       385 User I/O             db file sequential read                           256          7
+       385 User I/O             db file sequential read                           512          3
+       385 System I/O           log file parallel write                             1        673
+       385 System I/O           log file parallel write                             2        208
+       385 System I/O           log file parallel write                             8          9
+       385 System I/O           log file parallel write                            16         15
+       385 System I/O           log file parallel write                            32         41
+       385 System I/O           log file parallel write                            64         69
+       385 System I/O           log file parallel write                           128        153
+       385 System I/O           log file parallel write                           256          7
+       385 Commit               log file sync                                       1         14
+       385 Commit               log file sync                                       2          4
+       385 Commit               log file sync                                       8          1
+       385 Commit               log file sync                                      64         10
+       385 Commit               log file sync                                     128         42
+       385 Commit               log file sync                                     256          4
+       386 User I/O             db file scattered read                              1         12
+       386 User I/O             db file scattered read                             16          2
+       386 User I/O             db file scattered read                             64          1
+       386 User I/O             db file scattered read                            128          1
+       386 User I/O             db file sequential read                             1         92
+       386 User I/O             db file sequential read                             2          3
+       386 User I/O             db file sequential read                             4          6
+       386 User I/O             db file sequential read                             8          8
+       386 User I/O             db file sequential read                            16         10
+       386 User I/O             db file sequential read                            32          2
+       386 User I/O             db file sequential read                            64          4
+       386 User I/O             db file sequential read                           128          4
+       386 System I/O           log file parallel write                             1        120
+       386 System I/O           log file parallel write                             2         79
+       386 System I/O           log file parallel write                             4         19
+       386 System I/O           log file parallel write                             8          1
+       386 System I/O           log file parallel write                            16          7
+       386 System I/O           log file parallel write                            32          6
+       386 System I/O           log file parallel write                            64         19
+       386 System I/O           log file parallel write                           128        101
+       386 System I/O           log file parallel write                           256          1
+       386 Commit               log file sync                                       1         14
+       386 Commit               log file sync                                       2          4
+       386 Commit               log file sync                                       4          1
+       386 Commit               log file sync                                       8          1
+       386 Commit               log file sync                                      64          5
+       386 Commit               log file sync                                     128         39
+       386 Commit               log file sync                                     256          4
+       387 User I/O             db file scattered read                              1          7
+       387 User I/O             db file scattered read                              4          2
+       387 User I/O             db file scattered read                              8          3
+       387 User I/O             db file scattered read                             16          3
+       387 User I/O             db file scattered read                             64          1
+       387 User I/O             db file scattered read                            128          1
+       387 User I/O             db file sequential read                             1         58
+       387 User I/O             db file sequential read                             4          2
+       387 User I/O             db file sequential read                             8          3
+       387 User I/O             db file sequential read                            16          6
+       387 User I/O             db file sequential read                            32          1
+       387 User I/O             db file sequential read                            64          3
+       387 User I/O             db file sequential read                           128          3
+       387 System I/O           log file parallel write                             1         86
+       387 System I/O           log file parallel write                             2         50
+       387 System I/O           log file parallel write                             4         16
+       387 System I/O           log file parallel write                             8          2
+       387 System I/O           log file parallel write                            16          2
+       387 System I/O           log file parallel write                            32         10
+       387 System I/O           log file parallel write                            64         14
+       387 System I/O           log file parallel write                           128        123
+       387 System I/O           log file parallel write                           256          3
+       387 Commit               log file sync                                       1          3
+       387 Commit               log file sync                                       2          7
+       387 Commit               log file sync                                       4          1
+       387 Commit               log file sync                                      16          1
+       387 Commit               log file sync                                      32          2
+       387 Commit               log file sync                                      64         10
+       387 Commit               log file sync                                     128         45
+       387 Commit               log file sync                                     256          2
+       388 User I/O             db file scattered read                              1          5
+       388 User I/O             db file scattered read                              2          2
+       388 User I/O             db file scattered read                             16          1
+       388 User I/O             db file scattered read                             64          1
+       388 User I/O             db file sequential read                             1         13
+       388 User I/O             db file sequential read                             2          1
+       388 User I/O             db file sequential read                             4          2
+       388 User I/O             db file sequential read                             8          1
+       388 User I/O             db file sequential read                            16          2
+       388 User I/O             db file sequential read                            32          1
+       388 User I/O             db file sequential read                            64          2
+       388 System I/O           log file parallel write                             1         89
+       388 System I/O           log file parallel write                             2         55
+       388 System I/O           log file parallel write                             4         30
+       388 System I/O           log file parallel write                             8          4
+       388 System I/O           log file parallel write                            16          5
+       388 System I/O           log file parallel write                            32          5
+       388 System I/O           log file parallel write                            64         11
+       388 System I/O           log file parallel write                           128        133
+       388 Commit               log file sync                                       1         11
+       388 Commit               log file sync                                       2          3
+       388 Commit               log file sync                                       4          2
+       388 Commit               log file sync                                       8          1
+       388 Commit               log file sync                                      16          1
+       388 Commit               log file sync                                      32          1
+       388 Commit               log file sync                                      64         14
+       388 Commit               log file sync                                     128         37
+       388 Commit               log file sync                                     256          1
+       389 User I/O             db file scattered read                              1          5
+       389 User I/O             db file scattered read                              8          1
+       389 User I/O             db file scattered read                             32          1
+       389 User I/O             db file sequential read                             1         14
+       389 User I/O             db file sequential read                             8          4
+       389 User I/O             db file sequential read                            16          1
+       389 User I/O             db file sequential read                            32          1
+       389 User I/O             db file sequential read                            64          3
+       389 User I/O             db file sequential read                           128          1
+       389 System I/O           log file parallel write                             1         70
+       389 System I/O           log file parallel write                             2         47
+       389 System I/O           log file parallel write                             4         22
+       389 System I/O           log file parallel write                             8          8
+       389 System I/O           log file parallel write                            16          4
+       389 System I/O           log file parallel write                            32          7
+       389 System I/O           log file parallel write                            64         10
+       389 System I/O           log file parallel write                           128        119
+       389 System I/O           log file parallel write                           256          2
+       389 Commit               log file sync                                       1          8
+       389 Commit               log file sync                                       4          1
+       389 Commit               log file sync                                      16          1
+       389 Commit               log file sync                                      32          7
+       389 Commit               log file sync                                      64          7
+       389 Commit               log file sync                                     128         41
+       389 Commit               log file sync                                     256          5
+       390 User I/O             db file scattered read                              1          1
+       390 User I/O             db file scattered read                              8          1
+       390 User I/O             db file scattered read                             16          1
+       390 User I/O             db file scattered read                             32          1
+       390 User I/O             db file sequential read                             1         13
+       390 User I/O             db file sequential read                           128          1
+       390 System I/O           log file parallel write                             1        106
+       390 System I/O           log file parallel write                             2         83
+       390 System I/O           log file parallel write                             4         35
+       390 System I/O           log file parallel write                             8          2
+       390 System I/O           log file parallel write                            16          5
+       390 System I/O           log file parallel write                            32         12
+       390 System I/O           log file parallel write                            64          8
+       390 System I/O           log file parallel write                           128        106
+       390 System I/O           log file parallel write                           256          2
+       390 Commit               log file sync                                       1         11
+       390 Commit               log file sync                                       2         10
+       390 Commit               log file sync                                       4          3
+       390 Commit               log file sync                                      16          1
+       390 Commit               log file sync                                      32          1
+       390 Commit               log file sync                                      64          9
+       390 Commit               log file sync                                     128         31
+       390 Commit               log file sync                                     256          3
+       391 User I/O             db file scattered read                              1          1
+       391 User I/O             db file scattered read                             32          1
+       391 User I/O             db file sequential read                             1         14
+       391 System I/O           log file parallel write                             1        106
+       391 System I/O           log file parallel write                             2         60
+       391 System I/O           log file parallel write                             4         28
+       391 System I/O           log file parallel write                             8          5
+       391 System I/O           log file parallel write                            16          1
+       391 System I/O           log file parallel write                            32          4
+       391 System I/O           log file parallel write                            64         15
+       391 System I/O           log file parallel write                           128        114
+       391 System I/O           log file parallel write                           256          1
+       391 Commit               log file sync                                       1         11
+       391 Commit               log file sync                                       2          3
+       391 Commit               log file sync                                       4          1
+       391 Commit               log file sync                                       8          1
+       391 Commit               log file sync                                      64          9
+       391 Commit               log file sync                                     128         43
+       391 Commit               log file sync                                     256          2
+       392 User I/O             db file scattered read                              1        322
+       392 User I/O             db file scattered read                              2         79
+       392 User I/O             db file scattered read                              4         41
+       392 User I/O             db file scattered read                              8         27
+       392 User I/O             db file scattered read                             16         26
+       392 User I/O             db file scattered read                             32         46
+       392 User I/O             db file scattered read                             64         63
+       392 User I/O             db file scattered read                            128         20
+       392 User I/O             db file scattered read                            512          1
+       392 User I/O             db file sequential read                             1        682
+       392 User I/O             db file sequential read                             2         27
+       392 User I/O             db file sequential read                             4         28
+       392 User I/O             db file sequential read                             8         47
+       392 User I/O             db file sequential read                            16         75
+       392 User I/O             db file sequential read                            32        112
+       392 User I/O             db file sequential read                            64        119
+       392 User I/O             db file sequential read                           128         55
+       392 User I/O             db file sequential read                           256          2
+       392 User I/O             db file sequential read                           512          2
+       392 System I/O           log file parallel write                             1        354
+       392 System I/O           log file parallel write                             2        159
+       392 System I/O           log file parallel write                             4         57
+       392 System I/O           log file parallel write                             8         15
+       392 System I/O           log file parallel write                            16         22
+       392 System I/O           log file parallel write                            32         53
+       392 System I/O           log file parallel write                            64         79
+       392 System I/O           log file parallel write                           128        131
+       392 System I/O           log file parallel write                           256          2
+       392 System I/O           log file parallel write                           512          1
+       392 Commit               log file sync                                       1         12
+       392 Commit               log file sync                                       2          6
+       392 Commit               log file sync                                       4          2
+       392 Commit               log file sync                                       8          1
+       392 Commit               log file sync                                      32          2
+       392 Commit               log file sync                                      64         10
+       392 Commit               log file sync                                     128         33
+       392 Commit               log file sync                                     256          9
+       393 User I/O             db file scattered read                              1        420
+       393 User I/O             db file scattered read                              2         23
+       393 User I/O             db file scattered read                              4         41
+       393 User I/O             db file scattered read                              8         61
+       393 User I/O             db file scattered read                             16         58
+       393 User I/O             db file scattered read                             32         30
+       393 User I/O             db file scattered read                             64         23
+       393 User I/O             db file scattered read                            128          7
+       393 User I/O             db file scattered read                            256          1
+       393 User I/O             db file sequential read                             1        593
+       393 User I/O             db file sequential read                             2          9
+       393 User I/O             db file sequential read                             4         21
+       393 User I/O             db file sequential read                             8         35
+       393 User I/O             db file sequential read                            16         28
+       393 User I/O             db file sequential read                            32         17
+       393 User I/O             db file sequential read                            64         24
+       393 User I/O             db file sequential read                           128          8
+       393 System I/O           log file parallel write                             1        168
+       393 System I/O           log file parallel write                             2         88
+       393 System I/O           log file parallel write                             4         17
+       393 System I/O           log file parallel write                             8          5
+       393 System I/O           log file parallel write                            16          8
+       393 System I/O           log file parallel write                            32         18
+       393 System I/O           log file parallel write                            64         50
+       393 System I/O           log file parallel write                           128        127
+       393 System I/O           log file parallel write                           256          2
+       393 Commit               log file sync                                       1          9
+       393 Commit               log file sync                                       2          6
+       393 Commit               log file sync                                      16          1
+       393 Commit               log file sync                                      32          4
+       393 Commit               log file sync                                      64          9
+       393 Commit               log file sync                                     128         34
+       393 Commit               log file sync                                     256          7
+       394 User I/O             db file sequential read                             1          8
+       394 System I/O           log file parallel write                             1        118
+       394 System I/O           log file parallel write                             2         82
+       394 System I/O           log file parallel write                             4         15
+       394 System I/O           log file parallel write                             8          5
+       394 System I/O           log file parallel write                            16          3
+       394 System I/O           log file parallel write                            32          5
+       394 System I/O           log file parallel write                            64         12
+       394 System I/O           log file parallel write                           128        105
+       394 System I/O           log file parallel write                           256          3
+       394 Commit               log file sync                                       1          9
+       394 Commit               log file sync                                       2          4
+       394 Commit               log file sync                                      16          1
+       394 Commit               log file sync                                      32          2
+       394 Commit               log file sync                                      64         12
+       394 Commit               log file sync                                     128         40
+       394 Commit               log file sync                                     256          2
+       395 User I/O             db file scattered read                              1         12
+       395 User I/O             db file scattered read                             64          1
+       395 User I/O             db file sequential read                             1        184
+       395 User I/O             db file sequential read                             2          4
+       395 User I/O             db file sequential read                             4          9
+       395 User I/O             db file sequential read                             8         14
+       395 User I/O             db file sequential read                            16          9
+       395 User I/O             db file sequential read                            32          4
+       395 User I/O             db file sequential read                            64         13
+       395 User I/O             db file sequential read                           128          1
+       395 System I/O           log file parallel write                             1        137
+       395 System I/O           log file parallel write                             2         95
+       395 System I/O           log file parallel write                             4         23
+       395 System I/O           log file parallel write                             8          2
+       395 System I/O           log file parallel write                            16          3
+       395 System I/O           log file parallel write                            32          5
+       395 System I/O           log file parallel write                            64         10
+       395 System I/O           log file parallel write                           128        129
+       395 System I/O           log file parallel write                           256          1
+       395 System I/O           log file parallel write                           512          1
+       395 Commit               log file sync                                       1         10
+       395 Commit               log file sync                                       2         11
+       395 Commit               log file sync                                       4          2
+       395 Commit               log file sync                                       8          1
+       395 Commit               log file sync                                      16          1
+       395 Commit               log file sync                                      32          5
+       395 Commit               log file sync                                      64         10
+       395 Commit               log file sync                                     128         29
+       395 Commit               log file sync                                     256          2
+       396 User I/O             db file sequential read                             1          9
+       396 User I/O             db file sequential read                            16          1
+       396 User I/O             db file sequential read                            64          1
+       396 User I/O             db file sequential read                           128          1
+       396 System I/O           log file parallel write                             1        106
+       396 System I/O           log file parallel write                             2        107
+       396 System I/O           log file parallel write                             4         20
+       396 System I/O           log file parallel write                             8          2
+       396 System I/O           log file parallel write                            16          6
+       396 System I/O           log file parallel write                            32          8
+       396 System I/O           log file parallel write                            64         11
+       396 System I/O           log file parallel write                           128        102
+       396 System I/O           log file parallel write                           256          1
+       396 Commit               log file sync                                       1          6
+       396 Commit               log file sync                                       2          7
+       396 Commit               log file sync                                       4          4
+       396 Commit               log file sync                                       8          2
+       396 Commit               log file sync                                      16          1
+       396 Commit               log file sync                                      32          2
+       396 Commit               log file sync                                      64         13
+       396 Commit               log file sync                                     128         34
+       396 Commit               log file sync                                     256          3
+       397 User I/O             db file sequential read                             1          7
+       397 User I/O             db file sequential read                             2          1
+       397 User I/O             db file sequential read                            64          1
+       397 System I/O           log file parallel write                             1         97
+       397 System I/O           log file parallel write                             2         81
+       397 System I/O           log file parallel write                             4         18
+       397 System I/O           log file parallel write                             8          2
+       397 System I/O           log file parallel write                            16          2
+       397 System I/O           log file parallel write                            32          5
+       397 System I/O           log file parallel write                            64          7
+       397 System I/O           log file parallel write                           128        127
+       397 System I/O           log file parallel write                           256          3
+       397 Commit               log file sync                                       1          6
+       397 Commit               log file sync                                       2          8
+       397 Commit               log file sync                                       8          1
+       397 Commit               log file sync                                      16          2
+       397 Commit               log file sync                                      32          1
+       397 Commit               log file sync                                      64          8
+       397 Commit               log file sync                                     128         42
+       397 Commit               log file sync                                     256          5
+       398 User I/O             db file sequential read                             1          8
+       398 User I/O             db file sequential read                             2          1
+       398 System I/O           log file parallel write                             1         77
+       398 System I/O           log file parallel write                             2         77
+       398 System I/O           log file parallel write                             4          8
+       398 System I/O           log file parallel write                             8          3
+       398 System I/O           log file parallel write                            16          1
+       398 System I/O           log file parallel write                            64          9
+       398 System I/O           log file parallel write                           128        128
+       398 System I/O           log file parallel write                           256          2
+       398 Commit               log file sync                                       1         11
+       398 Commit               log file sync                                       2          8
+       398 Commit               log file sync                                       8          2
+       398 Commit               log file sync                                      32          3
+       398 Commit               log file sync                                      64         14
+       398 Commit               log file sync                                     128         33
+       398 Commit               log file sync                                     256          1
+       399 User I/O             db file sequential read                             1          6
+       399 System I/O           log file parallel write                             1         97
+       399 System I/O           log file parallel write                             2         83
+       399 System I/O           log file parallel write                             4          9
+       399 System I/O           log file parallel write                             8          2
+       399 System I/O           log file parallel write                            16          3
+       399 System I/O           log file parallel write                            32          5
+       399 System I/O           log file parallel write                            64          8
+       399 System I/O           log file parallel write                           128        104
+       399 System I/O           log file parallel write                           256          1
+       399 Commit               log file sync                                       1          3
+       399 Commit               log file sync                                       2          4
+       399 Commit               log file sync                                       4          1
+       399 Commit               log file sync                                       8          1
+       399 Commit               log file sync                                      32          2
+       399 Commit               log file sync                                      64         11
+       399 Commit               log file sync                                     128         43
+       399 Commit               log file sync                                     256          4
+       400 User I/O             db file sequential read                             1          6
+       400 User I/O             db file sequential read                           128          1
+       400 System I/O           log file parallel write                             1         64
+       400 System I/O           log file parallel write                             2         98
+       400 System I/O           log file parallel write                             4         37
+       400 System I/O           log file parallel write                             8          5
+       400 System I/O           log file parallel write                            16          6
+       400 System I/O           log file parallel write                            32         19
+       400 System I/O           log file parallel write                            64         31
+       400 System I/O           log file parallel write                           128         68
+       400 System I/O           log file parallel write                           256          1
+       400 Commit               log file sync                                       1          4
+       400 Commit               log file sync                                       2         12
+       400 Commit               log file sync                                       4          3
+       400 Commit               log file sync                                       8          1
+       400 Commit               log file sync                                      16          4
+       400 Commit               log file sync                                      32          7
+       400 Commit               log file sync                                      64         16
+       400 Commit               log file sync                                     128         19
+       400 Commit               log file sync                                     256          5
+       401 User I/O             db file sequential read                             1          6
+       401 System I/O           log file parallel write                             1         65
+       401 System I/O           log file parallel write                             2        106
+       401 System I/O           log file parallel write                             4         44
+       401 System I/O           log file parallel write                             8         10
+       401 System I/O           log file parallel write                            16         11
+       401 System I/O           log file parallel write                            32         24
+       401 System I/O           log file parallel write                            64         24
+       401 System I/O           log file parallel write                           128         50
+       401 System I/O           log file parallel write                           256          2
+       401 Commit               log file sync                                       1          5
+       401 Commit               log file sync                                       2         12
+       401 Commit               log file sync                                       4          7
+       401 Commit               log file sync                                       8          2
+       401 Commit               log file sync                                      16          1
+       401 Commit               log file sync                                      32          8
+       401 Commit               log file sync                                      64         18
+       401 Commit               log file sync                                     128         14
+       401 Commit               log file sync                                     256          4
+       402 User I/O             db file sequential read                             1          9
+       402 System I/O           log file parallel write                             1         50
+       402 System I/O           log file parallel write                             2         78
+       402 System I/O           log file parallel write                             4         16
+       402 System I/O           log file parallel write                             8          2
+       402 System I/O           log file parallel write                            16          8
+       402 System I/O           log file parallel write                            32         15
+       402 System I/O           log file parallel write                            64         41
+       402 System I/O           log file parallel write                           128        108
+       402 System I/O           log file parallel write                           256          1
+       402 Commit               log file sync                                       1          3
+       402 Commit               log file sync                                       2          7
+       402 Commit               log file sync                                       4          2
+       402 Commit               log file sync                                       8          1
+       402 Commit               log file sync                                      16          1
+       402 Commit               log file sync                                      32          4
+       402 Commit               log file sync                                      64         13
+       402 Commit               log file sync                                     128         26
+       402 Commit               log file sync                                     256         13
+       403 User I/O             db file sequential read                             1          5
+       403 System I/O           log file parallel write                             1         44
+       403 System I/O           log file parallel write                             2         51
+       403 System I/O           log file parallel write                             4          2
+       403 System I/O           log file parallel write                             8          2
+       403 System I/O           log file parallel write                            16          7
+       403 System I/O           log file parallel write                            32         17
+       403 System I/O           log file parallel write                            64         24
+       403 System I/O           log file parallel write                           128        109
+       403 System I/O           log file parallel write                           256          9
+       403 Commit               log file sync                                       4          1
+       403 Commit               log file sync                                      32          6
+       403 Commit               log file sync                                      64          9
+       403 Commit               log file sync                                     128         41
+       403 Commit               log file sync                                     256         12
+       404 User I/O             db file sequential read                             1          5
+       404 System I/O           log file parallel write                             1         45
+       404 System I/O           log file parallel write                             2         65
+       404 System I/O           log file parallel write                             4         19
+       404 System I/O           log file parallel write                             8          4
+       404 System I/O           log file parallel write                            16          6
+       404 System I/O           log file parallel write                            32         10
+       404 System I/O           log file parallel write                            64         35
+       404 System I/O           log file parallel write                           128         98
+       404 System I/O           log file parallel write                           256          3
+       404 Commit               log file sync                                       1          3
+       404 Commit               log file sync                                       2          3
+       404 Commit               log file sync                                       4          2
+       404 Commit               log file sync                                       8          1
+       404 Commit               log file sync                                      32          3
+       404 Commit               log file sync                                      64         11
+       404 Commit               log file sync                                     128         33
+       404 Commit               log file sync                                     256         14
+       405 User I/O             db file sequential read                             1          5
+       405 User I/O             db file sequential read                            16          1
+       405 System I/O           log file parallel write                             1         54
+       405 System I/O           log file parallel write                             2         64
+       405 System I/O           log file parallel write                             4         14
+       405 System I/O           log file parallel write                             8          5
+       405 System I/O           log file parallel write                            16          7
+       405 System I/O           log file parallel write                            32          6
+       405 System I/O           log file parallel write                            64         39
+       405 System I/O           log file parallel write                           128        101
+       405 System I/O           log file parallel write                           256          2
+       405 Commit               log file sync                                       1          1
+       405 Commit               log file sync                                       2          7
+       405 Commit               log file sync                                       4          2
+       405 Commit               log file sync                                       8          1
+       405 Commit               log file sync                                      32          1
+       405 Commit               log file sync                                      64         10
+       405 Commit               log file sync                                     128         35
+       405 Commit               log file sync                                     256         14
+       406 User I/O             db file sequential read                             1          7
+       406 User I/O             db file sequential read                            32          1
+       406 User I/O             db file sequential read                            64          1
+       406 System I/O           log file parallel write                             1         59
+       406 System I/O           log file parallel write                             2         52
+       406 System I/O           log file parallel write                             4         15
+       406 System I/O           log file parallel write                             8          7
+       406 System I/O           log file parallel write                            16          5
+       406 System I/O           log file parallel write                            32         17
+       406 System I/O           log file parallel write                            64         26
+       406 System I/O           log file parallel write                           128        112
+       406 System I/O           log file parallel write                           256          2
+       406 Commit               log file sync                                       1          2
+       406 Commit               log file sync                                       2          7
+       406 Commit               log file sync                                       4          2
+       406 Commit               log file sync                                       8          2
+       406 Commit               log file sync                                      16          2
+       406 Commit               log file sync                                      32          4
+       406 Commit               log file sync                                      64         10
+       406 Commit               log file sync                                     128         26
+       406 Commit               log file sync                                     256         13
+       407 User I/O             db file sequential read                             1          6
+       407 System I/O           log file parallel write                             1         66
+       407 System I/O           log file parallel write                             2         81
+       407 System I/O           log file parallel write                             4         16
+       407 System I/O           log file parallel write                             8          2
+       407 System I/O           log file parallel write                            16          9
+       407 System I/O           log file parallel write                            32         11
+       407 System I/O           log file parallel write                            64         28
+       407 System I/O           log file parallel write                           128        100
+       407 System I/O           log file parallel write                           256          6
+       407 Commit               log file sync                                       1          4
+       407 Commit               log file sync                                       2          3
+       407 Commit               log file sync                                       4          3
+       407 Commit               log file sync                                       8          1
+       407 Commit               log file sync                                      32          5
+       407 Commit               log file sync                                      64         12
+       407 Commit               log file sync                                     128         32
+       407 Commit               log file sync                                     256         10
+       408 User I/O             db file sequential read                             1          7
+       408 System I/O           log file parallel write                             1         51
+       408 System I/O           log file parallel write                             2         39
+       408 System I/O           log file parallel write                             4          5
+       408 System I/O           log file parallel write                             8          1
+       408 System I/O           log file parallel write                            16          6
+       408 System I/O           log file parallel write                            32          9
+       408 System I/O           log file parallel write                            64         32
+       408 System I/O           log file parallel write                           128        133
+       408 System I/O           log file parallel write                           256          1
+       408 Commit               log file sync                                       1          3
+       408 Commit               log file sync                                       2          4
+       408 Commit               log file sync                                       4          1
+       408 Commit               log file sync                                      32          3
+       408 Commit               log file sync                                      64         12
+       408 Commit               log file sync                                     128         36
+       408 Commit               log file sync                                     256         12
+       409 User I/O             db file sequential read                             1          6
+       409 System I/O           log file parallel write                             1         41
+       409 System I/O           log file parallel write                             2         64
+       409 System I/O           log file parallel write                             4         13
+       409 System I/O           log file parallel write                             8          4
+       409 System I/O           log file parallel write                            16          6
+       409 System I/O           log file parallel write                            32         11
+       409 System I/O           log file parallel write                            64         35
+       409 System I/O           log file parallel write                           128         87
+       409 System I/O           log file parallel write                           256          2
+       409 Commit               log file sync                                       2          3
+       409 Commit               log file sync                                       4          3
+       409 Commit               log file sync                                       8          1
+       409 Commit               log file sync                                      16          2
+       409 Commit               log file sync                                      32          1
+       409 Commit               log file sync                                      64         14
+       409 Commit               log file sync                                     128         30
+       409 Commit               log file sync                                     256         17
+       410 User I/O             db file sequential read                             1          5
+       410 System I/O           log file parallel write                             1         58
+       410 System I/O           log file parallel write                             2         88
+       410 System I/O           log file parallel write                             4         10
+       410 System I/O           log file parallel write                             8          4
+       410 System I/O           log file parallel write                            16          7
+       410 System I/O           log file parallel write                            32         12
+       410 System I/O           log file parallel write                            64         23
+       410 System I/O           log file parallel write                           128         92
+       410 System I/O           log file parallel write                           256          3
+       410 Commit               log file sync                                       1          5
+       410 Commit               log file sync                                       2          6
+       410 Commit               log file sync                                       4          1
+       410 Commit               log file sync                                       8          1
+       410 Commit               log file sync                                      16          3
+       410 Commit               log file sync                                      32          2
+       410 Commit               log file sync                                      64          7
+       410 Commit               log file sync                                     128         30
+       410 Commit               log file sync                                     256         15
+       411 User I/O             db file sequential read                             1          6
+       411 System I/O           log file parallel write                             1         41
+       411 System I/O           log file parallel write                             2         40
+       411 System I/O           log file parallel write                             4          5
+       411 System I/O           log file parallel write                             8          2
+       411 System I/O           log file parallel write                            16          1
+       411 System I/O           log file parallel write                            32          8
+       411 System I/O           log file parallel write                            64         39
+       411 System I/O           log file parallel write                           128        137
+       411 System I/O           log file parallel write                           256          5
+       411 Commit               log file sync                                       1          4
+       411 Commit               log file sync                                       2          4
+       411 Commit               log file sync                                       4          2
+       411 Commit               log file sync                                      32          2
+       411 Commit               log file sync                                      64          6
+       411 Commit               log file sync                                     128         32
+       411 Commit               log file sync                                     256         19
+       412 User I/O             db file sequential read                             1          5
+       412 System I/O           log file parallel write                             1         72
+       412 System I/O           log file parallel write                             2         71
+       412 System I/O           log file parallel write                             4         10
+       412 System I/O           log file parallel write                             8          3
+       412 System I/O           log file parallel write                            16          2
+       412 System I/O           log file parallel write                            32          7
+       412 System I/O           log file parallel write                            64         21
+       412 System I/O           log file parallel write                           128        124
+       412 System I/O           log file parallel write                           256          2
+       412 Commit               log file sync                                       1          5
+       412 Commit               log file sync                                       2          2
+       412 Commit               log file sync                                       4          1
+       412 Commit               log file sync                                      32          3
+       412 Commit               log file sync                                      64         11
+       412 Commit               log file sync                                     128         38
+       412 Commit               log file sync                                     256         10
+       413 User I/O             db file sequential read                             1          7
+       413 System I/O           log file parallel write                             1        108
+       413 System I/O           log file parallel write                             2         68
+       413 System I/O           log file parallel write                             4          8
+       413 System I/O           log file parallel write                             8          3
+       413 System I/O           log file parallel write                            16         12
+       413 System I/O           log file parallel write                            32          9
+       413 System I/O           log file parallel write                            64         21
+       413 System I/O           log file parallel write                           128         88
+       413 System I/O           log file parallel write                           256          4
+       413 Commit               log file sync                                       1          4
+       413 Commit               log file sync                                       2          4
+       413 Commit               log file sync                                      16          3
+       413 Commit               log file sync                                      32          2
+       413 Commit               log file sync                                      64          5
+       413 Commit               log file sync                                     128         41
+       413 Commit               log file sync                                     256         12
+       414 User I/O             db file sequential read                             1          6
+       414 System I/O           log file parallel write                             1         96
+       414 System I/O           log file parallel write                             2         55
+       414 System I/O           log file parallel write                             4         13
+       414 System I/O           log file parallel write                             8          3
+       414 System I/O           log file parallel write                            16          2
+       414 System I/O           log file parallel write                            32          6
+       414 System I/O           log file parallel write                            64         23
+       414 System I/O           log file parallel write                           128        130
+       414 System I/O           log file parallel write                           256          1
+       414 Commit               log file sync                                       1          9
+       414 Commit               log file sync                                       2          4
+       414 Commit               log file sync                                       8          1
+       414 Commit               log file sync                                      64          9
+       414 Commit               log file sync                                     128         34
+       414 Commit               log file sync                                     256         13
+       415 User I/O             db file sequential read                             1          5
+       415 System I/O           log file parallel write                             1        106
+       415 System I/O           log file parallel write                             2         57
+       415 System I/O           log file parallel write                             4          8
+       415 System I/O           log file parallel write                             8          2
+       415 System I/O           log file parallel write                            16          2
+       415 System I/O           log file parallel write                            32          8
+       415 System I/O           log file parallel write                            64         19
+       415 System I/O           log file parallel write                           128        129
+       415 System I/O           log file parallel write                           256          6
+       415 Commit               log file sync                                       1         11
+       415 Commit               log file sync                                       2          1
+       415 Commit               log file sync                                      16          1
+       415 Commit               log file sync                                      64          3
+       415 Commit               log file sync                                     128         40
+       415 Commit               log file sync                                     256         14
+
+~~END-IO-WAIT-HISTOGRAM~~
+
+
+
+~~BEGIN-IO-OBJECT-TYPE~~
+
+   SNAP_ID OBJECT_TYPE     LOGICAL_READ_GB PHYSICAL_READ_GB PHYSICAL_WRITE_GB   GB_ADDED
+---------- --------------- --------------- ---------------- ----------------- ----------
+       384 INDEX                        .5                0                 0          0
+       384 TABLE                        .5               .1                 0          0
+       385 INDEX                       2.2                0                 0          0
+       385 TABLE                       1.7                0                 0          0
+       386 INDEX                        .2                0                 0          0
+       386 LOB                           0                0                 0          0
+       386 TABLE                        .1                0                 0          0
+       387 INDEX                        .2                0                 0          0
+       387 TABLE                        .1                0                 0          0
+       388 INDEX                        .3                0                 0          0
+       388 LOB                           0                0                 0          0
+       388 TABLE                        .1                0                 0          0
+       389 INDEX                        .2                0                 0          0
+       389 TABLE                        .1                0                 0          0
+       390 INDEX                        .3                0                 0          0
+       390 TABLE                        .1                0                 0          0
+       391 INDEX                        .3                0                 0          0
+       391 TABLE                        .1                0                 0          0
+       392 INDEX                       1.8                0                 0          0
+       392 TABLE                       1.5                0                 0          0
+       393 INDEX                       1.1                0                 0          0
+       393 TABLE                        .6                0                 0          0
+       394 INDEX                        .3                0                 0          0
+       394 TABLE                        .1                0                 0          0
+       395 INDEX                        .3                0                 0          0
+       395 TABLE                        .1                0                 0          0
+       396 INDEX                        .3                0                 0          0
+       396 TABLE                        .1                0                 0          0
+       397 INDEX                        .2                0                 0          0
+       397 LOB                           0                0                 0          0
+       397 TABLE                        .1                0                 0          0
+       398 INDEX                        .2                0                 0          0
+       398 TABLE                        .1                0                 0          0
+       399 INDEX                        .2                0                 0          0
+       399 TABLE                        .1                0                 0          0
+       400 INDEX                        .2                0                 0          0
+       400 TABLE                        .1                0                 0          0
+       401 INDEX                        .2                0                 0          0
+       401 TABLE                        .1                0                 0          0
+       402 INDEX                        .3                0                 0          0
+       402 TABLE                        .1                0                 0          0
+       403 INDEX                        .2                0                 0          0
+       403 TABLE                        .1                0                 0          0
+       404 INDEX                        .2                0                 0          0
+       404 TABLE                        .1                0                 0          0
+       405 INDEX                        .3                0                 0          0
+       405 TABLE                        .1                0                 0          0
+       406 INDEX                        .2                0                 0          0
+       406 TABLE                        .1                0                 0          0
+       407 INDEX                        .2                0                 0          0
+       407 TABLE                        .1                0                 0          0
+       408 INDEX                        .3                0                 0          0
+       408 TABLE                        .1                0                 0          0
+       409 INDEX                        .3                0                 0          0
+       409 TABLE                        .1                0                 0          0
+       410 INDEX                        .3                0                 0          0
+       410 TABLE                        .1                0                 0          0
+       411 INDEX                        .2                0                 0          0
+       411 TABLE                        .1                0                 0          0
+       412 INDEX                        .2                0                 0          0
+       412 TABLE                        .1                0                 0          0
+       413 INDEX                        .3                0                 0          0
+       413 TABLE                        .1                0                 0          0
+       414 INDEX                        .2                0                 0          0
+       414 TABLE                        .1                0                 0          0
+       415 INDEX                        .2                0                 0          0
+       415 TABLE                        .1                0                 0          0
+
+~~END-IO-OBJECT-TYPE~~
+
+
+
+~~BEGIN-TOP-SQL-SUMMARY~~
+
+MODULE                                                           ACTION                                                           SQL_ID        OPTIMIZER_COST COMMAND_NAME  PARSING_SCHEMA_NAME             EXEC_RANK  ELAP_RANK LOG_READS_RANK PHYS_READS_RANK      EXECS       ELAP  LOG_READS PHY_READ_GB PLAN_COUNT PX_SERVERS_EXECS
+---------------------------------------------------------------- ---------------------------------------------------------------- ------------- -------------- ------------- ------------------------------ ---------- ---------- -------------- --------------- ---------- ---------- ---------- ----------- ---------- ----------------
+DBMS_SCHEDULER                                                   LOGGER_PURGE_JOB                                                 g6mz2v6n51jr5              0 PL/SQLEXECUTE LOGGER_USER                             7          1              5               5          2    5783361        969           0          1                0
+DBMS_SCHEDULER                                                   RLM$SCHDNEGACTION                                                b3abwkm67yg8r              0 PL/SQLEXECUTE EXFSYS                                  2          2              3               6         14    4075684       1104           0          1                0
+DBMS_SCHEDULER                                                   LOGGER_PURGE_JOB                                                 0d67zpdk5ujby              1 SELECT        LOGGER_USER2                            4          3             11               9          7    3404195        131           0          1                0
+DBMS_SCHEDULER                                                   MGMT_STATS_CONFIG_JOB                                            59kggcuf5t6bt              0 CALLMETHOD    ORACLE_OCM                              8          4              6               3          1    3155834        950           0          1                0
+                                                                                                                                  2nszajb0qbyvp              0 PL/SQLEXECUTE APEX_030200                             2          5              2               1         14    2369132       1339           0          1                0
+DBMS_SCHEDULER                                                   RLM$EVTCLEANUP                                                   9s0xa5dgvuq55              0 PL/SQLEXECUTE EXFSYS                                  6          6              7               4          3    1781961        689           0          1                0
+                                                                                                                                  6z9uusgaz5z9q              0 PL/SQLEXECUTE APEX_030200                             8          7              1               2          1    1759441       1509           0          1                0
+DBMS_SCHEDULER                                                   MGMT_STATS_CONFIG_JOB                                            bkryyh4vf4p55              8 SELECT        ORACLE_OCM                              7          8              9               8          2    1363235        452           0          1                0
+DBMS_SCHEDULER                                                   LOGGER_PURGE_JOB                                                 37m700w69fah7              1 DELETE        LOGGER_USER                             7          9              8              10          2     769930        485           0          1                0
+DBMS_SCHEDULER                                                   ORA$AT_SA_SPC_SY_171                                             bkjxktgc8afm1              0 PL/SQLEXECUTE MDSYS                                   5         10             10               7          4     477639        276           0          1                0
+MMON_SLAVE                                                       Auto-Purge Slave Action                                          13t5kwh3tyfhu              0 PL/SQLEXECUTE MDSYS                                   1         11              4               5         42     394448        987           0          1                0
+                                                                                                                                  6abthk1u14yb7              1 SELECT        ORACLE_OCM                              7         12             12              11          2       4552         77           0          1                0
+                                                                                                                                  aukfj0ur6962z              2 SELECT        APEX_030200                             3         13             13              11         12       1090         24           0          1                0
+DBMS_SCHEDULER                                                   RLM$SCHDNEGACTION                                                3xuwch8vwqmh9              1 SELECT        EXFSYS                                  7         14             14              11          2        176          2           0          1                0
+
+~~END-TOP-SQL-SUMMARY~~
+
+~~BEGIN-TOP-SQL-BY-SNAPID~~
+
+   SNAP_ID PARSING_SCHEMA_NAME            MODULE                                                           ACTION                                                           SQL_ID        OPTIMIZER_COST COMMAND_NAME   PLAN_HASH      EXECS BUFFER_GETS  ROWS_PROC    CPU_T_S     ELAP_S    READ_MB    IO_WAIT  ELAP_RANK  EXEC_RANK LOG_READS_RANK PHYS_READS_RANK PLAN_CHANGE      PLANS
+---------- ------------------------------ ---------------------------------------------------------------- ---------------------------------------------------------------- ------------- -------------- ------------- ---------- ---------- ----------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- -------------- --------------- ----------- ----------
+       384 LOGGER_USER                    DBMS_SCHEDULER                                                   LOGGER_PURGE_JOB                                                 g6mz2v6n51jr5              0 PL/SQLEXECUTE          0          2         969          2          0        5.8         .4        3.7          1          2              3               5           0          1
+       384 EXFSYS                         DBMS_SCHEDULER                                                   RLM$SCHDNEGACTION                                                b3abwkm67yg8r              0 PL/SQLEXECUTE          0          1         363          1         .1        3.7         .2         .8          2          3              8               6           0          1
+       384 LOGGER_USER2                   DBMS_SCHEDULER                                                   LOGGER_PURGE_JOB                                                 0d67zpdk5ujby              1 SELECT        2110946808          7         131          4          0        3.4         .1        2.1          3          1              9               8           0          1
+       384 ORACLE_OCM                     DBMS_SCHEDULER                                                   MGMT_STATS_CONFIG_JOB                                            59kggcuf5t6bt              0 CALLMETHOD             0          1         950          0         .1        3.2         .5        2.5          4          3              4               3           0          1
+       384 APEX_030200                                                                                                                                                      2nszajb0qbyvp              0 PL/SQLEXECUTE          0          2        1207          2         .1        2.3         .9        1.8          5          2              2               1           0          1
+       384 EXFSYS                         DBMS_SCHEDULER                                                   RLM$EVTCLEANUP                                                   9s0xa5dgvuq55              0 PL/SQLEXECUTE          0          1         685          1          0        1.8         .5        1.4          6          3              5               4           0          1
+       384 APEX_030200                                                                                                                                                      6z9uusgaz5z9q              0 PL/SQLEXECUTE          0          1        1509          1          0        1.8         .6        1.7          7          3              1               2           0          1
+       384 ORACLE_OCM                     DBMS_SCHEDULER                                                   MGMT_STATS_CONFIG_JOB                                            bkryyh4vf4p55              8 SELECT        2343235087          1         444          1         .1        1.2         .1         .6          8          3              7               7           0          1
+       384 LOGGER_USER                    DBMS_SCHEDULER                                                   LOGGER_PURGE_JOB                                                 37m700w69fah7              1 DELETE        2467779609          2         485          0          0         .8          0         .7          9          2              6               9           0          1
+       384 ORACLE_OCM                                                                                                                                                       6abthk1u14yb7              1 SELECT        2848324471          2          77          2          0          0          0          0         10          2             10              10           0          1
+       385 MDSYS                          MMON_SLAVE                                                       Auto-Purge Slave Action                                          13t5kwh3tyfhu              0 PL/SQLEXECUTE          0         42         987         42         .2         .4         .4         .2          1          1              1               1           0          1
+       388 APEX_030200                                                                                                                                                      2nszajb0qbyvp              0 PL/SQLEXECUTE          0          6          66          6          0          0          0          0          1          1              1               1           0          1
+       389 EXFSYS                         DBMS_SCHEDULER                                                   RLM$SCHDNEGACTION                                                b3abwkm67yg8r              0 PL/SQLEXECUTE          0          1          57          1          0          0          0          0          1          1              1               1           0          1
+       392 MDSYS                          DBMS_SCHEDULER                                                   ORA$AT_SA_SPC_SY_171                                             bkjxktgc8afm1              0 PL/SQLEXECUTE          0          4         276          4         .1         .5         .1         .5          1          1              1               1           0          1
+       392 ORACLE_OCM                     DBMS_SCHEDULER                                                   MGMT_STATS_CONFIG_JOB                                            bkryyh4vf4p55              8 SELECT        2343235087          1           8          1          0         .2          0         .2          2          2              2               2           0          1
+       394 EXFSYS                         DBMS_SCHEDULER                                                   RLM$SCHDNEGACTION                                                b3abwkm67yg8r              0 PL/SQLEXECUTE          0          1          57          1          0         .1          0         .1          1          1              1               1           0          1
+       395 EXFSYS                         DBMS_SCHEDULER                                                   RLM$SCHDNEGACTION                                                b3abwkm67yg8r              0 PL/SQLEXECUTE          0          1          56          1          0          0          0          0          1          1              1               1           0          1
+       397 EXFSYS                         DBMS_SCHEDULER                                                   RLM$SCHDNEGACTION                                                b3abwkm67yg8r              0 PL/SQLEXECUTE          0          1          56          1          0          0          0          0          1          1              1               1           0          1
+       398 EXFSYS                         DBMS_SCHEDULER                                                   RLM$SCHDNEGACTION                                                b3abwkm67yg8r              0 PL/SQLEXECUTE          0          1          63          1          0         .1          0         .1          1          1              1               1           0          1
+       399 APEX_030200                                                                                                                                                      2nszajb0qbyvp              0 PL/SQLEXECUTE          0          6          66          6          0          0          0          0          1          1              1               1           0          1
+       400 EXFSYS                         DBMS_SCHEDULER                                                   RLM$SCHDNEGACTION                                                b3abwkm67yg8r              0 PL/SQLEXECUTE          0          1          56          1          0          0          0          0          1          1              1               1           0          1
+       401 EXFSYS                         DBMS_SCHEDULER                                                   RLM$SCHDNEGACTION                                                b3abwkm67yg8r              0 PL/SQLEXECUTE          0          2         113          2          0          0          0          0          1          1              1               1           0          1
+       401 EXFSYS                         DBMS_SCHEDULER                                                   RLM$EVTCLEANUP                                                   9s0xa5dgvuq55              0 PL/SQLEXECUTE          0          1           2          1          0          0          0          0          2          2              2               1           0          1
+       401 EXFSYS                         DBMS_SCHEDULER                                                   RLM$SCHDNEGACTION                                                3xuwch8vwqmh9              1 SELECT        1867128790          2           2          2          0          0          0          0          3          1              2               1           0          1
+       403 EXFSYS                         DBMS_SCHEDULER                                                   RLM$SCHDNEGACTION                                                b3abwkm67yg8r              0 PL/SQLEXECUTE          0          1          57          1          0          0          0          0          1          1              1               1           0          1
+       403 EXFSYS                         DBMS_SCHEDULER                                                   RLM$EVTCLEANUP                                                   9s0xa5dgvuq55              0 PL/SQLEXECUTE          0          1           2          1          0          0          0          0          2          1              2               1           0          1
+       406 EXFSYS                         DBMS_SCHEDULER                                                   RLM$SCHDNEGACTION                                                b3abwkm67yg8r              0 PL/SQLEXECUTE          0          1          56          1          0          0          0          0          1          1              1               1           0          1
+       409 EXFSYS                         DBMS_SCHEDULER                                                   RLM$SCHDNEGACTION                                                b3abwkm67yg8r              0 PL/SQLEXECUTE          0          1          56          1          0          0          0          0          1          1              1               1           0          1
+       412 EXFSYS                         DBMS_SCHEDULER                                                   RLM$SCHDNEGACTION                                                b3abwkm67yg8r              0 PL/SQLEXECUTE          0          1          58          1          0          0          0          0          1          1              1               1           0          1
+       414 APEX_030200                                                                                                                                                      aukfj0ur6962z              2 SELECT        2366097979         12          24         12          0          0          0          0          1          1              1               1           0          1
+       415 EXFSYS                         DBMS_SCHEDULER                                                   RLM$SCHDNEGACTION                                                b3abwkm67yg8r              0 PL/SQLEXECUTE          0          1          56          1          0          0          0          0          1          1              1               1           0          1
+
+~~END-TOP-SQL-BY-SNAPID~~
