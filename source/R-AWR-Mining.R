@@ -492,7 +492,14 @@ build_data_frames <- function(dbid,dbname) {
   DF_IO_WAIT_HIST_INT$WAIT_COUNT <- as.numeric(DF_IO_WAIT_HIST_INT$WAIT_COUNT)
   DF_IO_BY_OBJECT_TYPE_INT <- getSection(theFile,'IO-OBJECT-TYPE',computedDecSep)
   DF_SQL_SUMMARY_INT <- getSection(theFile,'TOP-SQL-SUMMARY',computedDecSep)
-  DF_SQL_SUMMARY_INT$MODULE <- str_sub(DF_SQL_SUMMARY_INT$MODULE,1,10)
+  
+  if(("MODULE" %in% names(DF_SQL_SUMMARY_INT))){
+    DF_SQL_SUMMARY_INT$MODULE <- str_sub(DF_SQL_SUMMARY_INT$MODULE,1,10)
+  }
+  else{
+    DF_SQL_SUMMARY_INT$MODULE <- NA
+  }
+  
   DF_SQL_SUMMARY_INT[with(DF_SQL_SUMMARY_INT, grepl("PL/SQLEXECUTE", COMMAND_NAME)),]$COMMAND_NAME<-"PL/SQL"
   DF_SQL_BY_SNAPID_INT <- getSection(theFile,'TOP-SQL-BY-SNAPID',computedDecSep)
   rm(theFile)
