@@ -28,13 +28,23 @@
         </sequential>
     </macrodef> 
     
-    <!-- <target name="[Git] Tag"> -->
-    <target name="git-test">
-		<input message="Tag Name" addproperty="tagName" />
-		<git command="describe"  />
-        
-        <echo>Tag: ${git.tag}</echo>
-	</target>
+    <macrodef name="git-add-files">
+        <element name="extArgs" />
+        <attribute name="commitMsg" />
+        <sequential>
+            <exec executable="git" dir=".">
+                <arg value="add" />
+                <extArgs/>
+            </exec>
+            
+            <exec executable="git">
+                <arg value="commit" />
+                <arg value="-m" />
+                <arg value="${commitMsg}" />
+            </exec>
+        </sequential>
+    </macrodef> 
+       
   
   
     <target name="git-tag">
@@ -120,8 +130,19 @@
         </move>
     </target>
     
+    
+    <target name="git-add-new-release">
+        <input message="Commit Message:" addproperty="commitMsg" />
+        <git-add-files commitMsg="${commitMsg}">
+            <extArgs>
+                <arg value="release/3.0.6/*" />
+            </extArgs>
+        </git-add-files>
+    </target>
+
+    
   
-  <target name="build" depends="copy-to-build,updateBuildNumber,replace-version-num,move-capture-dir,zip-capture-dir,move-to-release-dir,git-tag">
+  <target name="build" depends="copy-to-build,updateBuildNumber,replace-version-num,move-capture-dir,zip-capture-dir,move-to-release-dir,git-add-new-release,git-tag">
     <description>Build</description>
   </target>
 
