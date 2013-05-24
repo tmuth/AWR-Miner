@@ -135,7 +135,7 @@
         <input message="Commit Message:" addproperty="commitMsg" />
         <git-add-files commitMsg="${commitMsg}">
             <extArgs>
-                <arg value="release/3.0.6/*" />
+                <arg value="${release.subdir}/*" />
             </extArgs>
         </git-add-files>
     </target>
