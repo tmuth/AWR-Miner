@@ -1,0 +1,267 @@
+SYS@demo1> select distinct WAIT_CLASS,event_name from DBA_HIST_event_histogram order by 1;
+
+WAIT_CLASS                                                       EVENT_NAME                                                                                
+---------------------------------------------------------------- ----------------------------------------------------------------                          
+Administrative                                                   JS coord start wait                                                                       
+Administrative                                                   JS kgl get object wait                                                                    
+Administrative                                                   JS kill job wait                                                                          
+Application                                                      SQL*Net break/reset to client                                                             
+Application                                                      enq: RC - Result Cache: Contention                                                        
+Application                                                      enq: RO - fast object reuse                                                               
+Application                                                      enq: TM - contention                                                                      
+Application                                                      enq: UL - contention                                                                      
+Cluster                                                          gc buffer busy acquire                                                                    
+Cluster                                                          gc buffer busy release                                                                    
+Cluster                                                          gc cr block 2-way                                                                         
+Cluster                                                          gc cr block busy                                                                          
+Cluster                                                          gc cr block congested                                                                     
+Cluster                                                          gc cr disk read                                                                           
+Cluster                                                          gc cr failure                                                                             
+Cluster                                                          gc cr grant 2-way                                                                         
+Cluster                                                          gc cr grant congested                                                                     
+Cluster                                                          gc cr multi block request                                                                 
+Cluster                                                          gc current block 2-way                                                                    
+Cluster                                                          gc current block busy                                                                     
+Cluster                                                          gc current block congested                                                                
+Cluster                                                          gc current grant 2-way                                                                    
+Cluster                                                          gc current grant busy                                                                     
+Cluster                                                          gc current grant congested                                                                
+Cluster                                                          gc current multi block request                                                            
+Cluster                                                          gc current retry                                                                          
+Cluster                                                          gc current split                                                                          
+Cluster                                                          gc domain validation                                                                      
+Cluster                                                          gc object scan                                                                            
+Cluster                                                          gc remaster                                                                               
+Commit                                                           log file sync                                                                             
+Concurrency                                                      buffer busy waits                                                                         
+Concurrency                                                      cursor: pin S                                                                             
+Concurrency                                                      cursor: pin S wait on X                                                                   
+Concurrency                                                      enq: TX - index contention                                                                
+Concurrency                                                      latch: cache buffers chains                                                               
+Concurrency                                                      latch: row cache objects                                                                  
+Concurrency                                                      latch: shared pool                                                                        
+Concurrency                                                      libcache interrupt action by LCK                                                          
+Concurrency                                                      library cache load lock                                                                   
+Concurrency                                                      library cache lock                                                                        
+Concurrency                                                      library cache pin                                                                         
+Concurrency                                                      library cache: mutex X                                                                    
+Concurrency                                                      os thread startup                                                                         
+Concurrency                                                      resmgr:internal state change                                                              
+Concurrency                                                      row cache lock                                                                            
+Configuration                                                    checkpoint completed                                                                      
+Configuration                                                    enq: HW - contention                                                                      
+Configuration                                                    enq: SQ - contention                                                                      
+Configuration                                                    enq: TX - allocate ITL entry                                                              
+Configuration                                                    latch: redo writing                                                                       
+Configuration                                                    sort segment request                                                                      
+Configuration                                                    undo segment extension                                                                    
+Idle                                                             ASM background timer                                                                      
+Idle                                                             DIAG idle wait                                                                            
+Idle                                                             GCR sleep                                                                                 
+Idle                                                             KSV master wait                                                                           
+Idle                                                             PING                                                                                      
+Idle                                                             PL/SQL lock timer                                                                         
+Idle                                                             PX Deq Credit: send blkd                                                                  
+Idle                                                             PX Deq: Execute Reply                                                                     
+Idle                                                             PX Deq: Execution Msg                                                                     
+Idle                                                             PX Deq: Join ACK                                                                          
+Idle                                                             PX Deq: Parse Reply                                                                       
+Idle                                                             PX Deque wait                                                                             
+Idle                                                             PX Idle Wait                                                                              
+Idle                                                             SQL*Net message from client                                                               
+Idle                                                             Space Manager: slave idle wait                                                            
+Idle                                                             Streams AQ: RAC qmn coordinator idle wait                                                 
+Idle                                                             Streams AQ: qmn coordinator idle wait                                                     
+Idle                                                             Streams AQ: qmn slave idle wait                                                           
+Idle                                                             Streams AQ: waiting for time management or cleanup tasks                                  
+Idle                                                             VKRM Idle                                                                                 
+Idle                                                             class slave wait                                                                          
+Idle                                                             gcs remote message                                                                        
+Idle                                                             ges remote message                                                                        
+Idle                                                             jobq slave wait                                                                           
+Idle                                                             parallel recovery slave idle wait                                                         
+Idle                                                             pmon timer                                                                                
+Idle                                                             rdbms ipc message                                                                         
+Idle                                                             smon timer                                                                                
+Idle                                                             wait for unread message on broadcast channel                                              
+Network                                                          SQL*Net message to client                                                                 
+Network                                                          SQL*Net more data from client                                                             
+Network                                                          SQL*Net more data to client                                                               
+Other                                                            ADR block file read                                                                       
+Other                                                            ADR block file write                                                                      
+Other                                                            ADR file lock                                                                             
+Other                                                            ASM background starting                                                                   
+Other                                                            ASM file metadata operation                                                               
+Other                                                            ASM: MARK subscribe to msg channel                                                        
+Other                                                            CGS skgxn join retry                                                                      
+Other                                                            CGS wait for IPC msg                                                                      
+Other                                                            CRS call completion                                                                       
+Other                                                            CSS Xgrp shared operation                                                                 
+Other                                                            CSS group membership query                                                                
+Other                                                            CSS group registration                                                                    
+Other                                                            CSS initialization                                                                        
+Other                                                            CSS operation: action                                                                     
+Other                                                            CSS operation: data query                                                                 
+Other                                                            CSS operation: data update                                                                
+Other                                                            CSS operation: query                                                                      
+Other                                                            DFS lock handle                                                                           
+Other                                                            GCR CSS join retry                                                                        
+Other                                                            GCR member Data from CSS                                                                  
+Other                                                            IMR mount phase II completion                                                             
+Other                                                            IPC send completion sync                                                                  
+Other                                                            KJC: Wait for msg sends to complete                                                       
+Other                                                            LGWR wait for redo copy                                                                   
+Other                                                            PX Deq: Signal ACK EXT                                                                    
+Other                                                            PX Deq: Signal ACK RSG                                                                    
+Other                                                            PX Deq: Slave Session Stats                                                               
+Other                                                            PX Deq: Test for msg                                                                      
+Other                                                            PX Deq: reap credit                                                                       
+Other                                                            PX qref latch                                                                             
+Other                                                            Streams AQ: qmn coordinator waiting for slave to start                                    
+Other                                                            asynch descriptor resize                                                                  
+Other                                                            buffer deadlock                                                                           
+Other                                                            change tracking file synchronous read                                                     
+Other                                                            change tracking file synchronous write                                                    
+Other                                                            control file heartbeat                                                                    
+Other                                                            enq: AE - lock                                                                            
+Other                                                            enq: AF - task serialization                                                              
+Other                                                            enq: AP - contention                                                                      
+Other                                                            enq: AS - service activation                                                              
+Other                                                            enq: CF - contention                                                                      
+Other                                                            enq: CN - race with init                                                                  
+Other                                                            enq: CO - master slave det                                                                
+Other                                                            enq: CR - block range reuse ckpt                                                          
+Other                                                            enq: CT - change stream ownership                                                         
+Other                                                            enq: CT - global space management                                                         
+Other                                                            enq: CT - local space management                                                          
+Other                                                            enq: CT - reading                                                                         
+Other                                                            enq: CT - state                                                                           
+Other                                                            enq: DL - contention                                                                      
+Other                                                            enq: DM - contention                                                                      
+Other                                                            enq: DR - contention                                                                      
+Other                                                            enq: DT - contention                                                                      
+Other                                                            enq: FB - contention                                                                      
+Other                                                            enq: FD - Flashback logical operations                                                    
+Other                                                            enq: FS - contention                                                                      
+Other                                                            enq: FU - contention                                                                      
+Other                                                            enq: IA - contention                                                                      
+Other                                                            enq: JS - job recov lock                                                                  
+Other                                                            enq: JS - job run lock - synchronize                                                      
+Other                                                            enq: JS - queue lock                                                                      
+Other                                                            enq: JS - wdw op                                                                          
+Other                                                            enq: KD - determine DBRM master                                                           
+Other                                                            enq: KM - contention                                                                      
+Other                                                            enq: KT - contention                                                                      
+Other                                                            enq: MD - contention                                                                      
+Other                                                            enq: MR - contention                                                                      
+Other                                                            enq: MW - contention                                                                      
+Other                                                            enq: PD - contention                                                                      
+Other                                                            enq: PE - contention                                                                      
+Other                                                            enq: PG - contention                                                                      
+Other                                                            enq: PI - contention                                                                      
+Other                                                            enq: PR - contention                                                                      
+Other                                                            enq: PS - contention                                                                      
+Other                                                            enq: PV - syncstart                                                                       
+Other                                                            enq: PW - perwarm status in dbw0                                                          
+Other                                                            enq: RD - RAC load                                                                        
+Other                                                            enq: RP - contention                                                                      
+Other                                                            enq: RS - read alert level                                                                
+Other                                                            enq: RS - write alert level                                                               
+Other                                                            enq: RT - contention                                                                      
+Other                                                            enq: SR - contention                                                                      
+Other                                                            enq: SW - contention                                                                      
+Other                                                            enq: TA - contention                                                                      
+Other                                                            enq: TB - SQL Tuning Base Cache Load                                                      
+Other                                                            enq: TD - KTF dump entries                                                                
+Other                                                            enq: TK - Auto Task Serialization                                                         
+Other                                                            enq: TK - Auto Task Slave Lockout                                                         
+Other                                                            enq: TL - contention                                                                      
+Other                                                            enq: TO - contention                                                                      
+Other                                                            enq: TQ - DDL contention                                                                  
+Other                                                            enq: TS - contention                                                                      
+Other                                                            enq: TT - contention                                                                      
+Other                                                            enq: TX - contention                                                                      
+Other                                                            enq: US - contention                                                                      
+Other                                                            enq: WF - contention                                                                      
+Other                                                            enq: WM - WLM Plan activation                                                             
+Other                                                            enq: WP - contention                                                                      
+Other                                                            enq: XR - database force logging                                                          
+Other                                                            enq: XR - quiesce database                                                                
+Other                                                            enq: ZH - compression analysis                                                            
+Other                                                            gcs drm freeze in enter server mode                                                       
+Other                                                            gcs log flush sync                                                                        
+Other                                                            gcs resource directory to be unfrozen                                                     
+Other                                                            ges DFS hang analysis phase 2 acks                                                        
+Other                                                            ges LMON to get to FTDONE                                                                 
+Other                                                            ges cgs registration                                                                      
+Other                                                            ges enter server mode                                                                     
+Other                                                            ges global resource directory to be frozen                                                
+Other                                                            ges inquiry response                                                                      
+Other                                                            ges lmd and pmon to attach                                                                
+Other                                                            ges lmd sync during reconfig                                                              
+Other                                                            ges lms sync during dynamic remastering and reconfig                                      
+Other                                                            ges retry query node                                                                      
+Other                                                            ges yield cpu in reconfig                                                                 
+Other                                                            global enqueue expand wait                                                                
+Other                                                            instance state change                                                                     
+Other                                                            kjctssqmg: quick message send wait                                                        
+Other                                                            kksfbc child completion                                                                   
+Other                                                            ksxr poll remote instances                                                                
+Other                                                            latch free                                                                                
+Other                                                            latch: active service list                                                                
+Other                                                            latch: cache buffers lru chain                                                            
+Other                                                            latch: call allocation                                                                    
+Other                                                            latch: gc element                                                                         
+Other                                                            latch: gcs resource hash                                                                  
+Other                                                            latch: ges resource hash list                                                             
+Other                                                            latch: messages                                                                           
+Other                                                            latch: object queue header operation                                                      
+Other                                                            latch: parallel query alloc buffer                                                        
+Other                                                            latch: redo allocation                                                                    
+Other                                                            lock deadlock retry                                                                       
+Other                                                            master diskmon read                                                                       
+Other                                                            name-service call wait                                                                    
+Other                                                            parallel recovery coord wait for reply                                                    
+Other                                                            rdbms ipc reply                                                                           
+Other                                                            reliable message                                                                          
+Other                                                            row cache cleanup                                                                         
+Other                                                            row cache process                                                                         
+Other                                                            wait list latch free                                                                      
+System I/O                                                       Log archive I/O                                                                           
+System I/O                                                       control file parallel write                                                               
+System I/O                                                       control file sequential read                                                              
+System I/O                                                       control file single write                                                                 
+System I/O                                                       db file async I/O submit                                                                  
+System I/O                                                       db file parallel write                                                                    
+System I/O                                                       kfk: async disk IO                                                                        
+System I/O                                                       log file parallel write                                                                   
+System I/O                                                       log file sequential read                                                                  
+System I/O                                                       log file single write                                                                     
+System I/O                                                       recovery read                                                                             
+User I/O                                                         Disk file Mirror Read                                                                     
+User I/O                                                         Disk file Mirror/Media Repair Write                                                       
+User I/O                                                         Disk file operations I/O                                                                  
+User I/O                                                         Parameter File I/O                                                                        
+User I/O                                                         cell list of blocks physical read                                                         
+User I/O                                                         cell multiblock physical read                                                             
+User I/O                                                         cell single block physical read                                                           
+User I/O                                                         cell smart file creation                                                                  
+User I/O                                                         cell statistics gather                                                                    
+User I/O                                                         db file scattered read                                                                    
+User I/O                                                         db file sequential read                                                                   
+User I/O                                                         db file single write                                                                      
+User I/O                                                         direct path read                                                                          
+User I/O                                                         direct path read temp                                                                     
+User I/O                                                         direct path write                                                                         
+User I/O                                                         direct path write temp                                                                    
+User I/O                                                         external table open                                                                       
+User I/O                                                         external table read                                                                       
+User I/O                                                         external table write                                                                      
+User I/O                                                         local write wait                                                                          
+User I/O                                                         read by other session                                                                     
+User I/O                                                         utl_file I/O                                                                              
+
+258 rows selected.
+
+Elapsed: 00:00:00.28
+SYS@demo1> spool off
