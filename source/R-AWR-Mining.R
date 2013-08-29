@@ -31,8 +31,8 @@ outFileSuffix <- '1'
 
 debugMode <- FALSE
 flog.threshold(INFO) #TRACE, DEBUG, INFO, WARN, ERROR, FATAL
-flog.threshold(ERROR,name='getSection') #TRACE, DEBUG, INFO, WARN, ERROR, FATAL 
-flog.threshold(ERROR,name='build_data_frames') #TRACE, DEBUG, INFO, WARN, ERROR, FATAL 
+#flog.threshold(ERROR,name='getSection') #TRACE, DEBUG, INFO, WARN, ERROR, FATAL 
+#flog.threshold(ERROR,name='build_data_frames') #TRACE, DEBUG, INFO, WARN, ERROR, FATAL 
 #name: build_data_frames, mainFunction,set_date_break_vars,plot_RAC_activity
 
 #debugModeOverride <- TRUE  | rm(debugModeOverride)
@@ -41,6 +41,9 @@ if(exists("debugModeOverride")){
     if(debugModeOverride){
       debugMode <- TRUE
       print('In debug mode')
+      flog.threshold(DEBUG)
+      flog.threshold(DEBUG,name='build_data_frames')
+      debugVars <- new.env()
     }
     else{
       debugMode <- FALSE
@@ -97,6 +100,9 @@ awrM$debug <- new.env()
 
 awrM$debug.plotSummary <- data.frame()
 awrM$debug.lastFunction <- NULL
+
+awrM$debug.unitTimes <- data.frame()
+
 
 attr <- new.env()
 attr$filter_snap_min <- 1
@@ -159,6 +165,41 @@ convert_snap_id_to_posixct <- function(snapID){
   theDateReturn <- as.POSIXct(theDateChar$end, format = "%y/%m/%d %H:%M",tz="UTC")
   return(theDateReturn)
 }
+
+
+
+appender.fn <- function(lineIn) { 
+  lineVars <- str_extract_all(lineIn, "\\[.+?\\]")
+  
+  strFormat <- function(stringIn){
+    stringInternal <- str_replace_all(stringIn,"\\[|\\]|\\n","")
+    return(stringInternal)
+  }
+  
+  lineVars <- lapply(lineVars,FUN=strFormat)
+  
+  oppCode <- as.character("")
+  
+  if(str_detect(lineVars[[1]][3]," - start$")){
+    oppCode <- "start"
+    lineVars[[1]][3] <- str_replace(lineVars[[1]][3]," - start$","")
+  }
+  
+  if(str_detect(lineVars[[1]][3]," - end$")){
+    oppCode <- "end"
+    lineVars[[1]][3] <- str_replace(lineVars[[1]][3]," - end$","")
+  }
+  
+  awrM$debug.unitTimes <<- rbind(awrM$debug.unitTimes,data.frame(db=main$current_db_name,level=lineVars[[1]][1],time=lineVars[[1]][2],message=lineVars[[1]][3],opp=oppCode))
+  print(lineIn)
+}
+
+flog.appender(appender.fn)
+
+layout <- layout.format('[~l] [~t] [~m]')
+flog.layout(layout)
+
+
 #====================================================================================================================
 
 
@@ -341,7 +382,7 @@ set_date_break_vars <- function(DF_MAIN_IN){
 
 
 getSection <- function(inFile,blockName,decSep='.',searchPatternIn=NULL,replacePatternIn=NULL){
-  flog.debug(paste0("getSection - start - ",blockName),name="getSection")
+  flog.debug(paste0("getSection - ",blockName," - start"),name="getSection")
   beginBlock <- paste0('~~BEGIN-',blockName,'~~')
   endBlock <- paste0('~~END-',blockName,'~~')
   thePattern <- paste0(beginBlock,'(.*)',endBlock)
@@ -350,6 +391,7 @@ getSection <- function(inFile,blockName,decSep='.',searchPatternIn=NULL,replaceP
   if(str_detect(body, 'table not in this version')){
     flog.trace("table not in this version",name="getSection")
     dfInt <- data.frame()
+    flog.debug(paste0("getSection - ",blockName," - end"),name="getSection")
     return(dfInt)
   }
   
@@ -416,7 +458,7 @@ getSection <- function(inFile,blockName,decSep='.',searchPatternIn=NULL,replaceP
   #print(dfInt)
   
   
-  flog.debug(paste0("getSection - end - ",blockName),name="getSection")
+  flog.debug(paste0("getSection - ",blockName," - end"),name="getSection")
   #dfInt <- na.omit(dfInt)
   return(dfInt)
 }
@@ -498,7 +540,18 @@ build_data_frames <- function(dbid,dbname) {
     DF_SQL_SUMMARY_INT$MODULE <- NA
   }
   
-  DF_SQL_SUMMARY_INT[with(DF_SQL_SUMMARY_INT, grepl("PL/SQLEXECUTE", COMMAND_NAME)),]$COMMAND_NAME<-"PL/SQL"
+
+  
+  tryCatch(  DF_SQL_SUMMARY_INT[with(DF_SQL_SUMMARY_INT, grepl("PL/SQLEXECUTE", COMMAND_NAME)),]$COMMAND_NAME<-"PL/SQL",
+           #DF_ATTRIBUTES_INT <- subset(DF_ATTRIBUTES_INT, db == main$current_db_name),
+           error = function(e) {
+             #traceback()
+             #browser()
+             
+           }
+  )
+  
+  
   DF_SQL_BY_SNAPID_INT <- getSection(theFile,'TOP-SQL-BY-SNAPID',computedDecSep)
   rm(theFile)
 
@@ -679,6 +732,16 @@ gen_summary_data <- function(){
                             logons_total=sum(logons_total),exec_s=sum(exec_s),commits_s=sum(commits_s),
                             aas=sum(aas))
   
+  if(is.na(sum(DF_MAIN_INT_SUM1$aas))){
+    DF_MAIN_INT_SUM1 <- subset( DF_MAIN_INT_SUM1, select = -aas )
+  
+    DF_AAS_TMP <- ddply(main$DF_AAS, .(SNAP_ID), summarise, aas=sum(AVG_SESS) )
+    DF_AAS_TMP <- rename(DF_AAS_TMP, c("SNAP_ID"="snap"))
+
+    DF_MAIN_INT_SUM1 <- merge(DF_MAIN_INT_SUM1,DF_AAS_TMP)
+  }
+  
+  
   DF_MAIN_INT_SUM <- ddply(DF_MAIN_INT_SUM1,.(), summarise,
                            cpu    = max(cpu),
                            r_iops = max(read_iops), w_iops = max(write_iops),
@@ -689,7 +752,7 @@ gen_summary_data <- function(){
   
   # round the whole data frame
   numVars <- sapply(DF_MAIN_INT_SUM, is.numeric)
-  DF_MAIN_INT_SUM[numVars] <- lapply(DF_MAIN_INT_SUM[numVars], round, digits = 0)
+  DF_MAIN_INT_SUM[numVars] <- lapply(DF_MAIN_INT_SUM[numVars], round, digits = 1)
   
   num_instances <- as.numeric(as.vector(get_os_stat("INSTANCES")))
   flog.trace(paste('instances: ',num_instances,sep=''))
@@ -853,10 +916,23 @@ plot_summary_boxplot_main <- function(){
   flog.debug('plot_summary_boxplot_main - start')
   x.melt <- melt(main$DF_MAIN_BY_SNAP, id.var = c("end"), measure.var = c("cpu","read_iops_max", "write_iops_max",
                                                                           "read_mb_s_max","write_mb_s_max","aas","logons_total","exec_s","sql_res_t_cs"))
+  if(debugMode){
+    debugVars$boxplot$melt <- x.melt
+  }
+  
   # add a "stat" column so we can facet by stat for avg-max
   #   x.melt$stat <- "Avg"  
   #   idx_max <- with(x.melt, grepl("max", variable))
   #   x.melt[idx_max,]$stat <- "Max"
+  
+  if(is.na(sum(subset(x.melt,variable == 'aas')$value))){
+    idx_aas_rm <- !with(x.melt, variable == 'aas')
+    x.melt<- x.melt[idx_aas_rm,]
+    DF_AAS.melt1 <- ddply(main$DF_AAS, .(end), summarise, value=sum(AVG_SESS) )
+    DF_AAS.melt1$variable <- "aas"
+    DF_AAS.melt1$L1 <- 1
+    x.melt <- rbind(DF_AAS.melt1,x.melt)
+  }
   
   x.melt$value <- round(x.melt$value,2)
   # We need to change these names and they are "factors" which we can't change
@@ -873,6 +949,12 @@ plot_summary_boxplot_main <- function(){
   x.melt[with(x.melt, grepl("sql_res_t_cs", variable)),]$variable<-"SQL Resp Time (cs)"
   x.melt$variable <- factor(x.melt$variable)
   x.melt$id <- 1
+  
+  if(is.na(sum(subset(x.melt,variable == 'Avg Act Sessions')$value))){
+    idx_aas_rm <- !with(x.melt, variable == 'Avg Act Sessions')
+    x.melt<- x.melt[idx_aas_rm,]
+  }
+  
   
   median_vals <- ddply(x.melt,.(variable),summarise, value=median(value))
   mean_vals <- ddply(x.melt,.(variable),summarise,value=mean(value))
@@ -1118,7 +1200,7 @@ plot_aas_bars_by_date <- function(DF_AAS_INT){
   
   
   
-  flog.debug('plot_aas_bars_by_date - start',name='plot_aas_bars_by_date')
+  flog.debug('plot_aas_bars_by_date - end',name='plot_aas_bars_by_date')
   return(aas_bar_plot)
 }
 
@@ -1253,19 +1335,25 @@ plot_io_histograms <- function(DF_IO_WAIT_HIST_INT){
     labs(title=paste0("I/O Wait Event Histogram"))+
     scale_y_continuous(labels = percent_format())+
     theme(axis.title.y  = element_blank(),legend.position =    "right" ,
-          legend.key.size = unit(.25, "cm"))+
+          legend.key.size = unit(.25, "cm"),
+          strip.text.x = element_text(size = 6))+
     xlab("Wait Milliseconds")
   
-
+  
   io_hist_area_plot <- ggplot()+
+    #ggplot(DF_IO_WAIT_HIST_INT, aes(x = end,
+    #                                                       fill = WAIT_TIME_MILLI))+
+    #geom_bar(stat = "identity", position = "stack",right=FALSE,drop=TRUE,
+    #         aes(y = WAIT_COUNT)+
     geom_area(data=DF_IO_WAIT_HIST_INT, aes(x = end, y = WAIT_COUNT,
-                                         fill = WAIT_TIME_MILLI),stat = "identity", position = "stack",alpha=1)+
+                                            fill = WAIT_TIME_MILLI),stat = "identity", position = "stack",alpha=1)+
     facet_grid(EVENT_NAME ~ .,scales="free_y")+
     gg_io_hist_colors2+
     main$gg_hour_bars+
     attr$vertical_line + attr$vertical_text +
     labs(title=paste0("I/O Wait Event Area Chart"))+
-    theme(legend.key.size = unit(.25, "cm"))+
+    theme(legend.key.size = unit(.25, "cm"),
+          strip.text.y = element_text(size = 4))+
     scale_x_datetime(labels = date_format("%a, %b %d %I %p"),breaks = attr$date_break_major_var,
                      minor_breaks = attr$date_break_minor_var,
                      limits = c(min(DF_IO_WAIT_HIST_INT$end),max(DF_IO_WAIT_HIST_INT$end)))+
@@ -1456,6 +1544,7 @@ plot_RAC_activity <- function(DF_MAIN_INT){
   
   flog.trace('DF_MAIN_INT2-1',DF_MAIN_INT2,capture=TRUE,name='plot_RAC_activity')
   if(!(max(DF_MAIN_INT2$gc_cr_rec_s)>10)){
+    flog.debug('plot_RAC_activity - end',name='plot_RAC_activity')
     return(TRUE)
   }
   
@@ -1652,6 +1741,7 @@ main$mainFunction <- function(f){
   vector_element = which(main$db_id==f)
   main$current_db_name=main$db_name[which(main$db_id==f)]
   flog.info(paste0('Starting DB: ',main$current_db_name))
+  flog.debug(paste0('Database - ',main$current_db_name," - start"))
   
   #flog.appender(appender.file(paste0(main$current_db_name,'.log')), name=main$current_db_name)
   
@@ -1681,6 +1771,14 @@ main$mainFunction <- function(f){
   c(main$DF_OS, main$DF_MAIN,main$DF_MEMORY,main$DF_SPACE,main$DF_AAS,main$DF_SQL_SUMMARY,main$DF_SQL_BY_SNAPID,main$DF_SNAP_ID_DATE,main$DF_IO_WAIT_HIST,main$DF_DB_PARAMETERS,main$DF_IO_BY_OBJECT_TYPE) := build_data_frames(f,main$current_db_name)
   c(main$DF_MAIN_BY_SNAP) := summarise_dfs_by_snap()
   main$DF_SNAP_ID_DATE2 <- build_snap_to_date_df()
+  
+  outFileName <- paste(main$current_db_name,min(main$DF_MAIN$snap),max(main$DF_MAIN$snap),outFileSuffix,sep='-')
+  
+  if(debugMode){
+    debugVars$main <- main
+    save(debugVars,file=paste(outFileName,"-debugVars.Rda",sep=""))
+  }
+  
   add_vetical_lines()
   set_date_break_vars(main$DF_MAIN)
   
@@ -1690,7 +1788,21 @@ main$mainFunction <- function(f){
   
   main$cpu_cores <- main$num_cpu_cores*get_os_stat("INSTANCES")
   
-  main$gg_hour_bars <- generate_hours_bars(main$DF_MAIN)
+  
+  
+  tryCatch(main$gg_hour_bars <- generate_hours_bars(main$DF_MAIN), 
+           error = function(e) {
+             #traceback()
+             flog.appender(appender.file(paste0(main$current_db_name,'.log')), name=main$current_db_name)
+             flog.error(paste0("Error in ",main$current_db_name,": ",e))
+             main$gg_hour_bars <- theme()
+             #flog.remove(name=main$current_db_name)
+             #browser()
+             
+           }
+           #,finally=print("finished")
+  )
+  
   
   c(main$DF_SUMMARY_OS,main$DF_SUMMARY_MAIN,main$DF_SUMMARY_OVERALL) := gen_summary_data()
   main$overall_summary_df <- rbind(main$overall_summary_df, main$DF_SUMMARY_OVERALL)
@@ -1707,7 +1819,7 @@ main$mainFunction <- function(f){
   flog.trace(str(tblText3),name='mainFunction')
   c(aas_plot, aas_plot2_gt,aas_plot2_line) := plot_aas_chart(main$DF_AAS)
   
-  outFileName <- paste(main$current_db_name,min(main$DF_MAIN$snap),max(main$DF_MAIN$snap),outFileSuffix,sep='-')
+  
   
   pdf(paste(outFileName,"-plot.pdf",sep=""), width = 11, height = 8.5,useDingbats=FALSE)
   
@@ -1716,7 +1828,18 @@ main$mainFunction <- function(f){
   #x <- grid.arrange(tblText,tblText2,tblText3, box_plots, ncol = 1, heights=c(1,1,1,8))
   #x <- grid.arrange(tblText,tblText2,tblText3, aas_plot2_line,box_plots, ncol = 1, heights=c(1,1,1,8,8))
   if(debugMode){
+    debugVars$tblText <- tblText
+    debugVars$tblText2 <- tblText2
+    debugVars$tblText3 <- tblText3
+    debugVars$aas_plot2_line <- aas_plot2_line
+    debugVars$box_plots <- box_plots
+    
+    
+    save(debugVars,file=paste(outFileName,"-debugVars.Rda",sep=""))
+    
     x <- grid.arrange(tblText,tblText2,tblText3, aas_plot2_line,box_plots, ncol = 1, heights=c(1,1,1,8,8))
+    #x <- grid.arrange(tblText,tblText2,tblText3, box_plots, ncol = 1, heights=c(1,1,1,8))
+    #x <- grid.arrange(tblText ,tblText2,tblText3, ncol = 1, heights=c(1,1,1))
   }
   else{
     tryCatch(x <- grid.arrange(tblText,tblText2,tblText3, aas_plot2_line,box_plots, ncol = 1, heights=c(1,1,1,8,8)), 
@@ -1769,7 +1892,7 @@ main$mainFunction <- function(f){
   if( nrow(main$DF_IO_WAIT_HIST)>10){
     x <- grid.arrange(io_hist_plot,io_hist_area_plot , ncol = 1, heights=c(1,4))
   }
-  head(main$DF_IO_WAIT_HIST)
+  #head(main$DF_IO_WAIT_HIST)
   grid.newpage()
   
   grid.draw(aas_plot)
@@ -1834,13 +1957,14 @@ main$mainFunction <- function(f){
   names(main$DF_SQL_SUMMARY)[names(main$DF_SQL_SUMMARY)=="LOG_READS_RANK"] <- "logRsRank"
   names(main$DF_SQL_SUMMARY)[names(main$DF_SQL_SUMMARY)=="PHYS_READS_RANK"] <- "physRsRank"
   #subset(df, select=-c(z,u))
-  sqlSummaryText1 <- tableGrob(subset(main$DF_SQL_SUMMARY, select=-c(PX_EXEC,LOG_READS)),show.rownames = FALSE, gpar.coretext = gpar(fontsize=5),gpar.coltext = gpar(fontsize=5),padding.v = unit(1, "mm"),padding.h = unit(1, "mm"),show.colnames = TRUE,col.just = "left", gpar.corefill = gpar(fill=NA,col=NA),h.even.alpha = 0 )
+  sqlSummaryText1 <- tableGrob(head(subset(main$DF_SQL_SUMMARY, select=-c(PX_EXEC,LOG_READS)),75),show.rownames = FALSE, gpar.coretext = gpar(fontsize=5),gpar.coltext = gpar(fontsize=5),padding.v = unit(1, "mm"),padding.h = unit(1, "mm"),show.colnames = TRUE,col.just = "left", gpar.corefill = gpar(fill=NA,col=NA),h.even.alpha = 0 )
   #print(sqlSummaryText1)
   grid.arrange(sqlSummaryText1,ncol = 1, widths=c(1))
   
   dev.off()
   
   main$plot_attributes <- rbind(main$plot_attributes,main$current_plot_attributes)
+  flog.debug(paste0('Database - ',main$current_db_name," - end"))
   flog.info(paste0('Finished DB: ',main$current_db_name))
 }
 
@@ -1872,6 +1996,23 @@ main$mainLoop <- function(){
   if(length(main$plot_attributes) > 0){
     write.csv(main$plot_attributes,'attributes.csv',row.names=FALSE)
   }
+  
+  if(debugMode){
+    awrM$debug.unitTimes[awrM$debug.unitTimes == ""] <<- NA
+  
+    
+    awrM$debug.unitTimesWide <<- reshape(subset(na.omit(awrM$debug.unitTimes),length(awrM$debug.unitTimes$opp)>2), 
+                 timevar = "opp",
+                 idvar = c("db", "level", "message"),
+                 direction = "wide")
+    
+    awrM$debug.unitTimesWide$time.start <- as.POSIXct(awrM$debug.unitTimesWide$time.start, format = "%Y-%m-%d %H:%M:%S",tz="UTC")
+    awrM$debug.unitTimesWide$time.end <- as.POSIXct(awrM$debug.unitTimesWide$time.end, format = "%Y-%m-%d %H:%M:%S",tz="UTC")
+    awrM$debug.unitTimesWide$duration <- difftime(awrM$debug.unitTimesWide$time.end , awrM$debug.unitTimesWide$time.start , unit="secs")
+    print(head(awrM$debug.unitTimesWide,30))
+    save(awrM,file="awrM.Rda")
+  }
+  
 }
 
 get_db_names()
