@@ -10,7 +10,7 @@ column cnt_dbid_1 new_value CNT_DBID noprint
 
 define NUM_DAYS = 30
 define SQL_TOP_N = 30
-define AWR_MINER_VER = 3.0.3
+define AWR_MINER_VER = 3.0.12
 
 
 
@@ -240,7 +240,6 @@ BEGIN
 			     FROM dba_hist_database_instance i,dba_hist_snapshot s
 				WHERE i.dbid = s.dbid
 				  and i.dbid = &DBID
-                  and s.startup_time = i.startup_time
 				  AND s.snap_id BETWEEN &SNAP_ID_MIN AND &SNAP_ID_MAX
 			    order by 1)
     loop
@@ -343,8 +342,6 @@ REPFOOTER PAGE LEFT '~~END-MAIN-METRICS~~'
   max(decode(metric_name,'Host CPU Utilization (%)',					maxval,null)) "os_cpu_max",
   max(decode(metric_name,'Database Wait Time Ratio',                   round(average,1),null)) "db_wait_ratio",
 max(decode(metric_name,'Database CPU Time Ratio',                   round(average,1),null)) "db_cpu_ratio",
-max(decode(metric_name,'CPU Usage Per Sec',                   round(average/100,3),null)) "cpu_per_s",
-max(decode(metric_name,'CPU Usage Per Sec',                   round(maxval/100,3),null)) "cpu_per_s_max",
 max(decode(metric_name,'Average Active Sessions',                   average,null)) "aas",
 max(decode(metric_name,'Average Active Sessions',                   maxval,null)) "aas_max",
 max(decode(metric_name,'SQL Service Response Time',                   average,null)) "sql_res_t_cs",
@@ -357,14 +354,14 @@ max(decode(metric_name,'Logical Reads Per Sec',                     average,null
 max(decode(metric_name,'User Commits Per Sec',                      average,null)) "commits_s",
 max(decode(metric_name,'Physical Read Total Bytes Per Sec',         round((average)/1024/1024,1),null)) "read_mb_s",
 max(decode(metric_name,'Physical Read Total Bytes Per Sec',         round((maxval)/1024/1024,1),null)) "read_mb_s_max",
-max(decode(metric_name,'Physical Reads Per Sec',   average,null)) "read_iops",
-max(decode(metric_name,'Physical Reads Per Sec',   maxval,null)) "read_iops_max",
+max(decode(metric_name,'Physical Read Total IO Requests Per Sec',   average,null)) "read_iops",
+max(decode(metric_name,'Physical Read Total IO Requests Per Sec',   maxval,null)) "read_iops_max",
 max(decode(metric_name,'Physical Reads Direct Per Sec',  			average,null)) "read_iops_direct",
 max(decode(metric_name,'Physical Reads Direct Per Sec',  			maxval,null)) "read_iops_direct_max",
 max(decode(metric_name,'Physical Write Total Bytes Per Sec',        round((average)/1024/1024,1),null)) "write_mb_s",
 max(decode(metric_name,'Physical Write Total Bytes Per Sec',        round((maxval)/1024/1024,1),null)) "write_mb_s_max",
-max(decode(metric_name,'Physical Writes Per Sec',  average,null)) "write_iops",
-max(decode(metric_name,'Physical Writes Per Sec',  maxval,null)) "write_iops_max",
+max(decode(metric_name,'Physical Write Total IO Requests Per Sec',  average,null)) "write_iops",
+max(decode(metric_name,'Physical Write Total IO Requests Per Sec',  maxval,null)) "write_iops_max",
 max(decode(metric_name,'Physical Writes Direct Per Sec',  			average,null)) "write_iops_direct",
 max(decode(metric_name,'Physical Writes Direct Per Sec',  			maxval,null)) "write_iops_direct_max",
 max(decode(metric_name,'Redo Generated Per Sec',                    round((average)/1024/1024,1),null)) "redo_mb_s",
@@ -389,8 +386,8 @@ where dbid = &DBID
  and snap_id between &SNAP_ID_MIN and &SNAP_ID_MAX
  --and snap_id = 920
  --and instance_number = 4
- and metric_name in ('Host CPU Utilization (%)','CPU Usage Per Sec','Average Active Sessions','Executions Per Sec','Hard Parse Count Per Sec','Logical Reads Per Sec','Logons Per Sec',
- 'Physical Read Total Bytes Per Sec','Physical Reads Per Sec','Physical Write Total Bytes Per Sec',
+ and metric_name in ('Host CPU Utilization (%)','Average Active Sessions','Executions Per Sec','Hard Parse Count Per Sec','Logical Reads Per Sec','Logons Per Sec',
+ 'Physical Read Total Bytes Per Sec','Physical Read Total IO Requests Per Sec','Physical Write Total Bytes Per Sec','Physical Write Total IO Requests Per Sec',
  'Redo Generated Per Sec','User Commits Per Sec','Current Logons Count','DB Block Gets Per Sec','DB Block Changes Per Sec',
  'Database Wait Time Ratio','Database CPU Time Ratio','SQL Service Response Time','Background Time Per Sec','Physical Writes Per Sec','Physical Writes Direct Per Sec','Physical Writes Direct Lobs Per Sec',
  'Physical Reads Direct Per Sec','Physical Reads Direct Lobs Per Sec',

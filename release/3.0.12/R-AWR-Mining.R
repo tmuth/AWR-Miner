@@ -692,12 +692,8 @@ summarise_dfs_by_snap <- function(){
                                cpu=max(os_cpu_max),
                                read_iops=sum(read_iops),
                                read_iops_max=sum(read_iops_max),
-                               read_iops_direct=sum(read_iops_direct),
-                               read_iops_direct_max=sum(read_iops_direct_max),
                                write_iops=sum(write_iops),
                                write_iops_max=sum(write_iops_max),
-                               write_iops_direct=sum(write_iops_direct),
-                               write_iops_direct_max=sum(write_iops_direct_max),
                                read_mb_s=sum(read_mb_s),
                                read_mb_s_max=sum(read_mb_s_max),
                                write_mb_s=sum(write_mb_s),
@@ -1215,25 +1211,15 @@ plot_io <- function(DF_MAIN_BY_SNAP_INT){
   flog.debug('plot_io - start',name='plot_io')
   DF_MAIN_INT2 <- DF_MAIN_BY_SNAP_INT
   x.melt <- melt(DF_MAIN_INT2, id.var = c("end"), measure.var = c("read_iops", "read_iops_max","write_iops", "write_iops_max",
-                                                                  "read_mb_s","read_mb_s_max","write_mb_s","write_mb_s_max",
-                                                                  "read_iops_direct","read_iops_direct_max","write_iops_direct","write_iops_direct_max"))
+                                                                  "read_mb_s","read_mb_s_max","write_mb_s","write_mb_s_max"))
   # add a "stat" column so we can facet by stat for avg-max
-  x.melt$stat <- "Avg"
-  x.melt$alphaSet <- .9  
+  x.melt$stat <- "Avg"  
   idx_max <- with(x.melt, grepl("max", variable))
-  x.melt[idx_max,]$stat <- "Max"
-  #idx_max <- with(x.melt, grepl("direct", variable))
-  #x.melt[idx_max,]$stat <- "Direct" 
-  #idx_max <- with(x.melt, grepl("direct_max", variable))
-  #x.melt[idx_max,]$stat <- "Direct Max" 
-  #x.melt$value <- round(x.melt$value)
-  idx_max <- with(x.melt, grepl("direct", variable))
-  x.melt[idx_max,]$alphaSet <- 0.4 
+  x.melt[idx_max,]$stat <- "Max"  
+  x.melt$value <- round(x.melt$value)
   # We need to change these names and they are "factors" which we can't change
   x.melt <- transform(x.melt, variable = as.character(variable))
   
-  x.melt[with(x.melt, grepl("read_iops_direct", variable)),]$variable<-"Read IOPs Direct *"
-  x.melt[with(x.melt, grepl("write_iops_direct", variable)),]$variable<-"Write IOPs Direct *"
   x.melt[with(x.melt, grepl("read_iops", variable)),]$variable<-"Read IOPs"
   x.melt[with(x.melt, grepl("write_iops", variable)),]$variable<-"Write IOPs"
   x.melt[with(x.melt, grepl("read_mb_s", variable)),]$variable<-"Read MB/s"
@@ -1256,62 +1242,48 @@ plot_io <- function(DF_MAIN_BY_SNAP_INT){
   
   # get the max vals for each day
   
+  max_vals <- ddply(x.melt, .(variable,stat,format(end,"%y/%m/%d")), subset, subset = rank(-value) <= 1)
+  max_vals$label <- formatC(max_vals$value, format="d", big.mark=",")
   
+  p <- ggplot(data=x.melt, aes(x=end, y=value),aes(color=stat)) +
+    geom_line(aes(color=stat), size=.2,alpha=0.7)+
+    #stat_smooth(method = "loess",n=300,size=.2,alpha=.1,linetype="dashed",
+    #      aes(color=stat,fill=stat))+
+    
+    attr$themeScaleColour+attr$themeScaleFill+
+    main$gg_avg_max_fill+main$gg_avg_max_color+
+    geom_point(data=max_vals, aes(x=end, y=value, fill=stat), size=2, shape=21)+
+    geom_text(data=max_vals, aes(x=end, y=value, color=stat,label=label),size=2.5, vjust=0.5, hjust=1.25)+
+    geom_text(data=DF_SNAP_ID_SUBSET3,aes(x=end,y=0,label=SNAP_ID),angle=-20,size=1.5,hjust=-0.1,vjust=0.7,alpha=0.2)+
+    geom_point(data=DF_SNAP_ID_SUBSET3,aes(x=end,y=0),alpha=0.2,size=1)+
+    ylab('')+
+    
+    facet_grid(variable ~ .,scales="free_y")+
+    #opts(axis.title.x  = theme_blank())+
+    #opts(plot.margin = unit(c(.1,.1,.1,.1), "cm"),panel.background = theme_rect(colour = "#aaaaaa"))+
+    scale_y_continuous(labels=comma)+
+    xlim(min(x.melt$end),max(x.melt$end))+
+    #opts(axis.title.x  = theme_blank())+
+    labs(title=paste("IO Avg and Max by IO Type for ",main$current_db_name,sep=""))+
+    main$gg_hour_bars+
+    attr$vertical_line + attr$vertical_text +
+    #                   opts(axis.text.x=theme_text(angle=-30, hjust=-.1,vjust=1,size=6))+
+    #                   opts(panel.grid.major = theme_line("#eeeeee", size = 0.2,linetype = "dotted"))+
+    #                   opts(panel.grid.minor = theme_line("#efefef", size = 0.1,linetype = "dotted"))+
+    #ylim(0,max(max_vals$value))+
+    
+    scale_x_datetime(labels = date_format("%a, %b %d %I%p"),breaks = attr$date_break_major_var,
+                     minor_breaks = attr$date_break_minor_var,
+                     limits = c(min(x.melt$end),max(x.melt$end)))
+  #main$gg_bottom_panel
   
-  plot_io_int <- function(df_in){
-    
-    
-   
-    max_vals <- ddply(df_in, .(variable,stat,format(end,"%y/%m/%d")), subset, subset = rank(-value) <= 1)
-    max_vals$label <- formatC(max_vals$value, format="d", big.mark=",")
-    
-    plot_int <- ggplot(data=df_in, aes(x=end, y=value),aes(color=stat,alpha=alphaSet)) +
-      geom_line(aes(color=stat,alpha=alphaSet), size=.2)+
-      #stat_smooth(method = "loess",n=300,size=.2,alpha=.1,linetype="dashed",
-      #      aes(color=stat,fill=stat))+
-      
-      attr$themeScaleColour+attr$themeScaleFill+
-      main$gg_avg_max_fill+main$gg_avg_max_color+
-      geom_point(data=max_vals, aes(x=end, y=value, fill=stat,alpha=alphaSet), size=2, shape=21)+
-      geom_text(data=max_vals, aes(x=end, y=value, color=stat,label=label,alpha=(alphaSet+0.1)),size=2.5, vjust=0.5, hjust=1.25,position = position_jitter(width = .2,height=0))+
-      geom_text(data=DF_SNAP_ID_SUBSET3,aes(x=end,y=0,label=SNAP_ID),angle=-20,size=1.5,hjust=-0.1,vjust=0.7,alpha=0.2)+
-      geom_point(data=DF_SNAP_ID_SUBSET3,aes(x=end,y=0),alpha=0.2,size=1)+
-      ylab('')+
-      
-      facet_grid(variable ~ .,scales="free_y")+
-      #opts(axis.title.x  = theme_blank())+
-      #opts(plot.margin = unit(c(.1,.1,.1,.1), "cm"),panel.background = theme_rect(colour = "#aaaaaa"))+
-      scale_y_continuous(labels=comma)+
-      xlim(min(x.melt$end),max(x.melt$end))+
-      #opts(axis.title.x  = theme_blank())+
-      labs(title=paste("IO Avg and Max by IO Type for ",main$current_db_name,sep=""))+
-      main$gg_hour_bars+
-      attr$vertical_line + attr$vertical_text +
-      #                   opts(axis.text.x=theme_text(angle=-30, hjust=-.1,vjust=1,size=6))+
-      #                   opts(panel.grid.major = theme_line("#eeeeee", size = 0.2,linetype = "dotted"))+
-      #                   opts(panel.grid.minor = theme_line("#efefef", size = 0.1,linetype = "dotted"))+
-      #ylim(0,max(max_vals$value))+
-      
-      scale_x_datetime(labels = date_format("%a, %b %d %I%p"),breaks = attr$date_break_major_var,
-                       minor_breaks = attr$date_break_minor_var,
-                       limits = c(min(x.melt$end),max(x.melt$end)))+
-      scale_alpha(guide = 'none')+
-      theme(legend.key.size = unit(.25, "cm"),
-          strip.text.y = element_text(size = 6)
-          )
-    return(plot_int)
-  }
-  
-  p <- plot_io_int(subset(x.melt,variable %in% c("Read IOPs Direct *","Write IOPs Direct *","Read IOPs","Write IOPs","Read MB/s","Write MB/s")))
+  #p
   
   p_gt <- ggplot_gtable(ggplot_build(p))
   p_gt$layout$clip[p_gt$layout$name=="panel"] <- "off"
   
-
-  
   flog.debug('plot_io - end',name='plot_io')
   return(p_gt)
-  #return(list(p_gt,io_hist_area_plot))
   #}
 }
 
@@ -1470,18 +1442,11 @@ plot_main_activity <- function(DF_MAIN_INT){
                         logons_total=sum(logons_total),
                         exec_s=sum(exec_s),
                         hard_p_s=sum(hard_p_s),
-                        commits_s=sum(commits_s)
-#                         ,
-#                         se_sess=sum(se_sess),
-#                        px_sess=sum(px_sess)
-                        )
+                        commits_s=sum(commits_s))
 
   
   x.melt <- melt(DF_MAIN_INT2, id.var = c("end"), measure.var = c("aas", "aas_max","sql_res_t_cs", "logons_s",
-                                                                  "logons_total","exec_s","hard_p_s","commits_s"
-                                                                  #,
-                                                                  #"se_sess","px_sess"
-                                                                  ))
+                                                                  "logons_total","exec_s","hard_p_s","commits_s"))
   #"db_block_gets_s","db_block_changes_s"))
   
   x.melt$value <- round(x.melt$value,2)
@@ -1493,8 +1458,6 @@ plot_main_activity <- function(DF_MAIN_INT){
   x.melt[with(x.melt, grepl("sql_res_t_cs", variable)),]$variable<-"SQL Resp (cs)"
   x.melt[with(x.melt, grepl("logons_s", variable)),]$variable<-"Logons/s"
   x.melt[with(x.melt, grepl("logons_total", variable)),]$variable<-"Logons Total"
-  #x.melt[with(x.melt, grepl("se_sess", variable)),]$variable<-"Serial Sessions"
-  #x.melt[with(x.melt, grepl("px_sess", variable)),]$variable<-"Parallel Sessions"
   x.melt[with(x.melt, grepl("exec_s", variable)),]$variable<-"Execs/s"
   x.melt[with(x.melt, grepl("commits_s", variable)),]$variable<-"Commits/s"
   x.melt[with(x.melt, grepl("hard_p_s", variable)),]$variable<-"Hard Parses/s"
@@ -1547,9 +1510,6 @@ plot_main_activity <- function(DF_MAIN_INT){
     main$gg_hour_bars+
     gg_aas_max_max +
     attr$vertical_line + attr$vertical_text +
-    theme(
-          strip.text.y = element_text(size = 6)
-    )+
     scale_x_datetime(labels = date_format("%a, %b %d %I%p"),breaks = attr$date_break_major_var,
                      minor_breaks = attr$date_break_minor_var,
                      limits = c(min(x.melt$end),max(x.melt$end)))

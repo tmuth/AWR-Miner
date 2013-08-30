@@ -10,7 +10,7 @@ column cnt_dbid_1 new_value CNT_DBID noprint
 
 define NUM_DAYS = 30
 define SQL_TOP_N = 30
-define AWR_MINER_VER = 3.0.3
+define AWR_MINER_VER = 3.0.14
 
 
 

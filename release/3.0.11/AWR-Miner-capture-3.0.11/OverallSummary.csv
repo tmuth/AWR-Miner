@@ -1,0 +1,2 @@
+"","name","nodes","platform","version","sockets","cores","threads","mem","days","days.shown","AWR.Miner.Capture","AWR.Miner.Graph","cpu","r_iops","w_iops","r_mb_s","w_mb_s","logons_total","exec_s","commits_s","aas","sga","pga","memused","sizegb","hosts"
+"1","USPS",6,"Linux_x86_64-bit","11.2.0.2.0",48,384,768,6056.4,8.2,8.2,"3.0.11","3.0.12",100,267733.2,152960.9,34439.7,5140,3450.8,8514.2,3.7,1539.9,2953,43,2976,33382,"dm01db01,dm01db02,dm02db01,dm02db02,dm03db01,dm03db02"

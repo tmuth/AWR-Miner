@@ -53,7 +53,7 @@ if(exists("debugModeOverride")){
 
 
 
-awrMinerPlotVersion <- '3.0.12'
+awrMinerPlotVersion <- '3.0.13'
 
 filePattern <- "^awr-hist*.*(\\.out|\\.gz)$"
 if(exists("filePatternOverride")){
@@ -406,10 +406,10 @@ getSection <- function(inFile,blockName,decSep='.',searchPatternIn=NULL,replaceP
   
   # Get the dashes which we'll use to get a vector of column lengths
   dashesLine <- str_extract(body, '\n[- ]+\n')
-  #print(dashesLine)
+  print(dashesLine)
   dashesLine <- gsub('\n', '', dashesLine)
   dashesVector <- str_split(dashesLine,' ')
-  #print(dashesVector)
+  print(dashesVector)
   #dashesVectorLengths <- lapply(dashesVector, nchar)
   
   #print(str(dashesVector))

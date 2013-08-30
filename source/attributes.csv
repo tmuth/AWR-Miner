@@ -1,0 +1,5 @@
+"db","variable","value1","value2"
+"USPS","$date_range","2012-02-24 00:59:00","2012-03-03 04:59:00"
+"USPS","$snap_id_range","776","985"
+"USPS","snap_id_filter","",""
+"USPS","annotated_line","",""

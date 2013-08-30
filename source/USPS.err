@@ -1,0 +1,14 @@
+[ERROR] [2013-08-30 14:05:44] [Error in USPS: Error in unit(x, default.units): 'x' and 'units' must have length > 0
+]
+[ERROR] [2013-08-30 14:20:49] [Error in USPS: Error: measure variables not found in data: read_iops_direct, read_iops_direct_max, write_iops_direct, write_iops_direct_max
+]
+[ERROR] [2013-08-30 14:20:49] [gsub("~m", msg, message, fixed = TRUE)]
+[ERROR] [2013-08-30 15:17:19] [Error in USPS: Error in do.call("layer", list(mapping = mapping, data = data, stat = stat, : object 'alphaSet' not found
+]
+[ERROR] [2013-08-30 15:17:19] [source("M:/Dropbox/MyFiles/GitHub/AWR-Miner/source/R-AWR-Mining.R")]
+[ERROR] [2013-08-30 15:20:57] [Error in USPS: Error in do.call("layer", list(mapping = mapping, data = data, stat = stat, : object 'alphaSet' not found
+]
+[ERROR] [2013-08-30 15:20:57] [source("M:/Dropbox/MyFiles/GitHub/AWR-Miner/source/R-AWR-Mining.R")]
+[ERROR] [2013-08-30 15:23:35] [Error in USPS: Error in Ops.unit(unit(0.25, "cm"), scale_alpha(guide = "none")): both operands must be units
+]
+[ERROR] [2013-08-30 15:23:35] [source("M:/Dropbox/MyFiles/GitHub/AWR-Miner/source/R-AWR-Mining.R")]
