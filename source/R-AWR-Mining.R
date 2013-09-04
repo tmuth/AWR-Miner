@@ -28,7 +28,7 @@ outFileSuffix <- '1'
 
 
 #====================================================================================================================
-
+options(scipen=999) # disable scientific notation
 debugMode <- FALSE
 flog.threshold(INFO) #TRACE, DEBUG, INFO, WARN, ERROR, FATAL
 #flog.threshold(ERROR,name='getSection') #TRACE, DEBUG, INFO, WARN, ERROR, FATAL 
@@ -194,12 +194,12 @@ appender.fn <- function(lineIn) {
   print(lineIn)
 }
 
-flog.appender(appender.fn)
-
-layout <- layout.format('[~l] [~t] [~m]')
-flog.layout(layout)
-
-
+if(debugMode){
+  flog.appender(appender.fn)
+  
+  layout <- layout.format('[~l] [~t] [~m]')
+  flog.layout(layout)
+}
 #====================================================================================================================
 
 
@@ -391,7 +391,7 @@ getSection <- function(inFile,blockName,decSep='.',searchPatternIn=NULL,replaceP
   if(str_detect(body, 'table not in this version')){
     flog.trace("table not in this version",name="getSection")
     dfInt <- data.frame()
-    flog.debug(paste0("getSection - ",blockName," - end"),name="getSection")
+    #flog.debug(paste0("getSection - ",blockName," - end"),name="getSection")
     return(dfInt)
   }
   
@@ -1118,7 +1118,6 @@ plot_aas_chart <- function(DF_AAS_INT){
                      #limits = c(min(DF_AAS_INT2$end),max(DF_AAS_INT2$end))
     )+
     theme(axis.title.x  = element_blank(),axis.title.y  = element_blank())+
-    #opts(panel.background = theme_rect(colour = "#777777"))+
     labs(title=paste(paste("Average Active Sessions by Wait Class - ",main$current_db_name,sep=""),"\n Only Values >= 95th Percentile",sep=""))+
     geom_text(data=DF_SNAP_ID_SUBSET2,aes(x=end,y=0,label=SNAP_ID),angle=-20,size=1.5,alpha=0.2,hjust=-0.15,vjust=2.2)+
     geom_point(data=DF_SNAP_ID_SUBSET2,aes(x=end,y=0),alpha=0.2,size=1,vjust=1,hjust=0)+
@@ -1279,19 +1278,12 @@ plot_io <- function(DF_MAIN_BY_SNAP_INT){
       ylab('')+
       
       facet_grid(variable ~ .,scales="free_y")+
-      #opts(axis.title.x  = theme_blank())+
-      #opts(plot.margin = unit(c(.1,.1,.1,.1), "cm"),panel.background = theme_rect(colour = "#aaaaaa"))+
       scale_y_continuous(labels=comma)+
       xlim(min(x.melt$end),max(x.melt$end))+
-      #opts(axis.title.x  = theme_blank())+
       labs(title=paste("IO Avg and Max by IO Type for ",main$current_db_name,sep=""))+
       main$gg_hour_bars+
       attr$vertical_line + attr$vertical_text +
-      #                   opts(axis.text.x=theme_text(angle=-30, hjust=-.1,vjust=1,size=6))+
-      #                   opts(panel.grid.major = theme_line("#eeeeee", size = 0.2,linetype = "dotted"))+
-      #                   opts(panel.grid.minor = theme_line("#efefef", size = 0.1,linetype = "dotted"))+
-      #ylim(0,max(max_vals$value))+
-      
+          
       scale_x_datetime(labels = date_format("%a, %b %d %I%p"),breaks = attr$date_break_major_var,
                        minor_breaks = attr$date_break_minor_var,
                        limits = c(min(x.melt$end),max(x.melt$end)))+
@@ -1521,7 +1513,7 @@ plot_main_activity <- function(DF_MAIN_INT){
   DF_SNAP_ID_SUBSET2$variable <- factor(DF_SNAP_ID_SUBSET2$variable)
   
   if(nrow(subset(x.melt, variable=="AAS")) == 0){
-    gg_aas_max_max <- opts()
+    gg_aas_max_max <- theme()
   }  else {
     df_aas_max_max <- data.frame(end=min(x.melt$end),variable="AAS",value=max(subset(x.melt, variable == "AAS Max")$value),stringsAsFactors =TRUE)
     gg_aas_max_max <- geom_point(data=df_aas_max_max,aes(x=end,y=value),alpha=0)
@@ -1641,12 +1633,7 @@ plot_RAC_activity <- function(DF_MAIN_INT){
   
   DF_SNAP_ID_SUBSET2$variable <- factor(DF_SNAP_ID_SUBSET2$variable)
   
-  #   if(nrow(subset(x.melt, variable=="AAS")) == 0){
-  #     gg_aas_max_max <- opts()
-  #   }  else {
-  #     df_aas_max_max <- data.frame(end=min(x.melt$end),variable="AAS",value=max(subset(x.melt, variable == "AAS Max")$value),stringsAsFactors =TRUE)
-  #     gg_aas_max_max <- geom_point(data=df_aas_max_max,aes(x=end,y=value),alpha=0)
-  #   }
+  
   
   max_vals <- ddply(x.melt, .(variable,inst,format(end,"%y/%m/%d")), subset, subset = rank(-value) <= 1)
   max_vals$label <- formatC(max_vals$value, digits=2,format="fg", big.mark=",")
@@ -1721,17 +1708,13 @@ plot_memory <- function(DF_MEMORY_INT){
     geom_line(aes(x=end,y=PGA),color="#47b850",size=1)+
     geom_text(data=line_labels,aes(x=end, y=PGA,label="PGA"),color="#47b850",size=3, vjust=-.8, hjust=1.5)+
     theme(axis.title.x  = element_blank())+
-    #opts(plot.margin = unit(c(.1,.1,.1,.1), "cm"),panel.background = theme_rect(colour = "#777777"))+
     labs(title=paste("Total Memory Usage in GB for ",main$current_db_name,sep=""))+
     #main$gg_hour_bars+
     attr$vertical_line + attr$vertical_text +
     scale_x_datetime(labels = date_format("%a, %b %d"),breaks = attr$date_break_major_var,
                      minor_breaks = attr$date_break_minor_var,
                      limits = c(min(DF_MEMORY_INT_SUM$end),max(DF_MEMORY_INT_SUM$end)))
-  #opts(axis.text.x=theme_text(angle=-30, hjust=-.1,vjust=1,size=6))+
-  #opts(panel.grid.major = theme_line("#eeeeee", size = 0.2,linetype = "dotted"))+
-  #opts(panel.grid.minor = theme_line("#efefef", size = 0.1,linetype = "dotted"))
-  
+    
   p
   flog.debug('plot_memory - end',name='plot_memory')
   return(p)
