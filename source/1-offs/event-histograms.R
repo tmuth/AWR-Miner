@@ -10,7 +10,7 @@ lapply(list.of.packages, function(x) {
   library(x,character.only=TRUE,quietly = TRUE)
 })
 
-
+options(scipen=999)
 
 getSection <- function(inFile,blockName,decSep='.',searchPatternIn=NULL,replacePatternIn=NULL){
   flog.debug(paste0("getSection - start - ",blockName),name="getSection")
