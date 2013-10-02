@@ -1,4 +1,7 @@
 #Sys.setenv(http_proxy="http://www-proxy.us.oracle.com:80")
+#debugModeOverride <- TRUE  | rm(debugModeOverride)
+#filePatternOverride <- "^awr-hist.+DB110g.+(\\.out|\\.gz)$" | rm(filePatternOverride)
+
 
 list.of.packages <- c("futile.logger","ggplot2", "plyr","gridExtra","scales","reshape","xtable","ggthemes","stringr","data.table","lubridate","gplots")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
@@ -732,8 +735,8 @@ gen_summary_data <- function(){
   
   DF_MAIN_INT_SUM1 <- ddply(main$DF_MAIN,.(snap), summarise,
                             cpu    = max(os_cpu_max),
-                            read_iops = sum(read_iops_max), write_iops = sum(write_iops_max),
-                            read_mb_s = sum(read_mb_s_max), write_mb_s = sum(write_mb_s_max),
+                            read_iops = sum(read_iops), write_iops = sum(write_iops),
+                            read_mb_s = sum(read_mb_s), write_mb_s = sum(write_mb_s),
                             logons_total=sum(logons_total),exec_s=sum(exec_s),commits_s=sum(commits_s),
                             aas=sum(aas))
   
@@ -1740,15 +1743,22 @@ plot_sql_text <- function(){
 
   main$DF_SQL_SUMMARY$ELAP <-  main$DF_SQL_SUMMARY$ELAP / 1000000 # convert microseconds to seconds
   main$DF_SQL_SUMMARY$AVG_DOP <- main$DF_SQL_SUMMARY$PX_SERVERS_EXECS / main$DF_SQL_SUMMARY$EXECS
-  main$DF_SQL_SUMMARY$ELAP_PER_EXEC_M <- (main$DF_SQL_SUMMARY$ELAP / main$DF_SQL_SUMMARY$EXECS)/60
+  main$DF_SQL_SUMMARY$ELAP_PER_EXEC_S <- (main$DF_SQL_SUMMARY$ELAP / main$DF_SQL_SUMMARY$EXECS)
   main$DF_SQL_SUMMARY$logRsGBperExec <- ((main$DF_SQL_SUMMARY$LOG_READS* 8)/main$DF_SQL_SUMMARY$EXECS)/1024/1024
+  main$DF_SQL_SUMMARY$PhysRsGBperExec <- ((main$DF_SQL_SUMMARY$PHY_READ_GB)/main$DF_SQL_SUMMARY$EXECS)
+  numVars <- sapply(main$DF_SQL_SUMMARY, is.numeric)
+  main$DF_SQL_SUMMARY[numVars] <- lapply(main$DF_SQL_SUMMARY[numVars], round, digits = 1)
+  
   main$DF_SQL_SUMMARY$ELAP <-  formatC(main$DF_SQL_SUMMARY$ELAP, digits=2,format="fg", big.mark=",")
+  main$DF_SQL_SUMMARY$OPTIMIZER_COST <-  formatC(main$DF_SQL_SUMMARY$OPTIMIZER_COST, digits=0,format="fg", big.mark=",")
   main$DF_SQL_SUMMARY$EXECS <-  formatC(main$DF_SQL_SUMMARY$EXECS, digits=2,format="fg", big.mark=",")
   main$DF_SQL_SUMMARY$LOG_READS <-  formatC(main$DF_SQL_SUMMARY$LOG_READS, digits=2,format="fg", big.mark=",")
   main$DF_SQL_SUMMARY$ELAP_PER_EXEC_M <-  formatC(main$DF_SQL_SUMMARY$ELAP_PER_EXEC_M, digits=2,format="fg", big.mark=",")
   main$DF_SQL_SUMMARY$AVG_DOP <-  formatC(main$DF_SQL_SUMMARY$AVG_DOP, digits=0,format="fg", big.mark=",")
   main$DF_SQL_SUMMARY$logRsGBperExec <-  formatC(main$DF_SQL_SUMMARY$logRsGBperExec, digits=2,format="fg", big.mark=",")
+  main$DF_SQL_SUMMARY$PhysRsGBperExec <-  formatC(main$DF_SQL_SUMMARY$PhysRsGBperExec, digits=1,format="fg", big.mark=",")
   
+  names(main$DF_SQL_SUMMARY)[names(main$DF_SQL_SUMMARY)=="ACTION"] <- ".          ACTION          ."
   names(main$DF_SQL_SUMMARY)[names(main$DF_SQL_SUMMARY)=="ELAP"] <- "ELAP_S"
   names(main$DF_SQL_SUMMARY)[names(main$DF_SQL_SUMMARY)=="PARSING_SCHEMA_NAME"] <- "SCHEMA"
   names(main$DF_SQL_SUMMARY)[names(main$DF_SQL_SUMMARY)=="OPTIMIZER_COST"] <- "COST"
@@ -1756,6 +1766,7 @@ plot_sql_text <- function(){
   names(main$DF_SQL_SUMMARY)[names(main$DF_SQL_SUMMARY)=="PX_SERVERS_EXECS"] <- "PX_EXEC"
   names(main$DF_SQL_SUMMARY)[names(main$DF_SQL_SUMMARY)=="LOG_READS_RANK"] <- "logRsRank"
   names(main$DF_SQL_SUMMARY)[names(main$DF_SQL_SUMMARY)=="PHYS_READS_RANK"] <- "physRsRank"
+  
   #subset(df, select=-c(z,u))
   #sqlSummaryText1 <- tableGrob(head(subset(main$DF_SQL_SUMMARY, select=-c(PX_EXEC,LOG_READS)),75),show.rownames = FALSE, gpar.coretext = gpar(fontsize=5),gpar.coltext = gpar(fontsize=5),padding.v = unit(1, "mm"),padding.h = unit(1, "mm"),show.colnames = TRUE,col.just = "left", gpar.corefill = gpar(fill=NA,col=NA),h.even.alpha = 0 )
   #print(sqlSummaryText1)
@@ -1764,7 +1775,7 @@ plot_sql_text <- function(){
   
   #textplot(head(subset(main$DF_SQL_SUMMARY, select=-c(PX_EXEC,LOG_READS)),75),cex=.5,cspace=0,lspace=.01,show.colnames=TRUE,cmar=.4,rmar=.5)
   
-  textplot(head(subset(main$DF_SQL_SUMMARY, select=-c(PX_EXEC,LOG_READS)),75),cex=.4,lspace=.01,show.colnames=TRUE,show.rownames=TRUE,cmar=.55,rmar=1.2,family="mono",hadj=0.5,mar=c(0,.001,0,0),fixed.width=TRUE,halign="left")
+  textplot(head(subset(main$DF_SQL_SUMMARY, select=-c(PX_EXEC,LOG_READS,ELAP_S)),75),cex=.4,lspace=.01,show.colnames=TRUE,show.rownames=TRUE,cmar=.55,rmar=1.2,hadj=0.5,mar=c(0,.001,0,0),fixed.width=FALSE,halign="left")
   
   flog.debug('plot_sql_text - end')
 }
