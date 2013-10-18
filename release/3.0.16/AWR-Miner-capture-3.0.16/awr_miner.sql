@@ -10,7 +10,7 @@ column cnt_dbid_1 new_value CNT_DBID noprint
 
 define NUM_DAYS = 30
 define SQL_TOP_N = 30
-define AWR_MINER_VER = 3.0.15
+define AWR_MINER_VER = 3.0.16
 
 alter session set cursor_sharing = exact;
 
@@ -608,7 +608,6 @@ round(sum(disk_reads_delta * &DB_BLOCK_SIZE)/1024/1024/1024) phy_read_gb,
    AND s.dbid = t.dbid
   AND s.sql_id = t.sql_id
   AND PARSING_SCHEMA_NAME NOT IN ('SYS','DBSNMP','SYSMAN')
-  and s.module = 'acctdriver'
   GROUP BY s.module,s.action,s.sql_id,t.command_type,PARSING_SCHEMA_NAME)
 WHERE elap_rank <= &SQL_TOP_N
  OR phys_reads_rank <= &SQL_TOP_N

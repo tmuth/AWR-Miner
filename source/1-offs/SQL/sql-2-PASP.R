@@ -1,4 +1,4 @@
-setwd("M:/Dropbox/MyFiles/GitHub/AWR-Miner/source/1-offs/SQL")
+#setwd("M:/Dropbox/MyFiles/GitHub/AWR-Miner/source/1-offs/SQL")
 #save(DF_IO_HIST,file="DF_IO_HIST.Rda")
 #DF_SQL_SUMMARY <- main$DF_SQL_SUMMARY
 #DF_SQL_BY_SNAPID <- main$DF_SQL_BY_SNAPID
@@ -6,12 +6,15 @@ setwd("M:/Dropbox/MyFiles/GitHub/AWR-Miner/source/1-offs/SQL")
 #save(DF_SQL_BY_SNAPID,file="DF_SQL_BY_SNAPID-CALTRANS.Rda")
 #load(file="DF_IO_HIST.Rda")
 rm(main)
-load(file="M:/Dropbox/USPS/March-27th/main-PSASP2.Rda")
-load(file="M:/Dropbox/USPS/AWR-Miner/HP-DL980/PSASP0-main.Rda")
+setwd("M:/Dropbox/MyFiles/Accounts/Federal/World Bank/WB-share/AWR-Miner5")
+load(file="RAC12P-22889-23057-1-debugVars.Rda")
+
+#load(file="M:/Dropbox/USPS/March-27th/main-PSASP2.Rda")
+#load(file="M:/Dropbox/USPS/AWR-Miner/HP-DL980/PSASP0-main.Rda")
 rm(DF_SQL_SUMMARY)
 rm(DF_SQL_BY_SNAPID)
-DF_SQL_SUMMARY <- main$DF_SQL_SUMMARY
-DF_SQL_BY_SNAPID <- main$DF_SQL_BY_SNAPID
+DF_SQL_SUMMARY <- debugVars$main$DF_SQL_SUMMARY
+DF_SQL_BY_SNAPID <- debugVars$main$DF_SQL_BY_SNAPID
 
 summary(DF_SQL_SUMMARY)
 summary(DF_SQL_BY_SNAPID)
@@ -20,7 +23,7 @@ summary(DF_SQL_BY_SNAPID)
 #load(file="DF_SQL_SUMMARY-CALTRANS.Rda")
 #load(file="DF_SQL_BY_SNAPID-CALTRANS.Rda")
 
-options(scipen=10)
+options(scipen=999) # disable scientific notation
 
 
 list.of.packages <- c("futile.logger","ggplot2", "plyr","gridExtra","scales","reshape","xtable","ggthemes","stringr","data.table","lubridate")
@@ -45,6 +48,7 @@ cleanStringNumbers <- function(x){
 
 
 DT_SQL_BY_SNAPID <- data.table(DF_SQL_BY_SNAPID)
+DT_SQL_BY_SNAPID <- DT_SQL_BY_SNAPID[PARSING_SCHEMA_NAME=='SUMMIT']
 
 DT_SQL_BY_SNAPID$EXECS <- cleanStringNumbers(DT_SQL_BY_SNAPID$EXECS)
 DT_SQL_BY_SNAPID$ELAP_S <- cleanStringNumbers(DT_SQL_BY_SNAPID$ELAP_S)
@@ -64,8 +68,9 @@ summary(DT_SQL_BY_SNAPID)
 setnames(DT_SQL_BY_SNAPID, "COMMAND_NAME", "COMMAND")
 setnames(DT_SQL_BY_SNAPID, "PARSING_SCHEMA_NAME", "SCHEMA")
 DT_SQL_BY_SNAPID[with(DT_SQL_BY_SNAPID, grepl("PL/SQLEXECUTE", COMMAND)),]$COMMAND<-"PL/SQL"
+DT_SQL_BY_SNAPID <- DT_SQL_BY_SNAPID[COMMAND!='PL/SQL']
 
-# DT_SQL_BY_SNAPID_GRP_BY_SQLID <- data.table(DT_SQL_BY_SNAPID[, list(ELAP_S = sum(ELAP_S),EXECS=sum(EXECS),
+# DT_SQL_BY_SNAPID_GRP_BY_SQLID <- data.table(DT_SQL_BY_SNAPID[, list(ELAP_S = sum(ELAP_S),EXECS=sum(EXECS), 
 #                                                        cost=max(OPTIMIZER_COST),IO_WAIT=sum(IO_WAIT),READ_MB=sum(READ_MB),CPU_T_S=sum(CPU_T_S)
 # ),                                               
 #                                                 by = list(MODULE,ACTION,SQL_ID,COMMAND,SCHEMA)])

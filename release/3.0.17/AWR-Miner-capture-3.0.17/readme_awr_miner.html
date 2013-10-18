@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+  <title>AWR Miner</title>
+  <meta name="generator" content="Amaya, see http://www.w3.org/Amaya/" />
+</head>
+
+<body>
+<h1>AWR Miner 3.0.17 Readme</h1>
+
+<p>Author: Tyler D Muth, tyler.muth@oracle.com</p>
+
+<p>URL: <a href="tylermuth.wordpress.com">tylermuth.wordpress.com</a></p>
+
+<p></p>
+
+<h2>What is AWR Miner?</h2>
+
+<p>This script queries the AWR repository and gathers key database metrics from
+each AWR snapshot over the last n days. These metrics can assist in sizing and
+tuning excercises. An AWR report provides much more detailed metrics but only
+between 2 snapshots. This script and the subsequent graphs produced from its
+data provide higher level aggregate data over a longer period of time.</p>
+
+<p></p>
+
+<h2>Diagnostic Pack License Required</h2>
+
+<p>This script queries DBA_HIST_ views in the Automatic Workload Repository
+(AWR). To generate AWR reports, take AWR snapshots, or queries these views
+requires a license for the Diagnostic Pack (<a
+href="http://docs.oracle.com/cd/E11882_01/license.112/e10594/options.htm#CIHIHDDJ"
+name="L265" id="L265">11.2 document</a> or <a
+href="http://docs.oracle.com/cd/B19306_01/license.102/b14199/options.htm#sthref76">10.2
+document</a>). You should NOT run this script on any Database that is not
+licensed for the Diagnostic Pack .</p>
+
+<p></p>
+
+<h2>How to Run the Script</h2>
+<ol>
+  <li>Run this as sys or system (or a DBA account), preferably on the
+    production system(s). If the desired goal is sizing a production system,
+    output from a development system is of little benefit. </li>
+  <li>If this is a RAC cluster you only need to run this from 1 node as the
+    DBA_HIST_ views contain data from all nodes.</li>
+  <li>Run from sqlplus command-line, not TOAD or SQL Developer.</li>
+  <li>Don't spool the output, it will automatically spool it to a file with a
+    specific name ( awr-hist*.out ).</li>
+  <li>Optionally compress the awr-hist*.out file using gzip, bzip2, or zip and
+    email it back. The generated file will be anywhere from 1-10 MB and is
+    highly compressable. Compressed output should be under 300 KB.</li>
+</ol>
+
+<p></p>
+
+<h2>Will This Impact My System?</h2>
+
+<p>It should have little to no impact on your system. It generally takes less
+than 45 seconds to run on anything from a laptop to an Exadata Full Rack and
+incurs less load than generating 1 AWR report. All queries are serial so at
+most this will occupy 1 CPU core for under a minute. Absolutely no objects are
+created in the Database.</p>
+
+<p></p>
+
+<h2>Can I View the Output?</h2>
+
+<p>Absolutely. It's just a plain text file with stadard reports composed of
+rows and columns. Ultimately this file is parsed into CSV with a perl script,
+then graphed in R.</p>
+</body>
+</html>

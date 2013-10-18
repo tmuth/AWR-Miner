@@ -12,3 +12,12 @@
 [ERROR] [2013-08-30 15:23:35] [Error in USPS: Error in Ops.unit(unit(0.25, "cm"), scale_alpha(guide = "none")): both operands must be units
 ]
 [ERROR] [2013-08-30 15:23:35] [source("M:/Dropbox/MyFiles/GitHub/AWR-Miner/source/R-AWR-Mining.R")]
+ERROR [2013-10-11 15:41:15] Error in USPS: Error in plot_cpu(main$DF_MAIN): object 'gg_maxvals_point' not found
+
+[ERROR] [2013-10-16 17:15:47] [Error in USPS: Error in file(con, "r"): invalid 'description' argument
+]
+[ERROR] [2013-10-16 17:15:47] [bzfile(con)]
+ERROR [2013-10-16 17:16:49] Error in USPS: Error in file(con, "r"): invalid 'description' argument
+
+ERROR [2013-10-16 17:17:24] Error in USPS: Error in file(con, "r"): invalid 'description' argument
+

@@ -27,7 +27,7 @@ lapply(list.of.packages, function(x) {
 
 MAX_DAYS <- 30
 
-outFileSuffix <- '1'
+outFileSuffix <- '2'
 
 
 #====================================================================================================================
@@ -463,6 +463,11 @@ getSection <- function(inFile,blockName,decSep='.',searchPatternIn=NULL,replaceP
   
   flog.debug(paste0("getSection - ",blockName," - end"),name="getSection")
   #dfInt <- na.omit(dfInt)
+  
+  
+  #write.csv(dfInt,paste0(main$current_db_name,"-",blockName,"-RAW.csv"))
+  #write.csv(summary(dfInt),paste0(main$current_db_name,"-",blockName,"-SUMMARY.csv"))
+  
   return(dfInt)
 }
 
@@ -478,6 +483,11 @@ build_data_frames <- function(dbid,dbname) {
   fileIndex<-grep(filePatternInt,main$awrFiles)
   #> os_files[y]
   theFile <- readLines(main$awrFiles[fileIndex])
+  
+  paste0("File Encoding: ",Encoding(theFile))
+  flog.debug(paste0("File Encoding: ",Encoding(theFile)))
+  Encoding(theFile) <- "UTF-8"
+  
   flog.debug(length(theFile))
 
   
@@ -695,12 +705,12 @@ summarise_dfs_by_snap <- function(){
                                cpu=max(os_cpu_max),
                                read_iops=sum(read_iops),
                                read_iops_max=sum(read_iops_max),
-                               #read_iops_direct=sum(read_iops_direct),
-                               #read_iops_direct_max=sum(read_iops_direct_max),
+                               read_iops_direct=sum(read_iops_direct),
+                               read_iops_direct_max=sum(read_iops_direct_max),
                                write_iops=sum(write_iops),
                                write_iops_max=sum(write_iops_max),
-                               #write_iops_direct=sum(write_iops_direct),
-                               #write_iops_direct_max=sum(write_iops_direct_max),
+                               write_iops_direct=sum(write_iops_direct),
+                               write_iops_direct_max=sum(write_iops_direct_max),
                                read_mb_s=sum(read_mb_s),
                                read_mb_s_max=sum(read_mb_s_max),
                                write_mb_s=sum(write_mb_s),
@@ -922,8 +932,10 @@ generate_hours_bars <- function(DF_MAIN_INT){
 
 plot_summary_boxplot_main <- function(){
   flog.debug('plot_summary_boxplot_main - start')
+  
   x.melt <- melt(main$DF_MAIN_BY_SNAP, id.var = c("end"), measure.var = c("cpu","read_iops_max", "write_iops_max",
                                                                           "read_mb_s_max","write_mb_s_max","aas","logons_total","exec_s","sql_res_t_cs"))
+  
   if(debugMode){
     debugVars$boxplot$melt <- x.melt
   }
@@ -1216,10 +1228,14 @@ plot_aas_bars_by_date <- function(DF_AAS_INT){
 plot_io <- function(DF_MAIN_BY_SNAP_INT){
   flog.debug('plot_io - start',name='plot_io')
   DF_MAIN_INT2 <- DF_MAIN_BY_SNAP_INT
-  x.melt <- melt(DF_MAIN_INT2, id.var = c("end"), measure.var = c("read_iops", "read_iops_max","write_iops", "write_iops_max",
-                                                                  "read_mb_s","read_mb_s_max","write_mb_s","write_mb_s_max"
-                                                                  #"read_iops_direct","read_iops_direct_max","write_iops_direct","write_iops_direct_max"
-                                                                  ))
+#   x.melt <- melt(DF_MAIN_INT2, id.var = c("end"), measure.var = c("read_iops", "read_iops_max","write_iops", "write_iops_max",
+#                                                                   "read_mb_s","read_mb_s_max","write_mb_s","write_mb_s_max",
+#                                                                   "read_iops_direct","read_iops_direct_max","write_iops_direct","write_iops_direct_max"))
+  
+  x.melt <- melt(DF_MAIN_INT2, id.var = c("end"), measure.var = c("read_iops","write_iops",
+                                                                  "read_mb_s","read_mb_s_max","write_mb_s","write_mb_s_max",
+                                                                  "read_iops_direct","write_iops_direct"))
+  
   # add a "stat" column so we can facet by stat for avg-max
   x.melt$stat <- "Avg"
   x.melt$alphaSet <- .9  
@@ -1230,26 +1246,26 @@ plot_io <- function(DF_MAIN_BY_SNAP_INT){
   #idx_max <- with(x.melt, grepl("direct_max", variable))
   #x.melt[idx_max,]$stat <- "Direct Max" 
   #x.melt$value <- round(x.melt$value)
-  #idx_max <- with(x.melt, grepl("direct", variable))
-  #x.melt[idx_max,]$alphaSet <- 0.4 
+  idx_max <- with(x.melt, grepl("direct", variable))
+  x.melt[idx_max,]$alphaSet <- 0.4 
   # We need to change these names and they are "factors" which we can't change
   x.melt <- transform(x.melt, variable = as.character(variable))
   
-  #x.melt[with(x.melt, grepl("read_iops_direct", variable)),]$variable<-"Read IOPs Direct *"
-  #x.melt[with(x.melt, grepl("write_iops_direct", variable)),]$variable<-"Write IOPs Direct *"
+  x.melt[with(x.melt, grepl("read_iops_direct", variable)),]$variable<-"Read IOPs Direct *"
+  x.melt[with(x.melt, grepl("write_iops_direct", variable)),]$variable<-"Write IOPs Direct *"
   x.melt[with(x.melt, grepl("read_iops", variable)),]$variable<-"Read IOPs"
   x.melt[with(x.melt, grepl("write_iops", variable)),]$variable<-"Write IOPs"
   x.melt[with(x.melt, grepl("read_mb_s", variable)),]$variable<-"Read MB/s"
   x.melt[with(x.melt, grepl("write_mb_s", variable)),]$variable<-"Write MB/s"
   
   
-  DF_VAR_INT <- data.frame(unique(x.melt$variable))
-  DF_SNAP_ID_SUBSET2 <- merge(DF_VAR_INT,main$DF_SNAP_ID_SUBSET)
+  #DF_VAR_INT <- data.frame(unique(x.melt$variable))
+  #DF_SNAP_ID_SUBSET2 <- merge(DF_VAR_INT,main$DF_SNAP_ID_SUBSET)
   
-  vals <- expand.grid(end = unique(DF_SNAP_ID_SUBSET2$end),
-                      variable = unique(x.melt$variable))
+  #vals <- expand.grid(end = unique(DF_SNAP_ID_SUBSET2$end),
+  #                    variable = unique(x.melt$variable))
   
-  DF_SNAP_ID_SUBSET2 <- merge(vals,main$DF_SNAP_ID_SUBSET)
+  #DF_SNAP_ID_SUBSET2 <- merge(vals,main$DF_SNAP_ID_SUBSET)
   
   DF_SNAP_ID_SUBSET3 <- main$DF_SNAP_ID_SUBSET
   x.melt$variable <- factor(x.melt$variable)
@@ -1268,17 +1284,36 @@ plot_io <- function(DF_MAIN_BY_SNAP_INT){
     max_vals <- ddply(df_in, .(variable,stat,format(end,"%y/%m/%d")), subset, subset = rank(-value) <= 1)
     max_vals$label <- formatC(max_vals$value, format="d", big.mark=",")
     
-    plot_int <- ggplot(data=df_in, aes(x=end, y=value),aes(color=stat,alpha=0.95)) +
-      geom_line(aes(color=stat,alpha=0.95), size=.2)+
+    max_vals_hidden1 <- subset(max_vals,variable == 'Read IOPs')
+    max_vals_hidden1[with(max_vals_hidden1, grepl("Read IOPs", variable)),]$variable<-"Read IOPs Direct *"
+    
+    max_vals_hidden_tmp <- subset(max_vals,variable == 'Read IOPs Direct *')
+    max_vals_hidden_tmp[with(max_vals_hidden_tmp, grepl("Read IOPs Direct *", variable)),]$variable<-"Read IOPs"
+    max_vals_hidden1 <- rbind(max_vals_hidden1,max_vals_hidden_tmp)
+    
+    max_vals_hidden_tmp <- subset(max_vals,variable == 'Write IOPs')
+    max_vals_hidden_tmp[with(max_vals_hidden_tmp, grepl("Write IOPs", variable)),]$variable<-"Write IOPs Direct *"
+    max_vals_hidden1 <- rbind(max_vals_hidden1,max_vals_hidden_tmp)
+    
+    max_vals_hidden_tmp <- subset(max_vals,variable == 'Write IOPs Direct *')
+    max_vals_hidden_tmp[with(max_vals_hidden_tmp, grepl("Write IOPs Direct *", variable)),]$variable<-"Write IOPs"
+    max_vals_hidden1 <- rbind(max_vals_hidden1,max_vals_hidden_tmp)
+    
+    #max_vals <- ddply(DF_IOPS_COMBINED_MAX, .(format(end,"%y/%m/%d")), subset, subset = rank(-total_iops_non_direct) <= 1)
+    #max_vals_hidden1 <- ddply(DF_IOPS_COMBINED_MAX, .(format(end,"%y/%m/%d")), subset, subset = rank(-total_iops_non_direct) <= 1)
+    
+    plot_int <- ggplot(data=df_in, aes(x=end, y=value),aes(color=stat,alpha=alphaSet)) +
+      geom_line(aes(color=stat,alpha=alphaSet), size=.2)+
       #stat_smooth(method = "loess",n=300,size=.2,alpha=.1,linetype="dashed",
       #      aes(color=stat,fill=stat))+
       
       attr$themeScaleColour+attr$themeScaleFill+
       main$gg_avg_max_fill+main$gg_avg_max_color+
-      geom_point(data=max_vals, aes(x=end, y=value, fill=stat,alpha=0.95), size=2, shape=21)+
-      geom_text(data=max_vals, aes(x=end, y=value, color=stat,label=label,alpha=(0.95)),size=2.5, vjust=0.5, hjust=1.25,position = position_jitter(width = .2,height=0))+
+      geom_point(data=max_vals, aes(x=end, y=value, fill=stat,alpha=alphaSet), size=2, shape=21)+
+      geom_text(data=max_vals, aes(x=end, y=value, color=stat,label=label,alpha=(alphaSet+0.1)),size=2.5, vjust=0.5, hjust=1.25,position = position_jitter(width = .2,height=0))+
       geom_text(data=DF_SNAP_ID_SUBSET3,aes(x=end,y=0,label=SNAP_ID),angle=-20,size=1.5,hjust=-0.1,vjust=0.7,alpha=0.2)+
       geom_point(data=DF_SNAP_ID_SUBSET3,aes(x=end,y=0),alpha=0.2,size=1)+
+      geom_point(data=max_vals_hidden1, aes(x=end, y=value, fill=stat,alpha=0), size=0, shape=21)+
       ylab('')+
       
       facet_grid(variable ~ .,scales="free_y")+
@@ -1396,7 +1431,7 @@ plot_io_histograms <- function(DF_IO_WAIT_HIST_INT){
 plot_cpu <- function(DF_MAIN_INT){
   flog.debug('plot_cpu - start',name='plot_cpu')
   #if(dim(DF_MAIN_INT)[1] > 2){
-  #DF_MAIN_INT <- DF_MAIN
+  DF_MAIN_INT <- main$DF_MAIN
   #browser()
   DF_INST_INT <- data.frame(unique(DF_MAIN_INT$inst))
   DF_SNAP_ID_SUBSET2 <- merge(DF_INST_INT,main$DF_SNAP_ID_SUBSET)
@@ -1411,10 +1446,36 @@ plot_cpu <- function(DF_MAIN_INT){
   x.melt$variable<-gsub( "os_cpu" , "OS CPU Avg" , x.melt$variable)
   
   # get the max vals for each day
-  max_vals <- ddply(x.melt, .(variable,inst,format(end,"%y/%m/%d")), subset, subset = rank(-value) <= 1)
-  max_vals$label <- formatC(max_vals$value, format="d", big.mark=",")
+  
+  max_vals <- data.frame()
+  gg_maxvals_point <- theme()
+  gg_maxvals_text <- theme()
+  
+  get_maxvals_int <- function(df_in){
+    max_vals_int <- ddply(df_in, .(variable,inst,format(end,"%y/%m/%d")), subset, subset = rank(-value) <= 1)
+    max_vals_int$label <<- formatC(max_vals_int$value, format="d", big.mark=",")
+    
+    gg_maxvals_point_int <- geom_point(data=max_vals_int, aes(x=end, y=value, fill=variable), size=2, shape=21)
+    gg_maxvals_text_int <- geom_text(data=max_vals_int, aes(x=end, y=value, color=variable,label=label),size=3, vjust=-.8, hjust=1.5)
+    return(list(max_vals_int,gg_maxvals_point_int,gg_maxvals_text_int))
+  }
   
   
+  
+  tryCatch(c(max_vals,gg_maxvals_point,gg_maxvals_text) :=  get_maxvals_int(x.melt),
+           error = function(e) {
+             #traceback()
+             gg_maxvals <- theme()
+             
+             
+             #max_vals <- data.frame(inst=min(x.melt$inst),end=min(x.melt$end),value=0,variable="OS CPU Avg",label=0)
+             #max_vals <- rbind(max_vals,data.frame(inst=min(x.melt$inst),end=min(x.melt$end),value=0,variable="OS CPU Max",label=0))
+             #flog.remove(name=main$current_db_name)
+             #browser()
+             
+           }
+           #,finally=print("finished")
+  )
   
   p <- ggplot(data=x.melt, aes(x=end, y=value),aes(group=variable,color=variable)) +
     geom_line(aes(group=variable,color=variable), size=.2)+
@@ -1423,8 +1484,9 @@ plot_cpu <- function(DF_MAIN_INT){
                 aes(group=variable,color=variable,fill=variable))+
     ylab('CPU Percent')+
     ylim(0,115)+
-    geom_point(data=max_vals, aes(x=end, y=value, fill=variable), size=2, shape=21)+
-    geom_text(data=max_vals, aes(x=end, y=value, color=variable,label=label),size=3, vjust=-.8, hjust=1.5)+
+    gg_maxvals_point+gg_maxvals_text+
+    #geom_point(data=max_vals, aes(x=end, y=value, fill=variable), size=2, shape=21)+
+    #geom_text(data=max_vals, aes(x=end, y=value, color=variable,label=label),size=3, vjust=-.8, hjust=1.5)+
     geom_text(data=DF_SNAP_ID_SUBSET2,aes(x=end,y=0,label=SNAP_ID),angle=-45,size=1.5,hjust=-.5,alpha=0.2)+
     geom_point(data=DF_SNAP_ID_SUBSET2,aes(x=end,y=0),alpha=0.2,size=1)+
     facet_grid(inst ~ .)+
@@ -2036,6 +2098,7 @@ main$mainLoop <- function(){
                  flog.error(traceback(),name=main$current_db_name)
                  flog.remove(main$current_db_name)
                  #browser()
+                 dev.off()
                  
                }
                #,finally=print("finished")

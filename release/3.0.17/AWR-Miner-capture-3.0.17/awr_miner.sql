@@ -10,7 +10,7 @@ column cnt_dbid_1 new_value CNT_DBID noprint
 
 define NUM_DAYS = 30
 define SQL_TOP_N = 30
-define AWR_MINER_VER = 3.0.15
+define AWR_MINER_VER = 3.0.17
 
 alter session set cursor_sharing = exact;
 
@@ -358,16 +358,16 @@ max(decode(metric_name,'Logical Reads Per Sec',                     average,null
 max(decode(metric_name,'User Commits Per Sec',                      average,null)) "commits_s",
 max(decode(metric_name,'Physical Read Total Bytes Per Sec',         round((average)/1024/1024,1),null)) "read_mb_s",
 max(decode(metric_name,'Physical Read Total Bytes Per Sec',         round((maxval)/1024/1024,1),null)) "read_mb_s_max",
-max(decode(metric_name,'Physical Reads Per Sec',   average,null)) "read_iops",
-max(decode(metric_name,'Physical Reads Per Sec',   maxval,null)) "read_iops_max",
-max(decode(metric_name,'Physical Reads Direct Per Sec',  			average,null)) "read_iops_direct",
-max(decode(metric_name,'Physical Reads Direct Per Sec',  			maxval,null)) "read_iops_direct_max",
+max(decode(metric_name,'Physical Read Total IO Requests Per Sec',   average,null)) "read_iops",
+max(decode(metric_name,'Physical Read Total IO Requests Per Sec',   maxval,null)) "read_iops_max",
+max(decode(metric_name,'Physical Reads Per Sec',  			average,null)) "read_bks",
+max(decode(metric_name,'Physical Reads Direct Per Sec',  			average,null)) "read_bks_direct",
 max(decode(metric_name,'Physical Write Total Bytes Per Sec',        round((average)/1024/1024,1),null)) "write_mb_s",
 max(decode(metric_name,'Physical Write Total Bytes Per Sec',        round((maxval)/1024/1024,1),null)) "write_mb_s_max",
-max(decode(metric_name,'Physical Writes Per Sec',  average,null)) "write_iops",
-max(decode(metric_name,'Physical Writes Per Sec',  maxval,null)) "write_iops_max",
-max(decode(metric_name,'Physical Writes Direct Per Sec',  			average,null)) "write_iops_direct",
-max(decode(metric_name,'Physical Writes Direct Per Sec',  			maxval,null)) "write_iops_direct_max",
+max(decode(metric_name,'Physical Write Total IO Requests Per Sec',  average,null)) "write_iops",
+max(decode(metric_name,'Physical Write Total IO Requests Per Sec',  maxval,null)) "write_iops_max",
+max(decode(metric_name,'Physical Writes Per Sec',  			average,null)) "write_bks",
+max(decode(metric_name,'Physical Writes Direct Per Sec',  			average,null)) "write_bks_direct",
 max(decode(metric_name,'Redo Generated Per Sec',                    round((average)/1024/1024,1),null)) "redo_mb_s",
 max(decode(metric_name,'DB Block Gets Per Sec',                     average,null)) "db_block_gets_s",
 max(decode(metric_name,'DB Block Changes Per Sec',                   average,null)) "db_block_changes_s",
@@ -391,9 +391,10 @@ where dbid = &DBID
  --and snap_id = 920
  --and instance_number = 4
  and metric_name in ('Host CPU Utilization (%)','CPU Usage Per Sec','Average Active Sessions','Executions Per Sec','Hard Parse Count Per Sec','Logical Reads Per Sec','Logons Per Sec',
- 'Physical Read Total Bytes Per Sec','Physical Reads Per Sec','Physical Write Total Bytes Per Sec',
+ 'Physical Read Total Bytes Per Sec','Physical Read Total IO Requests Per Sec','Physical Reads Per Sec','Physical Write Total Bytes Per Sec',
  'Redo Generated Per Sec','User Commits Per Sec','Current Logons Count','DB Block Gets Per Sec','DB Block Changes Per Sec',
- 'Database Wait Time Ratio','Database CPU Time Ratio','SQL Service Response Time','Background Time Per Sec','Physical Writes Per Sec','Physical Writes Direct Per Sec','Physical Writes Direct Lobs Per Sec',
+ 'Database Wait Time Ratio','Database CPU Time Ratio','SQL Service Response Time','Background Time Per Sec',
+ 'Physical Write Total IO Requests Per Sec','Physical Writes Per Sec','Physical Writes Direct Per Sec','Physical Writes Direct Lobs Per Sec',
  'Physical Reads Direct Per Sec','Physical Reads Direct Lobs Per Sec',
  'GC CR Block Received Per Second','GC Current Block Received Per Second','Global Cache Average CR Get Time','Global Cache Average Current Get Time',
  'Global Cache Blocks Corrupted','Global Cache Blocks Lost',
@@ -608,7 +609,6 @@ round(sum(disk_reads_delta * &DB_BLOCK_SIZE)/1024/1024/1024) phy_read_gb,
    AND s.dbid = t.dbid
   AND s.sql_id = t.sql_id
   AND PARSING_SCHEMA_NAME NOT IN ('SYS','DBSNMP','SYSMAN')
-  and s.module = 'acctdriver'
   GROUP BY s.module,s.action,s.sql_id,t.command_type,PARSING_SCHEMA_NAME)
 WHERE elap_rank <= &SQL_TOP_N
  OR phys_reads_rank <= &SQL_TOP_N
