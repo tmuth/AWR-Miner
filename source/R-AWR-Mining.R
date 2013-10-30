@@ -27,7 +27,7 @@ lapply(list.of.packages, function(x) {
 
 MAX_DAYS <- 30
 
-outFileSuffix <- '2'
+outFileSuffix <- '1'
 
 
 #====================================================================================================================
@@ -56,7 +56,7 @@ if(exists("debugModeOverride")){
 
 
 
-awrMinerPlotVersion <- '3.0.16'
+awrMinerPlotVersion <- '3.0.18'
 
 filePattern <- "^awr-hist*.*(\\.out|\\.gz)$"
 if(exists("filePatternOverride")){
@@ -333,12 +333,13 @@ apply_current_attributes <- function(){
     DF_TEMP <- NULL
     DF_TEMP <- get_attrs('snap_id_filter')
    # print(head(DF_TEMP))
-    if(nchar(as.character(DF_TEMP[1,]$value1))>1){
+    if(nchar(as.character(DF_TEMP[1,]$value1))>1 | nchar(as.character(DF_TEMP[1,]$value2))>1 ){
       if(nchar(as.character(DF_TEMP[1,]$value1))>1){
-        #print(head(as.vector(DF_TEMP$value1)))
-        attr$filter_snap_min <<- as.vector(DF_TEMP$value1) }
+        attr$filter_snap_min <<- as.vector(DF_TEMP$value1) 
+      }
       if(nchar(as.character(DF_TEMP[1,]$value2))>1){
-        attr$filter_snap_max <<- as.vector(DF_TEMP$value2) }
+        attr$filter_snap_max <<- as.vector(DF_TEMP$value2) 
+      }
       #attr$filter_snap_max <- as.vector(DF_TEMP$value2)
     }
   }
@@ -763,10 +764,11 @@ gen_summary_data <- function(){
   
   
   DF_MAIN_INT_SUM1 <- ddply(main$DF_MAIN,.(snap), summarise,
-                            cpu    = max(os_cpu_max),
+                            cpu    = max(os_cpu),
                             read_iops = sum(read_iops), write_iops = sum(write_iops),
                             read_mb_s = sum(read_mb_s), write_mb_s = sum(write_mb_s),
-                            logons_total=sum(logons_total),exec_s=sum(exec_s),commits_s=sum(commits_s),
+                            logons_total=sum(logons_total),
+                            exec_s=sum(exec_s),commits_s=sum(commits_s),
                             aas=sum(aas))
   
   if(is.na(sum(DF_MAIN_INT_SUM1$aas))){
@@ -783,7 +785,8 @@ gen_summary_data <- function(){
                            cpu    = max(cpu),
                            r_iops = max(read_iops), w_iops = max(write_iops),
                            r_mb_s = max(read_mb_s), w_mb_s = max(write_mb_s),
-                           logons_total = max(logons_total), exec_s = max(exec_s),
+                           logons_total = max(logons_total),"logons/core"=round(max(logons_total)/main$cpu_cores,0),
+                           exec_s = max(exec_s),
                            commits_s = max(commits_s), aas = max(aas)
   )
   
@@ -1012,7 +1015,7 @@ plot_summary_boxplot_main <- function(){
     geom_violin(aes(),fill="#4DAF4A",colour="#000000",size=0.05,alpha=0.6,adjust=0.5) +
     geom_boxplot(aes(),colour="#000000",alpha=.6,show_guide=FALSE,notch = FALSE,outlier.colour = "orange", outlier.size = 1,outlier.alpha=.4,outlier.shape=5)+
     attr$themeScaleColour+attr$themeScaleFill+
-    geom_jitter(alpha=.3,size=1,position = position_jitter(width = .2,height=0),aes(colour="gray"))+
+    geom_jitter(alpha=.2,size=1,position = position_jitter(width = .2,height=0),aes(colour="gray"))+
     geom_text(data=median_vals,aes(y=value,label=round(value,1)),alpha=0.8,size=2,vjust=-0.8,hjust=0)+
     geom_text(data=summary_vals,aes(y=value,label=round(value,1)),alpha=0.8,size=2,vjust=-0.8,hjust=0,colour="#666666")+
     geom_text(data=mean_vals,aes(y=value,label=round(value,1)),alpha=0.8,size=2,vjust=-0.8,hjust=1.2,colour="#D62728")+
@@ -1165,6 +1168,14 @@ plot_aas_chart <- function(DF_AAS_INT){
   plot_aas_wait_class2_gt$layout$clip[plot_aas_wait_class2_gt$layout$name=="panel"] <- "off"
   #print(plot_aas_wait_class_gt)
   #grid.draw(plot_aas_wait_class2_gt)
+  
+  
+ 
+  
+  
+  
+  
+  
   flog.debug('plot_aas_chart - end',name='plot_aas_chart')
   return(list(plot_aas_wait_class_gt,plot_aas_wait_class2_gt,plot_aas_wait_class2_line))
   
@@ -1240,6 +1251,61 @@ plot_aas_bars_by_date <- function(DF_AAS_INT){
   return(aas_bar_plot)
 }
 
+
+plot_aas_percent <- function(DF_AAS_INT){
+  flog.debug('plot_aas_percent - start',name='plot_aas_percent')
+  
+  
+  #New AAS Percent Section
+  
+  avgSessTotal <- sum(DF_AAS_INT$AVG_SESS)
+  DF_AAS_AGG_BY_SNAP <- DF_AAS_INT[, list(AVG_SESS = sum(AVG_SESS)), by = list(SNAP_ID)]
+  
+  DF_AAS_AGG <- DF_AAS_INT[, list(AVG_SESS = sum(AVG_SESS)), by = list(WAIT_CLASS)]
+  DF_AAS_AGG$AVG_SESS_PCT <- round(DF_AAS_AGG$AVG_SESS/avgSessTotal,2)
+  
+  ptile <- 0.75
+  aasPTile <- as.vector(quantile(DF_AAS_AGG_BY_SNAP$AVG_SESS,probs=c(ptile),type=4))
+  DF_AAS_AGG_BY_SNAP <- data.table(DF_AAS_AGG_BY_SNAP)
+  DF_AAS_AGG_BY_SNAP2 <- data.table(DF_AAS_AGG_BY_SNAP[AVG_SESS >= aasPTile])
+  DF_AAS_AGG_BY_SNAP3 <- data.table(DF_AAS_AGG_BY_SNAP2[,list(SNAP_ID = SNAP_ID)])
+  DF_AAS_TEMP2 <- data.table(DF_AAS_INT[DF_AAS_AGG_BY_SNAP3])
+  avgSessTotal2 <- sum(DF_AAS_TEMP2$AVG_SESS)
+  DF_AAS_AGG2 <- DF_AAS_TEMP2[, list(AVG_SESS = sum(AVG_SESS)), by = list(WAIT_CLASS)]
+  DF_AAS_AGG2$AVG_SESS_PCT <- round(DF_AAS_AGG2$AVG_SESS/avgSessTotal2,2)
+  
+  
+  
+  gg_aas_colors <- scale_fill_manual("", values = aas_colors)
+  
+  aas_pct_plot1 <- ggplot(data=DF_AAS_AGG, aes(x=WAIT_CLASS, y=AVG_SESS_PCT),aes(color=WAIT_CLASS)) +
+    geom_bar(stat="identity",aes(fill=WAIT_CLASS))+
+    geom_text(aes(label=paste(round(AVG_SESS_PCT * 100, 2), "%", sep = "")),size=2.5, vjust=-0.2)+
+    gg_aas_colors+
+    scale_y_continuous(labels = percent_format())+
+    theme(axis.title.y  = element_blank(),axis.title.x  = element_blank(),legend.position =    "none",
+          plot.title= element_text(size = 5) )+
+  labs(title=paste("AAS % by Wait Class - All Snapshots - ",main$current_db_name,sep=""))
+  #aas_pct_plot1
+  
+  aas_pct_plot2 <- ggplot(data=DF_AAS_AGG2, aes(x=WAIT_CLASS, y=AVG_SESS_PCT),aes(color=WAIT_CLASS)) +
+    geom_bar(stat="identity",aes(fill=WAIT_CLASS))+
+    geom_text(aes(label=paste(round(AVG_SESS_PCT * 100, 2), "%", sep = "")),size=2.5, vjust=-0.2)+
+    gg_aas_colors+
+    scale_y_continuous(labels = percent_format())+
+    theme(axis.title.y  = element_blank(),axis.title.x  = element_blank(),legend.position =    "none",
+          plot.title= element_text(size = 5) )+
+    labs(title=paste("AAS % by Wait Class - Only Snapshots Where Total AAS >= 75th Percentile - ",main$current_db_name,sep=""))
+  
+  #aas_pct_plot2
+  
+  
+  
+  
+  flog.debug('plot_aas_percent - end',name='plot_aas_percent')
+  return(list(aas_pct_plot1,aas_pct_plot2))
+
+}
 
 
 plot_io <- function(DF_MAIN_BY_SNAP_INT){
@@ -1384,7 +1450,7 @@ plot_io_histograms <- function(DF_IO_WAIT_HIST_INT){
   
   io_hist_plot <- ggplot(DF_IO_WAIT_HIST_INT_GROUP,aes(x=factor(WAIT_TIME_MILLI),fill = WAIT_TIME_MILLI,))+
     geom_bar(stat ='identity',aes(y=WAIT_PCT))+
-    geom_text(aes(label=round(WAIT_PCT*100,0),y=WAIT_PCT),size=3)+
+    geom_text(aes(label=round(WAIT_PCT*100,0),y=WAIT_PCT),size=2)+
     facet_grid(. ~ EVENT_NAME,scales="free_y")+
     gg_io_hist_colors2+
     labs(title=paste0("I/O Wait Event Histogram"))+
@@ -1832,7 +1898,7 @@ plot_sql_text <- function(){
   
   #textplot(head(subset(main$DF_SQL_SUMMARY, select=-c(PX_EXEC,LOG_READS)),75),cex=.5,cspace=0,lspace=.01,show.colnames=TRUE,cmar=.4,rmar=.5)
   
-  textplot(head(subset(main$DF_SQL_SUMMARY, select=-c(PX_EXEC,LOG_READS,ELAP_S)),75),cex=.4,lspace=.01,show.colnames=TRUE,show.rownames=TRUE,cmar=.55,rmar=1.2,hadj=0.5,mar=c(0,.001,0,0),fixed.width=FALSE,halign="left")
+  textplot(head(subset(main$DF_SQL_SUMMARY, select=-c(PX_EXEC,LOG_READS,ELAP_S,ELAP_PER_EXEC_M,COST)),75),cex=.4,lspace=.01,show.colnames=TRUE,show.rownames=TRUE,cmar=.55,rmar=1.2,hadj=0.5,mar=c(0,.001,0,0),fixed.width=FALSE,halign="left")
   
   flog.debug('plot_sql_text - end')
 }
@@ -1956,6 +2022,10 @@ main$mainFunction <- function(f){
   }
   tblText3 <- tableGrob(DF_HOSTS_INT,show.rownames = FALSE, gpar.coretext = gpar(fontsize=8),gpar.coltext = gpar(fontsize=8),padding.v = unit(1, "mm"),padding.h = unit(2, "mm"),show.colnames = FALSE,col.just = "left")
   flog.trace(str(tblText3),name='mainFunction')
+  
+  
+  c(aas_pct1, aas_pct2) := plot_aas_percent(main$DF_AAS)
+  
   c(aas_plot, aas_plot2_gt,aas_plot2_line) := plot_aas_chart(main$DF_AAS)
   
   
@@ -1981,7 +2051,8 @@ main$mainFunction <- function(f){
     #x <- grid.arrange(tblText ,tblText2,tblText3, ncol = 1, heights=c(1,1,1))
   }
   else{
-    tryCatch(x <- grid.arrange(tblText,tblText2,tblText3, aas_plot2_line,box_plots, ncol = 1, heights=c(1,1,1,8,8)), 
+    #tryCatch(x <- grid.arrange(tblText,tblText2,tblText3, aas_plot2_line,box_plots, ncol = 1, heights=c(1,1,1,8,8)), 
+    tryCatch(x <- grid.arrange(tblText,tblText2,tblText3, arrangeGrob(aas_pct1, aas_pct2, ncol=2),box_plots, ncol = 1, heights=c(1,1,1,8,8)), 
              error = function(e) {
                tryCatch(x <- grid.arrange(tblText,tblText2,tblText3, box_plots, ncol = 1, heights=c(1,1,1,8)), 
                         error = function(e) {
