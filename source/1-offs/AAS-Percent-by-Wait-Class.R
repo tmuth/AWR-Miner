@@ -41,7 +41,7 @@ aas_pct_plot1 <- ggplot(data=DF_AAS_AGG, aes(x=WAIT_CLASS, y=AVG_SESS_PCT),aes(c
   theme(axis.title.y  = element_blank(),legend.position =    "bottom" ,
         legend.key.size = unit(.25, "cm"))+
   labs(title=paste0("AAS Percent by Wait Class - All Snapshots - HP-DL980"))
-
+aas_pct_plot1
 
 aas_pct_plot2 <- ggplot(data=DF_AAS_AGG2, aes(x=WAIT_CLASS, y=AVG_SESS_PCT),aes(color=WAIT_CLASS)) +
   geom_bar(stat="identity",aes(fill=WAIT_CLASS))+
@@ -52,6 +52,7 @@ aas_pct_plot2 <- ggplot(data=DF_AAS_AGG2, aes(x=WAIT_CLASS, y=AVG_SESS_PCT),aes(
         legend.key.size = unit(.25, "cm"))+
   labs(title=paste0("AAS Percent by Wait Class - Only Snapshots Where Total AAS >= 75th Percentile - HP-DL980"))
 
+aas_pct_plot2
 
 aas_pct_plot3 <- ggplot(data=DF_AAS_AGG, aes(x=WAIT_CLASS, y=AVG_SESS_PCT),aes(color=WAIT_CLASS)) +
   geom_bar(stat="identity",aes(fill=WAIT_CLASS))+

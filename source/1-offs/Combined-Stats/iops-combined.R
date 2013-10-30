@@ -1,5 +1,8 @@
+source("M:/Dropbox/MyFiles/GitHub/AWR-Miner/source/commonFunctions.R")
+
 #setwd("M:/Dropbox/MyFiles/Accounts/Federal/FAA/AWR-Sizing-Sept-2013")
-setwd("M:/Dropbox/MyFiles/Accounts/Federal/World Bank/WB-share/AWR-Miner-Oct-2-2013")
+#setwd("M:/Dropbox/MyFiles/Accounts/Federal/World Bank/WB-share/AWR-Miner-Oct-2-2013")
+setwd("M:/Dropbox/MyFiles/Accounts/Federal/World Bank/WB-share/AWR-Miner-Oct-22")
 
 
 DF_TEMP <- data.frame()
@@ -19,19 +22,22 @@ getIOPsDF <- function(file){
                               end=min(as.POSIXct(end,tz="UTC")),
                               read_iops=sum(read_iops),
                               read_iops_max=sum(read_iops_max),
-                              read_iops_direct=sum(read_iops_direct),
-                              read_iops_direct_max=sum(read_iops_direct_max),
+                              #read_iops_direct=sum(read_iops_direct),
+                              #read_iops_direct_max=sum(read_iops_direct_max),
                               write_iops=sum(write_iops)*2,
-                              write_iops_max=sum(write_iops_max)*2,
-                              write_iops_direct=sum(write_iops_direct)*2,
-                              write_iops_direct_max=sum(write_iops_direct_max)*2
+                              write_iops_max=sum(write_iops_max)*2
+                              #write_iops_direct=sum(write_iops_direct)*2,
+                              #write_iops_direct_max=sum(write_iops_direct_max)*2
                    
                    ) 
   DF_TEMP$total_iops <<- DF_TEMP$read_iops + DF_TEMP$write_iops
   DF_TEMP$total_iops_max <<- DF_TEMP$read_iops_max + DF_TEMP$write_iops_max
-  DF_TEMP$total_iops_direct <<- DF_TEMP$read_iops_direct + DF_TEMP$write_iops_direct
-  DF_TEMP$total_iops_direct_max <<- DF_TEMP$read_iops_direct_max + DF_TEMP$write_iops_direct_max
+  #DF_TEMP$total_iops_direct <<- DF_TEMP$read_iops_direct + DF_TEMP$write_iops_direct
+  #DF_TEMP$total_iops_direct_max <<- DF_TEMP$read_iops_direct_max + DF_TEMP$write_iops_direct_max
   DF_TEMP$end <<- round_date(DF_TEMP$end,"hour")
+  
+  # need to avg by(snap,db,end) for all metrics to account for 15 min snapshots
+  
   DF_IOPS_COMBINED <<- rbind(DF_IOPS_COMBINED,DF_TEMP)
   
   
@@ -41,6 +47,7 @@ rm(main)
 rdaFiles <- list.files(pattern="*debugVars.Rda")
 
 for (f in rdaFiles) {
+  print(f)
   getIOPsDF(f)
 }
 
@@ -54,9 +61,9 @@ for (f in rdaFiles) {
 
 DF_IOPS_COMBINED$db <- factor(DF_IOPS_COMBINED$db)
 
-DF_IOPS_COMBINED <- subset(DF_IOPS_COMBINED,db != "RAC07P")
-DF_IOPS_COMBINED <- subset(DF_IOPS_COMBINED,db != "RAC07T")
-DF_IOPS_COMBINED <- subset(DF_IOPS_COMBINED,end >= as.POSIXct("2013-09-23 00:00:00",format="%Y-%m-%d %H:%M:%S",tz="UTC"))
+#DF_IOPS_COMBINED <- subset(DF_IOPS_COMBINED,db != "RAC07P")
+#DF_IOPS_COMBINED <- subset(DF_IOPS_COMBINED,db != "RAC07T")
+#DF_IOPS_COMBINED <- subset(DF_IOPS_COMBINED,end >= as.POSIXct("2013-09-23 00:00:00",format="%Y-%m-%d %H:%M:%S",tz="UTC"))
 
 
 
@@ -72,7 +79,7 @@ ggplot(data=DF_IOPS_COMBINED,aes(x=end,y=total_iops))+
   geom_point(data=max_vals, aes(x=end, y=total_iops), size=2, shape=21)+
   geom_text(data=max_vals, aes(x=end, y=total_iops,label=total_iops),size=3, vjust=-.8, hjust=1.5,alpha=0.7)+
   scale_fill_stata()+
-  labs(title="Combined Average IOPs - 7P Removed")+
+  labs(title="Combined Average IOPs")+
   scale_x_datetime(labels = date_format("%a, %b %d %I%p"),breaks = date_breaks("1 day"))
 
 max_vals <- ddply(DF_IOPS_COMBINED, .(db,format(end,"%y/%m/%d")), subset, subset = rank(-total_iops) <= 1)
@@ -84,33 +91,33 @@ ggplot(data=DF_IOPS_COMBINED,aes(x=end,y=total_iops,group=db))+
   geom_text(data=max_vals, aes(x=end, y=total_iops,label=total_iops),size=2, vjust=-.8, hjust=1.5,alpha=0.7)+
   scale_fill_stata()+
   facet_grid(db ~ . )+
-  labs(title="Combined Average IOPs - Facet by Database - 7P Removed")+
+  labs(title="Combined Average IOPs - Facet by Database")+
   scale_x_datetime(labels = date_format("%a, %b %d %I%p"),breaks = date_breaks("1 day"))
 
 ## *********************************************************
-DF_IOPS_COMBINED_MAX <- ddply(DF_IOPS_COMBINED, .(end), summarise,total_iops_direct=sum(total_iops_direct))
-max_vals <- ddply(DF_IOPS_COMBINED_MAX, .(format(end,"%y/%m/%d")), subset, subset = rank(-total_iops_direct) <= 1)
-
-ggplot(data=DF_IOPS_COMBINED,aes(x=end,y=total_iops_direct))+
-  #geom_line(aes(color=db), size=.2)total_iops
-  geom_area(aes(fill=db),stat='identity',position='stack',alpha=0.9)+
-  geom_point(data=max_vals, aes(x=end, y=total_iops_direct), size=2, shape=21)+
-  geom_text(data=max_vals, aes(x=end, y=total_iops_direct,label=total_iops_direct),size=3, vjust=-.8, hjust=1.5,alpha=0.7)+
-  scale_fill_stata()+
-  labs(title="Combined Average DIRECT-PATH IOPs - 7P Removed")+
-  scale_x_datetime(labels = date_format("%a, %b %d %I%p"),breaks = date_breaks("1 day"))
-
-max_vals <- ddply(DF_IOPS_COMBINED, .(db,format(end,"%y/%m/%d")), subset, subset = rank(-total_iops_direct) <= 1)
-
-ggplot(data=DF_IOPS_COMBINED,aes(x=end,y=total_iops_direct,group=db))+
-  #geom_line(aes(color=db), size=.2)
-  geom_area(aes(fill=db),stat='identity',position='stack',alpha=0.9)+
-  geom_point(data=max_vals, aes(x=end, y=total_iops_direct), size=2, shape=21)+
-  geom_text(data=max_vals, aes(x=end, y=total_iops_direct,label=total_iops_direct),size=2, vjust=-.8, hjust=1.5,alpha=0.7)+
-  scale_fill_stata()+
-  facet_grid(db ~ . )+
-  labs(title="Combined Average DIRECT-PATH IOPs - Facet by Database - 7P Removed")+
-  scale_x_datetime(labels = date_format("%a, %b %d %I%p"),breaks = date_breaks("1 day"))
+# DF_IOPS_COMBINED_MAX <- ddply(DF_IOPS_COMBINED, .(end), summarise,total_iops_direct=sum(total_iops_direct))
+# max_vals <- ddply(DF_IOPS_COMBINED_MAX, .(format(end,"%y/%m/%d")), subset, subset = rank(-total_iops_direct) <= 1)
+# 
+# ggplot(data=DF_IOPS_COMBINED,aes(x=end,y=total_iops_direct))+
+#   #geom_line(aes(color=db), size=.2)total_iops
+#   geom_area(aes(fill=db),stat='identity',position='stack',alpha=0.9)+
+#   geom_point(data=max_vals, aes(x=end, y=total_iops_direct), size=2, shape=21)+
+#   geom_text(data=max_vals, aes(x=end, y=total_iops_direct,label=total_iops_direct),size=3, vjust=-.8, hjust=1.5,alpha=0.7)+
+#   scale_fill_stata()+
+#   labs(title="Combined Average DIRECT-PATH IOPs")+
+#   scale_x_datetime(labels = date_format("%a, %b %d %I%p"),breaks = date_breaks("1 day"))
+# 
+# max_vals <- ddply(DF_IOPS_COMBINED, .(db,format(end,"%y/%m/%d")), subset, subset = rank(-total_iops_direct) <= 1)
+# 
+# ggplot(data=DF_IOPS_COMBINED,aes(x=end,y=total_iops_direct,group=db))+
+#   #geom_line(aes(color=db), size=.2)
+#   geom_area(aes(fill=db),stat='identity',position='stack',alpha=0.9)+
+#   geom_point(data=max_vals, aes(x=end, y=total_iops_direct), size=2, shape=21)+
+#   geom_text(data=max_vals, aes(x=end, y=total_iops_direct,label=total_iops_direct),size=2, vjust=-.8, hjust=1.5,alpha=0.7)+
+#   scale_fill_stata()+
+#   facet_grid(db ~ . )+
+#   labs(title="Combined Average DIRECT-PATH IOPs - Facet by Database")+
+#   scale_x_datetime(labels = date_format("%a, %b %d %I%p"),breaks = date_breaks("1 day"))
 
 ## *********************************************************
 rm(DF_IOPS_COMBINED_MAX)
@@ -124,7 +131,7 @@ ggplot(data=DF_IOPS_COMBINED,aes(x=end,y=total_iops_max))+
   geom_point(data=max_vals, aes(x=end, y=total_iops_max), size=2, shape=21)+
   geom_text(data=max_vals, aes(x=end, y=total_iops_max,label=total_iops_max),size=3, vjust=-.8, hjust=1.5,alpha=0.7)+
   scale_fill_stata()+
-  labs(title="Combined Maximum IOPs - 7P Removed")+
+  labs(title="Combined Maximum IOPs")+
   scale_x_datetime(labels = date_format("%a, %b %d %I%p"),breaks = date_breaks("1 day"))
 
 rm(max_vals)
@@ -137,7 +144,7 @@ ggplot(data=DF_IOPS_COMBINED,aes(x=end,y=total_iops_max,group=db))+
   geom_text(data=max_vals, aes(x=end, y=total_iops_max,label=total_iops_max),size=2, vjust=-.8, hjust=1.5,alpha=0.7)+
   scale_fill_stata()+
   facet_grid(db ~ . )+
-  labs(title="Combined Maximum IOPs - Facet by Database - 7P Removed")+
+  labs(title="Combined Maximum IOPs - Facet by Database")+
   scale_x_datetime(labels = date_format("%a, %b %d %I%p"),breaks = date_breaks("1 day"))
 
 dev.off()
