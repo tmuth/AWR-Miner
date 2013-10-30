@@ -68,7 +68,7 @@ DF_IOPS_COMBINED$db <- factor(DF_IOPS_COMBINED$db)
 
 
 
-pdf("Combined-IOPs3.pdf", width = 11, height = 8.5,useDingbats=FALSE)
+pdf("Combined-IOPs4.pdf", width = 11, height = 8.5,useDingbats=FALSE)
 
 DF_IOPS_COMBINED_MAX <- ddply(DF_IOPS_COMBINED, .(end), summarise,total_iops=sum(total_iops))
 max_vals <- ddply(DF_IOPS_COMBINED_MAX, .(format(end,"%y/%m/%d")), subset, subset = rank(-total_iops) <= 1)
