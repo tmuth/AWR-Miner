@@ -27,7 +27,7 @@ lapply(list.of.packages, function(x) {
 
 MAX_DAYS <- 30
 
-outFileSuffix <- '1'
+outFileSuffix <- '2'
 
 
 #====================================================================================================================
@@ -384,7 +384,7 @@ set_date_break_vars <- function(DF_MAIN_IN){
 # *DATA LOADING AND MANIPULATION FUNCTIONS* =========================================================================
 
 
-getSection <- function(inFile,blockName,decSep='.',searchPatternIn=NULL,replacePatternIn=NULL){
+getSectionInt <- function(inFile,blockName,decSep='.',searchPatternIn=NULL,replacePatternIn=NULL){
   flog.debug(paste0("getSection - ",blockName," - start"),name="getSection")
   beginBlock <- paste0('~~BEGIN-',blockName,'~~')
   endBlock <- paste0('~~END-',blockName,'~~')
@@ -463,10 +463,28 @@ getSection <- function(inFile,blockName,decSep='.',searchPatternIn=NULL,replaceP
   
   flog.debug(paste0("getSection - ",blockName," - end"),name="getSection")
   #dfInt <- na.omit(dfInt)
+  
+  #write.csv(dfInt,paste0(main$current_db_name,"-",blockName,"-RAW.csv"))
+  #write.csv(summary(dfInt),paste0(main$current_db_name,"-",blockName,"-SUMMARY.csv"))
   return(dfInt)
 }
 
 
+getSection <- function(inFile,blockName,decSep='.',searchPatternIn=NULL,replacePatternIn=NULL){
+  df_int_try <- data.frame()
+  tryCatch(df_int_try <- getSectionInt(inFile,blockName,decSep,searchPatternIn,replacePatternIn), 
+           error = function(e) {
+             #traceback()
+             return(df_int_try)
+             #flog.remove(name=main$current_db_name)
+             #browser()
+             
+           }
+           #,finally=print("finished")
+  )
+  
+  return(df_int_try)
+}
 
 build_data_frames <- function(dbid,dbname) {
   flog.debug("build_data_frames - start",name="build_data_frames")
@@ -595,7 +613,7 @@ build_data_frames <- function(dbid,dbname) {
   setkey(DF_MAIN_INT,snap,end)
   
   
-  filter_n_days <- function(DF_IN){
+  filter_n_days_int <- function(DF_IN){
     #    filter_snap_min 
     flog.trace(str(attr$filter_snap_min),name="build_data_frames")
     flog.trace(str(attr$filter_snap_max),name="build_data_frames")
@@ -618,6 +636,17 @@ build_data_frames <- function(dbid,dbname) {
   }
   
   
+  filter_n_days <- function(DF_IN){
+    df_try <- data.frame()
+    tryCatch(df_try <- filter_n_days_int(DF_IN), 
+             error = function(e) {
+               #traceback()
+               return(df_try)
+             }
+    )
+    return(df_try)
+    
+  }
   
   DF_SNAP_ID_DATE_INT<-filter_n_days(DF_SNAP_ID_DATE_INT)
   #DF_SNAP_ID_DATE_INT <- subset(DF_SNAP_ID_DATE_INT, SNAP_ID >= attr$filter_snap_min & SNAP_ID <= attr$filter_snap_max)
@@ -1268,17 +1297,17 @@ plot_io <- function(DF_MAIN_BY_SNAP_INT){
     max_vals <- ddply(df_in, .(variable,stat,format(end,"%y/%m/%d")), subset, subset = rank(-value) <= 1)
     max_vals$label <- formatC(max_vals$value, format="d", big.mark=",")
     
-    plot_int <- ggplot(data=df_in, aes(x=end, y=value),aes(color=stat,alpha=0.95)) +
-      geom_line(aes(color=stat,alpha=0.95), size=.2)+
+    plot_int <- ggplot(data=df_in, aes(x=end, y=value),aes(color=stat)) +
+      geom_line(aes(color=stat), size=.2)+
       #stat_smooth(method = "loess",n=300,size=.2,alpha=.1,linetype="dashed",
       #      aes(color=stat,fill=stat))+
       
       attr$themeScaleColour+attr$themeScaleFill+
       main$gg_avg_max_fill+main$gg_avg_max_color+
-      geom_point(data=max_vals, aes(x=end, y=value, fill=stat,alpha=0.95), size=2, shape=21)+
-      geom_text(data=max_vals, aes(x=end, y=value, color=stat,label=label,alpha=(0.95)),size=2.5, vjust=0.5, hjust=1.25,position = position_jitter(width = .2,height=0))+
-      geom_text(data=DF_SNAP_ID_SUBSET3,aes(x=end,y=0,label=SNAP_ID),angle=-20,size=1.5,hjust=-0.1,vjust=0.7,alpha=0.2)+
-      geom_point(data=DF_SNAP_ID_SUBSET3,aes(x=end,y=0),alpha=0.2,size=1)+
+      geom_point(data=max_vals, aes(x=end, y=value, fill=stat), size=2, shape=21)+
+      geom_text(data=max_vals, aes(x=end, y=value, color=stat,label=label),size=2.5, vjust=0.5, hjust=1.25,position = position_jitter(width = .2,height=0))+
+      geom_text(data=DF_SNAP_ID_SUBSET3,aes(x=end,y=0,label=SNAP_ID),angle=-20,size=1.5,hjust=-0.1,vjust=0.7)+
+      geom_point(data=DF_SNAP_ID_SUBSET3,aes(x=end,y=0),size=1)+
       ylab('')+
       
       facet_grid(variable ~ .,scales="free_y")+
@@ -1355,6 +1384,7 @@ plot_io_histograms <- function(DF_IO_WAIT_HIST_INT){
   
   io_hist_plot <- ggplot(DF_IO_WAIT_HIST_INT_GROUP,aes(x=factor(WAIT_TIME_MILLI),fill = WAIT_TIME_MILLI,))+
     geom_bar(stat ='identity',aes(y=WAIT_PCT))+
+    geom_text(aes(label=round(WAIT_PCT*100,0),y=WAIT_PCT),size=3)+
     facet_grid(. ~ EVENT_NAME,scales="free_y")+
     gg_io_hist_colors2+
     labs(title=paste0("I/O Wait Event Histogram"))+
@@ -1392,7 +1422,6 @@ plot_io_histograms <- function(DF_IO_WAIT_HIST_INT){
   return(list(io_hist_plot,io_hist_area_plot))
 }
 
-
 plot_cpu <- function(DF_MAIN_INT){
   flog.debug('plot_cpu - start',name='plot_cpu')
   #if(dim(DF_MAIN_INT)[1] > 2){
@@ -1411,8 +1440,33 @@ plot_cpu <- function(DF_MAIN_INT){
   x.melt$variable<-gsub( "os_cpu" , "OS CPU Avg" , x.melt$variable)
   
   # get the max vals for each day
-  max_vals <- ddply(x.melt, .(variable,inst,format(end,"%y/%m/%d")), subset, subset = rank(-value) <= 1)
-  max_vals$label <- formatC(max_vals$value, format="d", big.mark=",")
+  #max_vals <- ddply(x.melt, .(variable,inst,format(end,"%y/%m/%d")), subset, subset = rank(-value) <= 1)
+  #max_vals$label <- formatC(max_vals$value, format="d", big.mark=",")
+  
+max_vals <- data.frame()
+  gg_maxvals_point <- theme()
+  gg_maxvals_text <- theme()
+  
+  get_maxvals_int <- function(df_in){
+    max_vals_int <- ddply(df_in, .(variable,inst,format(end,"%y/%m/%d")), subset, subset = rank(-value) <= 1)
+    max_vals_int$label <- formatC(max_vals_int$value, format="d", big.mark=",")
+    
+    #gg_maxvals_point <<- geom_point(data=max_vals_int, aes(x=end, y=value, fill=variable), size=2, shape=21)
+    gg_maxvals_point_int <- geom_point(data=max_vals_int, aes(x=end, y=value, fill=variable), size=2, shape=21)
+    
+    gg_maxvals_text_int <- geom_text(data=max_vals_int, aes(x=end, y=value, color=variable,label=label),size=3, vjust=-.8, hjust=1.5)
+    return(list(max_vals_int,gg_maxvals_point_int,gg_maxvals_text_int))
+  }
+  
+    
+  tryCatch(c(max_vals,gg_maxvals_point,gg_maxvals_text) :=  get_maxvals_int(x.melt),
+           error = function(e) {
+             #traceback()
+             gg_maxvals_point <- theme()
+             gg_maxvals_text <- theme()
+             
+           }
+  )
   
   
   
@@ -1423,8 +1477,8 @@ plot_cpu <- function(DF_MAIN_INT){
                 aes(group=variable,color=variable,fill=variable))+
     ylab('CPU Percent')+
     ylim(0,115)+
-    geom_point(data=max_vals, aes(x=end, y=value, fill=variable), size=2, shape=21)+
-    geom_text(data=max_vals, aes(x=end, y=value, color=variable,label=label),size=3, vjust=-.8, hjust=1.5)+
+	gg_maxvals_point+gg_maxvals_text+
+
     geom_text(data=DF_SNAP_ID_SUBSET2,aes(x=end,y=0,label=SNAP_ID),angle=-45,size=1.5,hjust=-.5,alpha=0.2)+
     geom_point(data=DF_SNAP_ID_SUBSET2,aes(x=end,y=0),alpha=0.2,size=1)+
     facet_grid(inst ~ .)+
@@ -1451,6 +1505,8 @@ plot_cpu <- function(DF_MAIN_INT){
   return(p_gt)
   #}
 }
+
+#cpu_plot <- plot_cpu(main$DF_MAIN)
 
 
 plot_main_activity <- function(DF_MAIN_INT){

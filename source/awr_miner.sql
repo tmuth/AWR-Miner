@@ -172,6 +172,7 @@ column FILE_NAME new_value SPOOL_FILE_NAME noprint
 select 'awr-hist-'||'&DBID'||'-'||'&DBNAME'||'-'||ltrim('&SNAP_ID_MIN')||'-'||ltrim('&SNAP_ID_MAX')||'.out' FILE_NAME from dual;
 spool &SPOOL_FILE_NAME
 
+
 -- ##############################################################################################
 REPHEADER ON
 REPFOOTER ON 
