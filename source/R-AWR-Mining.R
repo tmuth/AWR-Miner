@@ -27,7 +27,7 @@ lapply(list.of.packages, function(x) {
 
 MAX_DAYS <- 30
 
-outFileSuffix <- '3'
+outFileSuffix <- '1'
 
 
 #====================================================================================================================
@@ -56,7 +56,7 @@ if(exists("debugModeOverride")){
 
 
 
-awrMinerPlotVersion <- '3.0.18'
+awrMinerPlotVersion <- '3.0.20'
 
 filePattern <- "^awr-hist*.*(\\.out|\\.gz)$"
 if(exists("filePatternOverride")){
@@ -261,11 +261,11 @@ attr$themeScaleColour <- scale_colour_stata()
 
 
 get_attrs <- function(SEARCH_VAL){
-  if(nrow(subset(main$current_plot_attributes, variable==SEARCH_VAL)) == 0){
+  if(nrow(subset(main$current_plot_attributes, variable==SEARCH_VAL & db==main$current_db_name)) == 0){
     return(NA)
   }
   else{
-    return(main$current_plot_attributes[with(main$current_plot_attributes,variable==SEARCH_VAL),])
+    return(main$current_plot_attributes[with(main$current_plot_attributes,variable==SEARCH_VAL & db==main$current_db_name),])
   }
 }
 
@@ -332,16 +332,18 @@ apply_current_attributes <- function(){
   if(nrow(main$current_plot_attributes) > 0){
     DF_TEMP <- NULL
     DF_TEMP <- get_attrs('snap_id_filter')
-   # print(head(DF_TEMP))
-    if(nchar(as.character(DF_TEMP[1,]$value1))>1 | nchar(as.character(DF_TEMP[1,]$value2))>1 ){
+    print(head(DF_TEMP))
+    #if(nchar(as.character(DF_TEMP[1,]$value1))>1 | nchar(as.character(DF_TEMP[1,]$value2))>1 ){
       if(nchar(as.character(DF_TEMP[1,]$value1))>1){
+        flog.debug('found begin snap',name='apply_current_attributes')
         attr$filter_snap_min <<- as.vector(DF_TEMP$value1) 
       }
       if(nchar(as.character(DF_TEMP[1,]$value2))>1){
+        flog.debug('found end snap',name='apply_current_attributes')
         attr$filter_snap_max <<- as.vector(DF_TEMP$value2) 
       }
       #attr$filter_snap_max <- as.vector(DF_TEMP$value2)
-    }
+    #}
   }
   
   
@@ -391,6 +393,11 @@ getSectionInt <- function(inFile,blockName,decSep='.',searchPatternIn=NULL,repla
   endBlock <- paste0('~~END-',blockName,'~~')
   thePattern <- paste0(beginBlock,'(.*)',endBlock)
   body <- str_extract(paste(inFile, collapse='\n'), thePattern)
+  #print(str(body))
+  if(is.na(body)){
+    flog.debug(paste0("getSection - ",blockName," - section not in capture"),name="getSection")
+    return(data.frame())
+  }
   
   if(str_detect(body, 'table not in this version')){
     flog.trace("table not in this version",name="getSection")
@@ -543,6 +550,8 @@ build_data_frames <- function(dbid,dbname) {
   flog.trace("YEP2",name="build_data_frames")
   DF_AAS_INT$SNAP_ID <- as.numeric(DF_AAS_INT$SNAP_ID)
   DF_AAS_INT$AVG_SESS <- as.numeric(DF_AAS_INT$AVG_SESS)
+  idx_aas_ltz_rm <- with(DF_AAS_INT,AVG_SESS >= 0)
+  DF_AAS_INT<- DF_AAS_INT[idx_aas_ltz_rm,]
   DF_AAS_INT <- data.table(DF_AAS_INT)
   flog.trace("DF_AAS_INT1",DF_AAS_INT,name="build_data_frames",capture=TRUE)
   
@@ -552,6 +561,9 @@ build_data_frames <- function(dbid,dbname) {
   DF_IO_WAIT_HIST_INT$SNAP_ID <- as.numeric(DF_IO_WAIT_HIST_INT$SNAP_ID)
   DF_IO_WAIT_HIST_INT$WAIT_TIME_MILLI <- as.numeric(DF_IO_WAIT_HIST_INT$WAIT_TIME_MILLI)
   DF_IO_WAIT_HIST_INT$WAIT_COUNT <- as.numeric(DF_IO_WAIT_HIST_INT$WAIT_COUNT)
+  
+  DF_IOSTAT_FUNCTION_INT <- getSection(theFile,'IOSTAT-BY-FUNCTION',computedDecSep)
+  
   DF_IO_BY_OBJECT_TYPE_INT <- getSection(theFile,'IO-OBJECT-TYPE',computedDecSep)
   DF_SQL_SUMMARY_INT <- getSection(theFile,'TOP-SQL-SUMMARY',computedDecSep)
   
@@ -584,7 +596,8 @@ build_data_frames <- function(dbid,dbname) {
   options(tz="")
   
   DF_SNAP_ID_DATE_INT <- ddply(DF_MAIN_INT, .(snap), summarise, 
-                               end=min(as.POSIXct(end,format="%y/%m/%d %H:%M",tz="UTC")))
+                               end=min(as.POSIXct(end,format="%y/%m/%d %H:%M",tz="UTC")),
+                               dur_m=max(dur_m))
   
   DF_SNAP_ID_DATE_INT <- data.table(DF_SNAP_ID_DATE_INT)
   
@@ -694,7 +707,9 @@ build_data_frames <- function(dbid,dbname) {
   #print(head(DF_OS_INT))
   flog.debug("build_data_frames - end",name="build_data_frames")
   
-  return(list(DF_OS_INT,DF_MAIN_INT,DF_MEMORY_INT,DF_SPACE_INT,DF_AAS_INT,DF_SQL_SUMMARY_INT,DF_SQL_BY_SNAPID_INT,DF_SNAP_ID_DATE_INT,DF_IO_WAIT_HIST_INT,DF_DB_PARAMETERS_INT,DF_IO_BY_OBJECT_TYPE_INT))
+  return(list(DF_OS_INT,DF_MAIN_INT,DF_MEMORY_INT,DF_SPACE_INT,DF_AAS_INT,DF_SQL_SUMMARY_INT,DF_SQL_BY_SNAPID_INT,DF_SNAP_ID_DATE_INT,
+              DF_IO_WAIT_HIST_INT,DF_IOSTAT_FUNCTION_INT,
+              DF_DB_PARAMETERS_INT,DF_IO_BY_OBJECT_TYPE_INT))
 }
 
 
@@ -748,7 +763,8 @@ summarise_dfs_by_snap <- function(){
 build_snap_to_date_df <- function(){
   DF_SNAP_ID_DATE_INT <- ddply(main$DF_MAIN, .(snap), summarise, 
                                end=min(as.POSIXct(end,tz="UTC")),
-                               aas=sum(aas)) 
+                               aas=sum(aas),
+                               dur_m=max(dur_m)) 
   DF_SNAP_ID_DATE_INT$end <- format(DF_SNAP_ID_DATE_INT$end,"%y/%m/%d %H:%M")
   return(DF_SNAP_ID_DATE_INT)
 }
@@ -1491,6 +1507,97 @@ plot_io_histograms <- function(DF_IO_WAIT_HIST_INT){
   return(list(io_hist_plot,io_hist_area_plot))
 }
 
+
+
+
+plot_iostat_by_function <- function(DF_IOSTAT_FUNCTION_INT){
+  
+  
+  #DF_IOSTAT_FUNCTION_INT <- main$DF_IOSTAT_FUNCTION
+  # multiply writes by 2
+  #DF_IOSTAT_FUNCTION_INT$SM_W_REQS <- 2*DF_IOSTAT_FUNCTION_INT$SM_W_REQS
+  #DF_IOSTAT_FUNCTION_INT$LG_W_REQS <- 2*DF_IOSTAT_FUNCTION_INT$LG_W_REQS
+  iostat.melt <- melt(DF_IOSTAT_FUNCTION_INT,id.var = c("SNAP_ID","FUNCTION_NAME"),measure.var = c("SM_R_REQS","SM_W_REQS", "LG_R_REQS", "LG_W_REQS"))
+  expanded_vals <- expand.grid(SNAP_ID = unique(main$DF_IOSTAT_FUNCTION$SNAP_ID),
+                               FUNCTION_NAME = unique(main$DF_IOSTAT_FUNCTION$FUNCTION_NAME))
+  
+  iostat.melt <- merge(iostat.melt,expanded_vals)
+  iostat2.melt<- merge(iostat.melt,main$DF_SNAP_ID_DATE,by="SNAP_ID")
+  iostat2.melt <- transform(iostat2.melt, variable = as.character(variable))
+  iostat2.melt[with(iostat2.melt, grepl("SM_R_REQS", variable)),]$variable<-"Small Read IOPs"
+  iostat2.melt[with(iostat2.melt, grepl("SM_W_REQS", variable)),]$variable<-"Small Write IOPs *"
+  iostat2.melt[with(iostat2.melt, grepl("LG_R_REQS", variable)),]$variable<-"Large Read IOPs"
+  iostat2.melt[with(iostat2.melt, grepl("LG_W_REQS", variable)),]$variable<-"Large Write IOPs *"
+  
+  #convert absolute values to per-second values
+  iostat2.melt$value_per_s <- round(iostat2.melt$value / (iostat2.melt$dur_m*60),0)
+  
+  # find the FUNCTIONS for which we have no data and remove them
+  iostat2.totals <- ddply(iostat2.melt, .(FUNCTION_NAME), summarise, 
+                          value=sum(as.numeric(value)))
+  idx_iostat_rm <- !with(iostat2.melt, FUNCTION_NAME %in% subset(iostat2.totals,value==0)$FUNCTION_NAME)
+  iostat2.melt<- iostat2.melt[idx_iostat_rm,]
+  
+  #create fake max points to normalize the scale of small reads with writes, and the same for large ...
+  iostat2.agg1 <- ddply(iostat2.melt, .(SNAP_ID,end,variable), summarise, value_per_s=sum(as.numeric(value_per_s)))
+  iostat2.agg1.max <- ddply(iostat2.agg1, .(variable), summarise, value_per_s=max(as.numeric(value_per_s)))
+  iostat2.agg1.max$value_per_s <- iostat2.agg1.max$value_per_s + (iostat2.agg1.max$value_per_s*0.05) # add 5% padding
+  #rm(iostat2.agg1)
+  iostat2.agg1.max.tmp <- iostat2.agg1.max
+  # Flip the names with each other
+  iostat2.agg1.max$variable<-paste0(iostat2.agg1.max$variable,"_TMP")
+  iostat2.agg1.max$variable<-gsub( "Small Read IOPs_TMP" , "Small Write IOPs *" , iostat2.agg1.max$variable)
+  iostat2.agg1.max$variable<-gsub( "Small Write IOPs \\*_TMP" , "Small Read IOPs" , iostat2.agg1.max$variable)
+  iostat2.agg1.max$variable<-gsub( "Large Read IOPs_TMP" , "Large Write IOPs *" , iostat2.agg1.max$variable)
+  iostat2.agg1.max$variable<-gsub( "Large Write IOPs \\*_TMP" , "Large Read IOPs" , iostat2.agg1.max$variable)
+  
+  iostat2.agg1.max <- rbind(iostat2.agg1.max,iostat2.agg1.max.tmp )
+  iostat2.agg1.max$end <- min(iostat2.melt$end)
+  
+  
+  max_vals <- ddply(iostat2.agg1, .(variable,end=format(end,"%y/%m/%d")), subset, subset = rank(-value_per_s) <= 1)
+  max_vals$label <- formatC(max_vals$value, format="d", big.mark=",")
+  
+  
+  
+  
+  #http://docs.oracle.com/cd/E24628_01/server.121/e17635/tdppt_realtime.htm#CBBEFAAC   
+  iostat_colors <- c("ARCH" = "#cc6617", "Archive Manager" = "#9ccecc", "Buffer Cache Reads" = "#0133ff", "Data Pump" = "#747254",
+                     "DBWR" = "#993309","Direct Reads" = "#00cc2e","Direct Writes" = "#9aff9a","LGWR" = "#cc330c",
+                     "Others" = "#ff6699","Recovery" = "#5c460c","RMAN" = "#fcfe84",
+                     "Smart Scan" = "#800040","Streams AQ" = "#9c9274","XDB" = "#c4b69c")
+  
+  
+  gg_iostat_colors <- scale_fill_manual("", values = iostat_colors)
+  
+  
+  iostat_plot_int <- ggplot()+
+    main$gg_hour_bars+
+    geom_area(data=iostat2.melt, aes(x = end, y = value_per_s,
+                                     fill = FUNCTION_NAME),stat = "identity", position = "stack",alpha=.95)+
+    geom_point(data=max_vals, aes(x=end, y=value_per_s), size=2, shape=21)+
+    geom_text(data=max_vals, aes(x=end, y=value_per_s,label=label),size=2, vjust=-.5, hjust=1)+
+    gg_iostat_colors+
+    
+    attr$vertical_line + attr$vertical_text +
+    geom_point(data=iostat2.agg1.max,aes(x=end,y=value_per_s),alpha=0)+
+    theme(
+      strip.text.y = element_text(size = 7),
+      legend.key.size = unit(.25, "cm")
+    )+
+    scale_x_datetime(labels = date_format("%a, %b %d %I %p"),breaks = attr$date_break_major_var,
+                     minor_breaks = attr$date_break_minor_var,
+                     limits = c(min(iostat2.melt$end),max(iostat2.melt$end)))+
+    facet_grid(variable ~ . ,scales="free_y")+
+    theme(axis.title.x=element_blank(),axis.title.y=element_blank() )+
+    labs(title=paste("IO Requests by Size by Function - ",main$current_db_name,sep=""))
+  
+  return(iostat_plot_int)
+
+}
+
+
+
 plot_cpu <- function(DF_MAIN_INT){
   flog.debug('plot_cpu - start',name='plot_cpu')
   #if(dim(DF_MAIN_INT)[1] > 2){
@@ -1976,7 +2083,10 @@ main$mainFunction <- function(f){
   attr$filter_snap_min <<- as.numeric(attr$filter_snap_min)
   attr$filter_snap_max <<- as.numeric(attr$filter_snap_max)
   
-  c(main$DF_OS, main$DF_MAIN,main$DF_MEMORY,main$DF_SPACE,main$DF_AAS,main$DF_SQL_SUMMARY,main$DF_SQL_BY_SNAPID,main$DF_SNAP_ID_DATE,main$DF_IO_WAIT_HIST,main$DF_DB_PARAMETERS,main$DF_IO_BY_OBJECT_TYPE) := build_data_frames(f,main$current_db_name)
+  c(main$DF_OS, main$DF_MAIN,main$DF_MEMORY,main$DF_SPACE,main$DF_AAS,main$DF_SQL_SUMMARY,main$DF_SQL_BY_SNAPID,
+    main$DF_SNAP_ID_DATE,
+    main$DF_IO_WAIT_HIST,main$DF_IOSTAT_FUNCTION,
+    main$DF_DB_PARAMETERS,main$DF_IO_BY_OBJECT_TYPE) := build_data_frames(f,main$current_db_name)
   c(main$DF_MAIN_BY_SNAP) := summarise_dfs_by_snap()
   main$DF_SNAP_ID_DATE2 <- build_snap_to_date_df()
   
@@ -2072,6 +2182,12 @@ main$mainFunction <- function(f){
   cpu_plot <- plot_cpu(main$DF_MAIN)
   io_plot <- plot_io(main$DF_MAIN_BY_SNAP)
   
+  iostat_by_function_plot <- NULL
+  if( nrow(main$DF_IOSTAT_FUNCTION)>10){
+    iostat_by_function_plot <-  plot_iostat_by_function(main$DF_IOSTAT_FUNCTION)
+  }
+  
+  
   main_activity_plot <- plot_main_activity(main$DF_MAIN)
   
   memory_plot <- plot_memory(main$DF_MEMORY)
@@ -2101,6 +2217,11 @@ main$mainFunction <- function(f){
   grid.draw(cpu_plot)
   grid.newpage()
   grid.draw(io_plot)
+  
+  if( nrow(main$DF_IOSTAT_FUNCTION)>10){
+   
+    print(iostat_by_function_plot)
+  }
   
   if( nrow(main$DF_IO_WAIT_HIST)>10){
     x <- grid.arrange(io_hist_plot,io_hist_area_plot , ncol = 1, heights=c(1,4))
