@@ -27,7 +27,7 @@ lapply(list.of.packages, function(x) {
 
 MAX_DAYS <- 30
 
-outFileSuffix <- '1'
+outFileSuffix <- '4'
 
 
 #====================================================================================================================
@@ -74,16 +74,6 @@ print(paste0('for files that match the pattern: ',filePattern))
 Sys.sleep(2)
 
 
-#library(plyr)
-#library(ggplot2)
-#library(gridExtra)
-#library(scales)
-#library(reshape)
-#library(xtable)
-#library(ggthemes)
-#library(stringr)
-#library(data.table)
-
 
 
 if(interactive()){
@@ -118,11 +108,6 @@ attr$date_break_minor_var <- date_breaks("12 hour")
 
 
 main$awrFiles <- list.files(pattern=filePattern)
-
-
-
-
-
 
 
 # *UTILITY FUNCTIONS* ===============================================================================================
@@ -1468,7 +1453,7 @@ plot_io_histograms <- function(DF_IO_WAIT_HIST_INT){
   gg_io_hist_colors2 <- scale_fill_manual(values = io_hist_colors2,name="wait ms" )
   
   io_hist_plot <- ggplot(DF_IO_WAIT_HIST_INT_GROUP,aes(x=factor(WAIT_TIME_MILLI),fill = WAIT_TIME_MILLI,))+
-    geom_bar(stat ='identity',aes(y=WAIT_PCT))+
+    geom_bar(stat ='identity',aes(y=WAIT_PCT),width=1)+
     geom_text(aes(label=round(WAIT_PCT*100,0),y=WAIT_PCT),size=2)+
     facet_grid(. ~ EVENT_NAME,scales="free_y")+
     gg_io_hist_colors2+
@@ -1485,11 +1470,12 @@ plot_io_histograms <- function(DF_IO_WAIT_HIST_INT){
     #                                                       fill = WAIT_TIME_MILLI))+
     #geom_bar(stat = "identity", position = "stack",right=FALSE,drop=TRUE,
     #         aes(y = WAIT_COUNT)+
-    geom_area(data=DF_IO_WAIT_HIST_INT, aes(x = end, y = WAIT_COUNT,
+    main$gg_hour_bars+
+    geom_area(data=DF_IO_WAIT_HIST_INT,aes(x = end, y = WAIT_COUNT,
                                             fill = WAIT_TIME_MILLI),stat = "identity", position = "stack",alpha=1)+
     facet_grid(EVENT_NAME ~ .,scales="free_y")+
     gg_io_hist_colors2+
-    main$gg_hour_bars+
+    
     attr$vertical_line + attr$vertical_text +
     labs(title=paste0("I/O Wait Event Area Chart"))+
     theme(legend.key.size = unit(.25, "cm"),
@@ -1501,6 +1487,8 @@ plot_io_histograms <- function(DF_IO_WAIT_HIST_INT){
     ylab("Wait Count")+
     theme(axis.title.x=element_blank(),legend.position =    "none" )
   
+  
+  #io_hist_area_plot$grobs[[4]]$children[[2]]$width <- (io_hist_area_plot$grobs[[4]]$children[[2]]$width[[1]]*1.5)
   
   flog.debug('plot_io_histograms - end',name='plot_io_histograms')
   awrM$debug.lastFunction <- 'plot_io_histograms - end'
@@ -2159,7 +2147,7 @@ main$mainFunction <- function(f){
     
     save(debugVars,file=paste(outFileName,"-debugVars.Rda",sep=""))
     
-    x <- grid.arrange(tblText,tblText2,tblText3, aas_plot2_line,box_plots, ncol = 1, heights=c(1,1,1,8,8))
+    x <- grid.arrange(tblText,tblText2,tblText3, arrangeGrob(aas_pct1, aas_pct2, ncol=2),box_plots, ncol = 1, heights=c(1,1,1,8,8))
     #x <- grid.arrange(tblText,tblText2,tblText3, box_plots, ncol = 1, heights=c(1,1,1,8))
     #x <- grid.arrange(tblText ,tblText2,tblText3, ncol = 1, heights=c(1,1,1))
   }
