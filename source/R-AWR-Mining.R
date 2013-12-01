@@ -1,5 +1,6 @@
 #Sys.setenv(http_proxy="http://www-proxy.us.oracle.com:80")
 #debugModeOverride <- TRUE  | rm(debugModeOverride)
+#dumpCSV <- TRUE  | rm(dumpCSV)
 #filePatternOverride <- "^awr-hist.+DB110g.+(\\.out|\\.gz)$" | rm(filePatternOverride)
 
 
@@ -38,6 +39,11 @@ flog.threshold(INFO) #TRACE, DEBUG, INFO, WARN, ERROR, FATAL
 #flog.threshold(ERROR,name='build_data_frames') #TRACE, DEBUG, INFO, WARN, ERROR, FATAL 
 #name: build_data_frames, mainFunction,set_date_break_vars,plot_RAC_activity
 
+if(file.exists('settings.R')){
+  source('settings.R')
+}
+
+
 #debugModeOverride <- TRUE  | rm(debugModeOverride)
 if(exists("debugModeOverride")){
   if(!is.null(debugModeOverride)){
@@ -47,6 +53,7 @@ if(exists("debugModeOverride")){
       flog.threshold(DEBUG)
       flog.threshold(DEBUG,name='build_data_frames')
       debugVars <- new.env()
+      
     }
     else{
       debugMode <- FALSE
@@ -1397,7 +1404,7 @@ plot_io <- function(DF_MAIN_BY_SNAP_INT){
     return(plot_int)
   }
   
-  p <- plot_io_int(subset(x.melt,variable %in% c("Read IOPs Direct *","Write IOPs Direct *","Read IOPs","Write IOPs","Read MB/s","Write MB/s")))
+  p <- plot_io_int(subset(x.melt,variable %in% c("Read IOPs Direct *","Write IOPs Direct *","Read IOPs","Write IOPs","Read MB/s","Write MB/s") & stat == "Avg"))
   
   p_gt <- ggplot_gtable(ggplot_build(p))
   p_gt$layout$clip[p_gt$layout$name=="panel"] <- "off"
@@ -1468,10 +1475,10 @@ plot_io_histograms <- function(DF_IO_WAIT_HIST_INT){
   io_hist_area_plot <- ggplot()+
     #ggplot(DF_IO_WAIT_HIST_INT, aes(x = end,
     #                                                       fill = WAIT_TIME_MILLI))+
-    #geom_bar(stat = "identity", position = "stack",right=FALSE,drop=TRUE,
-    #         aes(y = WAIT_COUNT)+
+ #   geom_bar(stat = "identity", position = "stack",right=FALSE,drop=TRUE,
+#             aes(y = WAIT_COUNT)+
     main$gg_hour_bars+
-    geom_area(data=DF_IO_WAIT_HIST_INT,aes(x = end, y = WAIT_COUNT,
+    geom_bar(data=DF_IO_WAIT_HIST_INT,aes(x = end, y = WAIT_COUNT,
                                             fill = WAIT_TIME_MILLI),stat = "identity", position = "stack",alpha=1)+
     facet_grid(EVENT_NAME ~ .,scales="free_y")+
     gg_io_hist_colors2+
@@ -2083,6 +2090,22 @@ main$mainFunction <- function(f){
   if(debugMode){
     debugVars$main <- main
     save(debugVars,file=paste(outFileName,"-debugVars.Rda",sep=""))
+    if(exists("dumpCSV")){
+      if(!is.null(dumpCSV)){
+        if(dumpCSV){
+          
+          for (objName in ls(main)) {
+            tmp <- get(objName,envir=main)
+            #print(class(tmp))
+            #print(paste0(objName," - ",class(tmp)))
+            if(inherits(tmp,what='data.frame')){
+              write.csv(x=tmp,file=paste0(main$current_db_name, "-",objName,".csv"),row.names=FALSE)
+            }
+            rm(tmp)
+          }
+        }
+      }
+    }
   }
   
   add_vetical_lines()
@@ -2302,6 +2325,8 @@ main$mainLoop <- function(){
     awrM$debug.unitTimesWide$duration <- difftime(awrM$debug.unitTimesWide$time.end , awrM$debug.unitTimesWide$time.start , unit="secs")
     print(head(awrM$debug.unitTimesWide,30))
     save(awrM,file="awrM.Rda")
+    
+  
   }
   
 }

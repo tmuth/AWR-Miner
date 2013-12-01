@@ -65,11 +65,11 @@ plot_io <- function(DF_MAIN_BY_SNAP_INT){
   #x.melt[with(x.melt, grepl("read_iops_direct", variable)),]$variable<-"Read IOPs Direct *"
   #x.melt[with(x.melt, grepl("write_iops_direct", variable)),]$variable<-"Write IOPs Direct *"
   
-  x.melt[with(x.melt, grepl("read_iops_direct_est", variable)),]$variable<-"Read IOPs Direct Est"
+  x.melt[with(x.melt, grepl("read_iops_direct_est", variable)),]$variable<-"Read IOPs Direct"
   #x.melt[with(x.melt, grepl("read_iops_est", variable)),]$variable<-"Read IOPs Est"
   x.melt[with(x.melt, grepl("^read_iops$", variable)),]$variable<-"Read IOPs"
   x.melt[with(x.melt, grepl("^write_iops$", variable)),]$variable<-"Write IOPs"
-  x.melt[with(x.melt, grepl("^write_iops_direct_est$", variable)),]$variable<-"Write IOPs Direct Est"
+  x.melt[with(x.melt, grepl("^write_iops_direct_est$", variable)),]$variable<-"Write IOPs Direct"
   #x.melt[with(x.melt, grepl("write_iops_est", variable)),]$variable<-"Write IOPs Est"
   print(head(x.melt))
   print(unique(x.melt$variable))
@@ -108,12 +108,12 @@ plot_io <- function(DF_MAIN_BY_SNAP_INT){
     max_vals_fake <- max_vals
     max_vals_fake <- transform(max_vals_fake, variable = as.character(variable)) # can't replace factors
     max_vals_fake[with(max_vals_fake, grepl("^Read IOPs$", variable)),]$variable<-"Read IOPs-old"   
-    max_vals_fake[with(max_vals_fake, grepl("^Read IOPs Direct Est$", variable)),]$variable<-"Read IOPs"
-    max_vals_fake[with(max_vals_fake, grepl("^Read IOPs-old$", variable)),]$variable<-"Read IOPs Direct Est"
+    max_vals_fake[with(max_vals_fake, grepl("^Read IOPs Direct$", variable)),]$variable<-"Read IOPs"
+    max_vals_fake[with(max_vals_fake, grepl("^Read IOPs-old$", variable)),]$variable<-"Read IOPs Direct"
         
     max_vals_fake[with(max_vals_fake, grepl("^Write IOPs$", variable)),]$variable<-"Write IOPs-old"
-    max_vals_fake[with(max_vals_fake, grepl("^Write IOPs Direct Est$", variable)),]$variable<-"Write IOPs"
-    max_vals_fake[with(max_vals_fake, grepl("^Write IOPs-old$", variable)),]$variable<-"Write IOPs Direct Est"
+    max_vals_fake[with(max_vals_fake, grepl("^Write IOPs Direct$", variable)),]$variable<-"Write IOPs"
+    max_vals_fake[with(max_vals_fake, grepl("^Write IOPs-old$", variable)),]$variable<-"Write IOPs Direct"
     
     
     plot_int <- ggplot(data=df_in, aes(x=end, y=value),aes(color=stat)) +
@@ -147,7 +147,7 @@ plot_io <- function(DF_MAIN_BY_SNAP_INT){
     return(plot_int)
   }
   
-  p <- plot_io_int(subset(x.melt,variable %in% c("Read IOPs Direct *","Write IOPs Direct *","Read IOPs","Write IOPs","Read MB/s","Write MB/s","Read IOPs Direct Est","Write IOPs Direct Est")))
+  p <- plot_io_int(subset(x.melt,variable %in% c("Read IOPs Direct *","Write IOPs Direct *","Read IOPs","Write IOPs","Read MB/s","Write MB/s","Read IOPs Direct","Write IOPs Direct")))
   print(p)
   p_gt <- ggplot_gtable(ggplot_build(p))
   p_gt$layout$clip[p_gt$layout$name=="panel"] <- "off"
@@ -162,6 +162,7 @@ plot_io <- function(DF_MAIN_BY_SNAP_INT){
 
 p <- plot_io(DF_MAIN_IOPS_BY_SNAP_INT)
 print(p)
+pdf(paste(main$current_db_name,"-iops.pdf",sep=""), width = 11, height = 8.5,useDingbats=FALSE)
 grid.draw(p)
 
 
@@ -191,7 +192,7 @@ DF_MAIN_IOPS_BY_SNAP_INT.melt[with(DF_MAIN_IOPS_BY_SNAP_INT.melt, grepl("^write_
 
 
 ggplot(data=DF_MAIN_IOPS_BY_SNAP_INT.melt, aes(x=end, y=value)) +
-  geom_line(aes(), size=.2)+
+  geom_line(aes(), size=.2,color="#3a6185")+
   #stat_smooth(method = "loess",n=300,size=.2,alpha=.1,linetype="dashed",
   #      aes(color=stat,fill=stat))+
   
@@ -225,3 +226,5 @@ ggplot(data=DF_MAIN_IOPS_BY_SNAP_INT.melt, aes(x=value)) +
   labs(title=paste("Flash IOPs Histogram for ",main$current_db_name,sep=""))+
   scale_x_continuous(labels = percent_format())+
   facet_grid(variable ~ .)
+
+dev.off()
