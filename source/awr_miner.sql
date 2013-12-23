@@ -9,8 +9,8 @@ set verify off
 column cnt_dbid_1 new_value CNT_DBID noprint
 
 define NUM_DAYS = 30
-define SQL_TOP_N = 30
-define AWR_MINER_VER = 3.0.3
+define SQL_TOP_N = 50
+define AWR_MINER_VER = 3.0.21
 
 alter session set cursor_sharing = exact;
 
@@ -343,11 +343,13 @@ REPFOOTER PAGE LEFT '~~END-MAIN-METRICS~~'
  select snap_id "snap",num_interval "dur_m", end_time "end",inst "inst",
   max(decode(metric_name,'Host CPU Utilization (%)',					average,null)) "os_cpu",
   max(decode(metric_name,'Host CPU Utilization (%)',					maxval,null)) "os_cpu_max",
+  max(decode(metric_name,'Host CPU Utilization (%)',					STANDARD_DEVIATION,null)) "os_cpu_sd",
   max(decode(metric_name,'Database Wait Time Ratio',                   round(average,1),null)) "db_wait_ratio",
 max(decode(metric_name,'Database CPU Time Ratio',                   round(average,1),null)) "db_cpu_ratio",
 max(decode(metric_name,'CPU Usage Per Sec',                   round(average/100,3),null)) "cpu_per_s",
 max(decode(metric_name,'CPU Usage Per Sec',                   round(maxval/100,3),null)) "cpu_per_s_max",
 max(decode(metric_name,'Average Active Sessions',                   average,null)) "aas",
+max(decode(metric_name,'Average Active Sessions',                   STANDARD_DEVIATION,null)) "aas_sd",
 max(decode(metric_name,'Average Active Sessions',                   maxval,null)) "aas_max",
 max(decode(metric_name,'SQL Service Response Time',                   average,null)) "sql_res_t_cs",
 max(decode(metric_name,'Background Time Per Sec',                   average,null)) "bkgd_t_per_s",
@@ -385,7 +387,7 @@ max(decode(metric_name,'Cell Physical IO Interconnect Bytes',         round((ave
 max(decode(metric_name,'Cell Physical IO Interconnect Bytes',         round((maxval)/1024/1024,1),null)) "cell_io_int_mb_max"
   from(
   select  snap_id,num_interval,to_char(end_time,'YY/MM/DD HH24:MI') end_time,instance_number inst,metric_name,round(average,1) average,
-  round(maxval,1) maxval
+  round(maxval,1) maxval,round(standard_deviation,1) standard_deviation
  from dba_hist_sysmetric_summary
 where dbid = &DBID
  and snap_id between &SNAP_ID_MIN and &SNAP_ID_MAX
@@ -722,7 +724,8 @@ DENSE_RANK() OVER       (PARTITION BY s.snap_id ORDER BY sum(disk_reads_delta) D
       CASE WHEN MAX(PLAN_HASH_VALUE) = LAG(MAX(PLAN_HASH_VALUE), 1, 0) OVER (PARTITION BY s.sql_id ORDER BY s.snap_id ASC) 
       OR LAG(MAX(PLAN_HASH_VALUE), 1, 0) OVER (PARTITION BY s.sql_id ORDER BY s.snap_id ASC) = 0 THEN 0
       when count(distinct PLAN_HASH_VALUE) > 1 then 1 else 1 end plan_change,count(distinct PLAN_HASH_VALUE) plans,
-      round(sum(disk_reads_delta * &DB_BLOCK_SIZE)/1024/1024/1024) phy_read_gb
+      round(sum(disk_reads_delta * &DB_BLOCK_SIZE)/1024/1024/1024) phy_read_gb,
+      sum(s.px_servers_execs_delta) px_servers_execs
   FROM dba_hist_sqlstat s,dba_hist_sqltext t,top_n_sql_ids topn
   WHERE s.dbid = &DBID 
   AND s.dbid = t.dbid
