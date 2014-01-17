@@ -1,0 +1,2 @@
+[ERROR] [2013-11-01 17:38:03] [Error in USPS: Error in UseMethod("grid.draw"): no applicable method for 'grid.draw' applied to an object of class "c('gg', 'ggplot')"
+]
