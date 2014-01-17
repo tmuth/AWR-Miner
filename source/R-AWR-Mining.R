@@ -28,7 +28,7 @@ lapply(list.of.packages, function(x) {
 
 MAX_DAYS <- 30
 
-outFileSuffix <- '4'
+outFileSuffix <- '5'
 
 
 #====================================================================================================================
@@ -2230,7 +2230,6 @@ main$mainFunction <- function(f){
   grid.draw(io_plot)
   
   if( nrow(main$DF_IOSTAT_FUNCTION)>10){
-   
     print(iostat_by_function_plot)
   }
   
