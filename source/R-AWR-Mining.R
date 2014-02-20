@@ -74,10 +74,30 @@ if(exists("filePatternOverride")){
   }
 }
 
- 
-print('Looking in this directory:')
-print(getwd())
-print(paste0('for files that match the pattern: ',filePattern))
+
+appender.status.fn <- function(lineIn) {
+  strFormat <- function(stringIn){
+    stringInternal <- str_replace_all(stringIn,"\\n$","")
+    return(stringInternal)
+  }
+  lineIn <- strFormat(lineIn)
+  cat(lineIn,file="status.log",append=TRUE,sep="\n")
+  print(lineIn,quote=FALSE,useSource = TRUE)
+}
+
+
+flog.appender(appender.status.fn, 'status')
+flog.info("\n\n--------------------------------------------------\n\n",name='status')
+flog.info("** Starting AWR-Miner ** ",name='status')
+
+
+
+flog.info("Looking in this directory:",name='status')
+flog.info(getwd(),name='status')
+flog.info(paste0('for files that match the pattern: ',filePattern),name='status')
+# print('Looking in this directory:')
+# print(getwd())
+# print(paste0('for files that match the pattern: ',filePattern))
 Sys.sleep(2)
 
 
@@ -114,7 +134,11 @@ attr$date_break_major_var <- date_breaks("1 day")
 attr$date_break_minor_var <- date_breaks("12 hour")
 
 
+
+
 main$awrFiles <- list.files(pattern=filePattern)
+
+flog.info(paste0("Files found: \n",paste(main$awrFiles,collapse="\n"),"\n"), name='status')
 
 
 # *UTILITY FUNCTIONS* ===============================================================================================
@@ -186,7 +210,7 @@ appender.fn <- function(lineIn) {
   }
   
   awrM$debug.unitTimes <<- rbind(awrM$debug.unitTimes,data.frame(db=main$current_db_name,level=lineVars[[1]][1],time=lineVars[[1]][2],message=lineVars[[1]][3],opp=oppCode))
-  print(lineIn)
+  print(lineIn,quote=FALSE)
 }
 
 if(debugMode){
