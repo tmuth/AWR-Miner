@@ -22,7 +22,6 @@ lapply(list.of.packages, function(x) {
 #WORK_DIR <- 'E:/Portable-AWR-Miner'
 #setwd(WORK_DIR)
 
-
 #filePatternOverride <- "^awr-hist.+DB110g.+(\\.out|\\.gz)$"
 #rm(filePatternOverride)
 
