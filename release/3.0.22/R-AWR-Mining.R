@@ -2,6 +2,7 @@
 #debugModeOverride <- TRUE  | rm(debugModeOverride)
 #dumpCSV <- TRUE  | rm(dumpCSV)
 #filePatternOverride <- "^awr-hist.+DB110g.+(\\.out|\\.gz)$" | rm(filePatternOverride)
+#plotOverride <- "ALL" [ALL|NONE|SOME|PAGE1|AAS]
 
 
 list.of.packages <- c("futile.logger","ggplot2", "plyr","gridExtra","scales","reshape","xtable","ggthemes","stringr","data.table","lubridate","gplots")
@@ -22,13 +23,12 @@ lapply(list.of.packages, function(x) {
 #WORK_DIR <- 'E:/Portable-AWR-Miner'
 #setwd(WORK_DIR)
 
-
 #filePatternOverride <- "^awr-hist.+DB110g.+(\\.out|\\.gz)$"
 #rm(filePatternOverride)
 
 MAX_DAYS <- 30
 
-outFileSuffix <- '4'
+outFileSuffix <- '1'
 
 
 #====================================================================================================================
@@ -195,8 +195,42 @@ if(debugMode){
   layout <- layout.format('[~l] [~t] [~m]')
   flog.layout(layout)
 }
-#====================================================================================================================
 
+
+okToPrintPlot <- function(plotName){
+  plotNameInt <- toupper(plotName)
+  if(exists("plotOverride")){
+    if(!is.null(plotOverride)){
+      plotOverride <- lapply(plotOverride,function(x) toupper(x) )
+      
+      if(is.element('NONE', plotOverride)){
+        return(FALSE)
+      }
+      
+      
+      if(is.element('ALL', plotOverride)){
+        return(TRUE)
+      }
+      
+      if(is.element('SOME', plotOverride)){
+        if(is.element(plotNameInt, plotOverride)){
+          return(TRUE)
+        }else
+        {
+          return(FALSE)
+        }
+      }
+    }
+    else{
+      return(TRUE)
+    }
+  }
+  else{
+    return(TRUE)
+  }
+}
+#====================================================================================================================
+okToPrintPlot('foo')
 
 
 
@@ -547,6 +581,9 @@ build_data_frames <- function(dbid,dbname) {
   DF_AAS_INT <- data.table(DF_AAS_INT)
   flog.trace("DF_AAS_INT1",DF_AAS_INT,name="build_data_frames",capture=TRUE)
   
+  
+  DF_TOP_N_EVENTS_INT <- getSection(theFile,'TOP-N-TIMED-EVENTS',computedDecSep)
+  
   searchPattern <- "\n([[:digit:] ]{10}) ([[:print:] ]{20}) ([[:print:] ]{37}) ([[:print:] ]{15}) ([[:print:] ]{10})"
   replacePattern <- "\n'\\1' '\\2' '\\3' '\\4' '\\5' "
   DF_IO_WAIT_HIST_INT <- getSection(theFile,'IO-WAIT-HISTOGRAM',computedDecSep,searchPattern,replacePattern)
@@ -667,6 +704,7 @@ build_data_frames <- function(dbid,dbname) {
 
 #   DF_AAS_INT<-data.frame(DF_AAS_INT)
   DF_AAS_INT<-filter_n_days(DF_AAS_INT)
+  DF_TOP_N_EVENTS_INT<-filter_n_days(DF_TOP_N_EVENTS_INT)
    flog.trace("DF_AAS_INT2.2",head(DF_AAS_INT),name="build_data_frames",capture=TRUE)
   DF_MEMORY_INT<-filter_n_days(DF_MEMORY_INT)
   DF_SQL_BY_SNAPID_INT<-filter_n_days(DF_SQL_BY_SNAPID_INT)
@@ -701,7 +739,7 @@ build_data_frames <- function(dbid,dbname) {
   
   return(list(DF_OS_INT,DF_MAIN_INT,DF_MEMORY_INT,DF_SPACE_INT,DF_AAS_INT,DF_SQL_SUMMARY_INT,DF_SQL_BY_SNAPID_INT,DF_SNAP_ID_DATE_INT,
               DF_IO_WAIT_HIST_INT,DF_IOSTAT_FUNCTION_INT,
-              DF_DB_PARAMETERS_INT,DF_IO_BY_OBJECT_TYPE_INT))
+              DF_DB_PARAMETERS_INT,DF_IO_BY_OBJECT_TYPE_INT,DF_TOP_N_EVENTS_INT))
 }
 
 
@@ -2035,6 +2073,8 @@ main$DF_SNAP_ID_DATE2 <- NULL
 main$DF_IO_WAIT_HIST <- NULL
 main$DF_DB_PARAMETERS <- NULL
 main$DF_IO_BY_OBJECT_TYPE <- NULL
+main$DF_TOP_N_EVENTS <- NULL
+
 main$gg_hour_bars <- NULL
 main$cpu_cores <- NULL
 main$current_db_name=""
@@ -2081,7 +2121,8 @@ main$mainFunction <- function(f){
   c(main$DF_OS, main$DF_MAIN,main$DF_MEMORY,main$DF_SPACE,main$DF_AAS,main$DF_SQL_SUMMARY,main$DF_SQL_BY_SNAPID,
     main$DF_SNAP_ID_DATE,
     main$DF_IO_WAIT_HIST,main$DF_IOSTAT_FUNCTION,
-    main$DF_DB_PARAMETERS,main$DF_IO_BY_OBJECT_TYPE) := build_data_frames(f,main$current_db_name)
+    main$DF_DB_PARAMETERS,main$DF_IO_BY_OBJECT_TYPE,
+    main$DF_TOP_N_EVENTS) := build_data_frames(f,main$current_db_name)
   c(main$DF_MAIN_BY_SNAP) := summarise_dfs_by_snap()
   main$DF_SNAP_ID_DATE2 <- build_snap_to_date_df()
   
@@ -2175,16 +2216,18 @@ main$mainFunction <- function(f){
     #x <- grid.arrange(tblText ,tblText2,tblText3, ncol = 1, heights=c(1,1,1))
   }
   else{
-    #tryCatch(x <- grid.arrange(tblText,tblText2,tblText3, aas_plot2_line,box_plots, ncol = 1, heights=c(1,1,1,8,8)), 
-    tryCatch(x <- grid.arrange(tblText,tblText2,tblText3, arrangeGrob(aas_pct1, aas_pct2, ncol=2),box_plots, ncol = 1, heights=c(1,1,1,8,8)), 
-             error = function(e) {
-               tryCatch(x <- grid.arrange(tblText,tblText2,tblText3, box_plots, ncol = 1, heights=c(1,1,1,8)), 
-                        error = function(e) {
-                          x <- grid.arrange(tblText ,tblText2,tblText3, ncol = 1, heights=c(1,1,1))
-                        }
-               )
-             }
-    )
+    if(okToPrintPlot('page1')){ 
+      #tryCatch(x <- grid.arrange(tblText,tblText2,tblText3, aas_plot2_line,box_plots, ncol = 1, heights=c(1,1,1,8,8)), 
+      tryCatch(x <- grid.arrange(tblText,tblText2,tblText3, arrangeGrob(aas_pct1, aas_pct2, ncol=2),box_plots, ncol = 1, heights=c(1,1,1,8,8)), 
+               error = function(e) {
+                 tryCatch(x <- grid.arrange(tblText,tblText2,tblText3, box_plots, ncol = 1, heights=c(1,1,1,8)), 
+                          error = function(e) {
+                            x <- grid.arrange(tblText ,tblText2,tblText3, ncol = 1, heights=c(1,1,1))
+                          }
+                 )
+               }
+      )
+    }
   }
   
   #flog.remove(main$current_db_name)
@@ -2223,56 +2266,79 @@ main$mainFunction <- function(f){
     c(io_hist_plot, io_hist_area_plot) := plot_io_histograms(main$DF_IO_WAIT_HIST)
   }
  # main$RAC_plot <<-RAC_activity_plot
-  
-  grid.newpage()
-  grid.draw(cpu_plot)
-  grid.newpage()
-  grid.draw(io_plot)
-  
-  if( nrow(main$DF_IOSTAT_FUNCTION)>10){
-    print(iostat_by_function_plot)
+  if(okToPrintPlot('cpu')){ 
+    grid.newpage()
+    grid.draw(cpu_plot)
+  }
+ 
+  if(okToPrintPlot('cpu')){ 
+    grid.newpage()
+    grid.draw(io_plot)
   }
   
-  if( nrow(main$DF_IO_WAIT_HIST)>10){
-    x <- grid.arrange(io_hist_plot,io_hist_area_plot , ncol = 1, heights=c(1,4))
-  }
+ if(okToPrintPlot('iostat_function')){ 
+    if( nrow(main$DF_IOSTAT_FUNCTION)>10){
+      print(iostat_by_function_plot)
+    }
+ }
+  
+ if(okToPrintPlot('io_histogram')){ 
+    if( nrow(main$DF_IO_WAIT_HIST)>10){
+        x <- grid.arrange(io_hist_plot,io_hist_area_plot , ncol = 1, heights=c(1,4))
+    }
+ }
   #head(main$DF_IO_WAIT_HIST)
-  grid.newpage()
-  
-  grid.draw(aas_plot)
-  grid.newpage()
-  grid.draw(aas_plot2_gt)
+ if(okToPrintPlot('aas1')){ 
+    grid.newpage()
+    grid.draw(aas_plot)
+ }
+ 
+ if(okToPrintPlot('aas_facet')){ 
+    grid.newpage()
+    grid.draw(aas_plot2_gt)
+ }
   
   #grid.newpage()
-  print(aas_bars_by_date_plot)
+  if(okToPrintPlot('aas_by_day')){ 
+    print(aas_bars_by_date_plot)
+  }
   
-  grid.newpage()
-  grid.draw(main_activity_plot)
+  if(okToPrintPlot('main_activity')){
+    grid.newpage()
+    grid.draw(main_activity_plot)
+  }
   
   
   #if(!is.null(RAC_activity_plot)){
-  if(inherits(RAC_activity_plot,what='grob')){
-    if(("gc_cr_rec_s" %in% names(main$DF_MAIN))){
-      grid.newpage()
-      tryCatch(
-        grid.draw(RAC_activity_plot), 
-        error = function(e) {
-          traceback()
-          print(paste0("Error in ",main$current_db_name,": ",e))
-          #browser()
-        }
-        #,finally=print("finished")
-      )
-      
+ if(okToPrintPlot('rac')){ 
+    if(inherits(RAC_activity_plot,what='grob')){
+      if(("gc_cr_rec_s" %in% names(main$DF_MAIN))){
+        grid.newpage()
+        tryCatch(
+          grid.draw(RAC_activity_plot), 
+          error = function(e) {
+            traceback()
+            print(paste0("Error in ",main$current_db_name,": ",e))
+            #browser()
+          }
+          #,finally=print("finished")
+        )
+        
+      }
     }
-  }
+ }
+ 
+ if(okToPrintPlot('memory_plot')){
   print(memory_plot)
-  
-  
-  plot_db_parameters()
-  
-  
-  plot_sql_text()
+ }
+ 
+ if(okToPrintPlot('db_parameters')){
+    plot_db_parameters()
+ }
+ 
+  if(okToPrintPlot('sql_text')){
+    plot_sql_text()
+  }
   
   dev.off()
   
