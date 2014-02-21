@@ -19,7 +19,7 @@ column cnt_dbid_1 new_value CNT_DBID noprint
 
 define NUM_DAYS = 30
 define SQL_TOP_N = 100
-define AWR_MINER_VER = 3.0.21
+define AWR_MINER_VER = 4.0.3
 
 alter session set cursor_sharing = exact;
 
