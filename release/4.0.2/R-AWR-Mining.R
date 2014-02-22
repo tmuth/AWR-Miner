@@ -2,7 +2,7 @@
 #debugModeOverride <- TRUE  | rm(debugModeOverride)
 #dumpCSV <- TRUE  | rm(dumpCSV)
 #filePatternOverride <- "^awr-hist.+DB110g.+(\\.out|\\.gz)$" | rm(filePatternOverride)
-#plotOverride <- "ALL" [ALL|NONE|SOME|PAGE1|AAS] | rm(plotOverride) | c("SOME","aas_facet")
+#plotOverride <- "ALL" [ALL|NONE|SOME|PAGE1|AAS] | rm(plotOverride)
 
 
 list.of.packages <- c("futile.logger","ggplot2", "plyr","gridExtra","scales","reshape","xtable","ggthemes","stringr","data.table","lubridate","gplots")
@@ -28,7 +28,7 @@ lapply(list.of.packages, function(x) {
 
 MAX_DAYS <- 30
 
-outFileSuffix <- '3'
+outFileSuffix <- '1'
 
 
 #====================================================================================================================
@@ -63,7 +63,7 @@ if(exists("debugModeOverride")){
 
 
 
-awrMinerPlotVersion <- '4.0.4'
+awrMinerPlotVersion <- '4.0.2'
 
 filePattern <- "^awr-hist*.*(\\.out|\\.gz)$"
 if(exists("filePatternOverride")){
@@ -85,7 +85,7 @@ appender.status.fn <- function(lineIn) {
   print(lineIn,quote=FALSE,useSource = TRUE)
 }
 
-flog.logger(name='status', threshold=INFO, appender=NULL, carp=TRUE)
+
 flog.appender(appender.status.fn, 'status')
 flog.info("\n\n--------------------------------------------------\n\n",name='status')
 flog.info("** Starting AWR-Miner ** ",name='status')
@@ -288,7 +288,7 @@ get_db_name <- function(fileName){
   
   fullNamePattern <- "^awr-hist-([0-9]+)-([a-zA-Z0-9_]+)-([0-9]+)-([0-9]+)(\\.|out|gz)+$"
   
-  if(str_detect(fileName,fullNamePattern)){
+  if(str_detect(fileName,namePattern)){
     namePattern <- "awr-hist-([0-9]+)-([a-zA-Z0-9_]+)-.*"
     main$current_db_name <<- gsub(pattern = namePattern, replacement="\\2", fileName)
     main$current_dbid <<- gsub(pattern = namePattern, replacement="\\1", fileName)
@@ -355,36 +355,24 @@ load_plot_attributes <- function(){
   DF_ATTRIBUTES_INT <- data.frame()
   flog.debug('load_plot_attributes - start')
   if(file.exists('attributes.csv')){
-    if(debugMode){
-      DF_ATTRIBUTES_INT <- read.csv('attributes.csv', head=TRUE,sep=",",stringsAsFactors=FALSE)
-      
-    }
-    else{
-      tryCatch(DF_ATTRIBUTES_INT <- read.csv('attributes.csv', head=TRUE,sep=",",stringsAsFactors=FALSE),
-               #DF_ATTRIBUTES_INT <- subset(DF_ATTRIBUTES_INT, db == main$current_db_name),
-               error = function(e) {
-                 #traceback()
-                 file.remove('attributes.csv')
-                 flog.appender(appender.file(paste0(main$current_db_name,'.log')), name=main$current_db_name)
-                 flog.error(paste0("Error in ",main$current_db_name,": ",e))
-                 flog.remove(main$current_db_name)
-                 #browser()
-                 
-               }
-      )
-      
-        
-      }
+    
+    tryCatch(DF_ATTRIBUTES_INT <- read.csv('attributes.csv', head=TRUE,sep=",",stringsAsFactors=FALSE),
+             #DF_ATTRIBUTES_INT <- subset(DF_ATTRIBUTES_INT, db == main$current_db_name),
+             error = function(e) {
+               #traceback()
+               file.remove('attributes.csv')
+               flog.appender(appender.file(paste0(main$current_db_name,'.log')), name=main$current_db_name)
+               flog.error(paste0("Error in ",main$current_db_name,": ",e))
+               flog.remove(main$current_db_name)
+               #browser()
+               
+             }
+    )
   
-  }
-  
-  if(nrow(DF_ATTRIBUTES_INT) > 0){
-    DF_ATTRIBUTES_INT <- subset(DF_ATTRIBUTES_INT,db == main$current_db_name)
   }
   
   flog.debug('load_plot_attributes - end')
   DF_ATTRIBUTES_INT <- unique(DF_ATTRIBUTES_INT)
-  
   flog.trace(head(DF_ATTRIBUTES_INT),capture=TRUE)
   return(DF_ATTRIBUTES_INT)
 }
@@ -573,22 +561,17 @@ getSectionInt <- function(inFile,blockName,decSep='.',searchPatternIn=NULL,repla
 
 getSection <- function(inFile,blockName,decSep='.',searchPatternIn=NULL,replacePatternIn=NULL){
   df_int_try <- data.frame()
-  if(debugMode){
-    df_int_try <- getSectionInt(inFile,blockName,decSep,searchPatternIn,replacePatternIn)
-  }
-  else{
+  tryCatch(df_int_try <- getSectionInt(inFile,blockName,decSep,searchPatternIn,replacePatternIn), 
+           error = function(e) {
+             #traceback()
+             return(df_int_try)
+             #flog.remove(name=main$current_db_name)
+             #browser()
+             
+           }
+           #,finally=print("finished")
+  )
   
-    tryCatch(df_int_try <- getSectionInt(inFile,blockName,decSep,searchPatternIn,replacePatternIn), 
-             error = function(e) {
-               #traceback()
-               return(df_int_try)
-               #flog.remove(name=main$current_db_name)
-               #browser()
-               
-             }
-             #,finally=print("finished")
-    )
-  }
   return(df_int_try)
 }
 
@@ -596,8 +579,7 @@ getSection <- function(inFile,blockName,decSep='.',searchPatternIn=NULL,replaceP
 build_data_frames <- function(fileName) {
   flog.debug("build_data_frames - start",name="build_data_frames")
   flog.info("-",name='status')
-  flog.info(paste0("dbname-dbid: ",main$current_db_name,'-',main$current_dbid),name="build_data_frames")
-  flog.info(paste0("dbname-dbid: ",main$current_db_name,'-',main$current_dbid),name='status')
+  flog.info(paste0("dbname-dbid: ",main$current_db_name,'-',main$current_dbid),name=c("build_data_frames",'status'))
   flog.info(fileName,name='status')
   flog.info(paste0("File size (kb): ",round(file.info(fileName)[1,"size"]/1024)),name='status')
   theFile <- readLines(fileName)
@@ -892,10 +874,10 @@ gen_summary_data <- function(){
   
   if(is.na(sum(DF_MAIN_INT_SUM1$aas))){
     DF_MAIN_INT_SUM1 <- subset( DF_MAIN_INT_SUM1, select = -aas )
-    
+  
     DF_AAS_TMP <- ddply(main$DF_AAS, .(SNAP_ID), summarise, aas=sum(AVG_SESS) )
     DF_AAS_TMP <- rename(DF_AAS_TMP, c("SNAP_ID"="snap"))
-    
+
     DF_MAIN_INT_SUM1 <- merge(DF_MAIN_INT_SUM1,DF_AAS_TMP)
   }
   
@@ -930,30 +912,6 @@ gen_summary_data <- function(){
                           AWR.Miner.Graph=awrMinerPlotVersion
   )
   
-  
-  # begin 10g fixup for missing data if missing and if we have it
-  if((get_os_stat_string("PLATFORM_NAME") == "None") & !is.null(get_os_stat_string("!PLATFORM_NAME"))){
-    DF_OS_INT$platform <- get_os_stat_string("!PLATFORM_NAME")
-  }
-  
-  fixupCPUs <- function(metricName,fixupMetricName){
-    if(nrow(subset(main$DF_OS,STAT_NAME == metricName)) > 0){
-      if(is.na(get_os_stat_string(metricName)) | is.null(get_os_stat_string(metricName))){
-        if(!is.null(get_os_stat_string(fixupMetricName)) & !is.na(get_os_stat_string(fixupMetricName))){
-          main$DF_SUMMARY_OS[,metricName] <- get_os_stat_string(fixupMetricName)
-        }
-      }
-    }
-  }
-  
-  
-  fixupCPUs("NUM_CPUS","!CPU_COUNT")
-  fixupCPUs("NUM_CPU_CORES","!CPU_CORE_COUNT")
-  fixupCPUs("NUM_CPU_SOCKETS","!CPU_SOCKET_COUNT")
-  # end 10g fixup
-  
-  
-  
   DF_OTHER_INT <- data.frame(
     sga=as.numeric(as.vector(max(DF_MEM_TOTALS$SGA))),pga=as.numeric(as.vector(max(DF_MEM_TOTALS$PGA))),
     memused=as.numeric(as.vector(max(DF_MEM_TOTALS$TOTAL))),
@@ -973,6 +931,12 @@ gen_summary_data <- function(){
   
   DF_SUM_COMBINED_INT$.id <- NULL
   
+  #df_temp <- summary_df_iostat_by_time_int
+  #summary_df_iostat_by_time_int[-1] <- round(df_temp[-1],1) # round all but the 1st column
+  #remove(df_temp)
+  
+  #overall_summary_df <- rbind(overall_summary_df, summary_df_totals)
+  #overall_combined_df <- rbind(overall_combined_df, summary_df_cluster_by_snap_id)
   flog.debug('gen_summary_data - end')
   return(list(DF_OS_INT,DF_SUM_COMBINED_INT,DF_SUM_COMBINED_INT2))
   
@@ -1278,25 +1242,23 @@ plot_aas_chart <- function(DF_AAS_INT){
   
   
   plot_aas_wait_class2_line <- ggplot()+
-    #geom_line(data=DF_AAS_INT2, aes(x = end, y = AVG_SESS,color=WAIT_CLASS),stat = "identity",alpha=1,size=.7) +
-    geom_bar(data=DF_AAS_INT, aes(x = end, y = AVG_SESS,fill=WAIT_CLASS),stat = "identity") +
+    geom_line(data=DF_AAS_INT2, aes(x = end, y = AVG_SESS,color=WAIT_CLASS),stat = "identity",alpha=1,size=.7) +
     scale_color_manual("", values = aas_colors)+
-    #geom_point(data=max_vals2, aes(x=end, y=AVG_SESS), size=2, shape=21)+
-    #geom_text(data=max_vals2, aes(x=end, y=AVG_SESS,label=AVG_SESS),size=3, vjust=-.4, hjust=1)+
+    geom_point(data=max_vals2, aes(x=end, y=AVG_SESS), size=2, shape=21)+
+    geom_text(data=max_vals2, aes(x=end, y=AVG_SESS,label=AVG_SESS),size=3, vjust=-.4, hjust=1)+
     #facet_grid(WAIT_CLASS ~ . )+
     main$gg_hour_bars+
     attr$vertical_line + attr$vertical_text +
-    #scale_x_datetime(labels = date_format("%a, %b %d %I%p"),breaks = attr$date_break_major_var,
-    scale_x_datetime(breaks = attr$date_break_major_var,
+    scale_x_datetime(labels = date_format("%a, %b %d %I%p"),breaks = attr$date_break_major_var,
                      minor_breaks = attr$date_break_minor_var
                      #limits = c(min(DF_AAS_INT2$end),max(DF_AAS_INT2$end))
     )+
-    theme(axis.title.x  = element_blank(),axis.title.y  = element_blank(),axis.text.x = theme_blank())+
+    theme(axis.title.x  = element_blank(),axis.title.y  = element_blank())+
     labs(title=paste(paste("Average Active Sessions by Wait Class - ",main$current_db_name,sep=""),"\n Only Values >= 95th Percentile",sep=""))+
-    #geom_text(data=DF_SNAP_ID_SUBSET2,aes(x=end,y=0,label=SNAP_ID),angle=-20,size=1.5,alpha=0.2,hjust=-0.15,vjust=2.2)+
-    #geom_point(data=DF_SNAP_ID_SUBSET2,aes(x=end,y=0),alpha=0.2,size=1,vjust=1,hjust=0)+
+    geom_text(data=DF_SNAP_ID_SUBSET2,aes(x=end,y=0,label=SNAP_ID),angle=-20,size=1.5,alpha=0.2,hjust=-0.15,vjust=2.2)+
+    geom_point(data=DF_SNAP_ID_SUBSET2,aes(x=end,y=0),alpha=0.2,size=1,vjust=1,hjust=0)+
     #ylim(0,ymax2)+
-    theme(legend.position="none")
+    theme(legend.position="right")
   
   plot_aas_wait_class2 <- plot_aas_wait_class2_line+
     facet_grid(WAIT_CLASS ~ . )+theme(legend.position="none")
@@ -1377,8 +1339,7 @@ plot_aas_bars_by_date <- function(DF_AAS_INT){
     facet_grid(day_night ~ dayName)+
     ylab("Average Active Sessions")+
     labs(title=paste("Average Active Sessions Summarized by Day and Hour for ",main$current_db_name,sep=""))+
-    theme(legend.key.size =    unit(0.6, "lines"))+
-    theme(legend.position="right")
+    theme(legend.key.size =    unit(0.6, "lines"))
   
   
   
@@ -1603,9 +1564,6 @@ plot_io_histograms <- function(DF_IO_WAIT_HIST_INT){
           strip.text.x = element_text(size = 6))+
     xlab("Wait Milliseconds")
   
-  barWidth <- (400000/length(unique(main$DF_IO_WAIT_HIST$SNAP_ID)))
-  
-  flog.info(paste0("Num snap_id for IO_HIST: ",length(unique(main$DF_IO_WAIT_HIST$SNAP_ID))),name='status')
   
   io_hist_area_plot <- ggplot()+
     #ggplot(DF_IO_WAIT_HIST_INT, aes(x = end,
@@ -1614,7 +1572,7 @@ plot_io_histograms <- function(DF_IO_WAIT_HIST_INT){
 #             aes(y = WAIT_COUNT)+
     main$gg_hour_bars+
     geom_bar(data=DF_IO_WAIT_HIST_INT,aes(x = end, y = WAIT_COUNT,
-                                            fill = WAIT_TIME_MILLI),stat = "identity", position = "stack",alpha=1,width=barWidth)+
+                                            fill = WAIT_TIME_MILLI),stat = "identity", position = "stack",alpha=1)+
     facet_grid(EVENT_NAME ~ .,scales="free_y")+
     gg_io_hist_colors2+
     
@@ -2183,17 +2141,6 @@ main$cpu_plot<-NULL
 main$RAC_plot<-NULL
 
 
-
-
-
-
-
-
-
-
-#####################################################################
-
-
 main$mainFunction <- function(f){
 
   get_db_name(f)
@@ -2212,22 +2159,17 @@ main$mainFunction <- function(f){
   main$DF_IO_WAIT_HIST <- NULL
   main$current_plot_attributes <- NULL
   
-  if(debugMode){
-    main$current_plot_attributes <- load_plot_attributes()
-  }
-  else{
-    tryCatch(main$current_plot_attributes <- load_plot_attributes(), 
-             error = function(e) {
-               #traceback()
-               flog.appender(appender.file(paste0(main$current_db_name,'.log')), name=main$current_db_name)
-               flog.error(paste0("Error in ",main$current_db_name,": ",e))
-               #flog.remove(name=main$current_db_name)
-               #browser()
-               
-             }
-             #,finally=print("finished")
-    )
-  }
+  tryCatch(main$current_plot_attributes <- load_plot_attributes(), 
+           error = function(e) {
+             #traceback()
+             flog.appender(appender.file(paste0(main$current_db_name,'.log')), name=main$current_db_name)
+             flog.error(paste0("Error in ",main$current_db_name,": ",e))
+             #flog.remove(name=main$current_db_name)
+             #browser()
+             
+           }
+           #,finally=print("finished")
+  )
   
   attr$filter_snap_min <<- as.numeric(attr$filter_snap_min)
   attr$filter_snap_max <<- as.numeric(attr$filter_snap_max)
@@ -2346,10 +2288,6 @@ main$mainFunction <- function(f){
   }
   
   #flog.remove(main$current_db_name)
-  if(okToPrintPlot('aas1')){ 
-    grid.newpage()
-    grid.draw(aas_plot)
-  }
   
   cpu_plot <- NULL
   cpu_plot <- plot_cpu(main$DF_MAIN)
@@ -2407,18 +2345,19 @@ main$mainFunction <- function(f){
     }
  }
   #head(main$DF_IO_WAIT_HIST)
- 
+ if(okToPrintPlot('aas1')){ 
+    grid.newpage()
+    grid.draw(aas_plot)
+ }
  
  if(okToPrintPlot('aas_facet')){ 
-    #grid.newpage()
-    #grid.arrange(aas_plot2_gt ,aas_bars_by_date_plot, ncol = 1, heights=c(1,1))
-    #grid.draw(aas_plot2_gt)
-   print(aas_bars_by_date_plot)
+    grid.newpage()
+    grid.draw(aas_plot2_gt)
  }
   
   #grid.newpage()
   if(okToPrintPlot('aas_by_day')){ 
-    #print(aas_bars_by_date_plot)
+    print(aas_bars_by_date_plot)
   }
   
   if(okToPrintPlot('main_activity')){
