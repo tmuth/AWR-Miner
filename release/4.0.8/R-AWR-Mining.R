@@ -7,7 +7,6 @@
 #plotOverride <- "ALL" [ALL|NONE|SOME|PAGE1|AAS] | rm(plotOverride) | plotOverride <- c("SOME","PAGE1,"AAS")
 #parseOverride <- "ALL" [ALL|NONE|SOME|PAGE1|AAS] | rm(parseOverride) | c("SOME","aas_facet")
 parseOverride <- c("!TOP-SQL-BY-SNAPID")
-#plotOverride <- "NONE"
 
 list.of.packages <- c("futile.logger","ggplot2", "plyr","gridExtra","scales","reshape","xtable","ggthemes","stringr","data.table","lubridate","gplots","gtools","dplyr")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
@@ -68,7 +67,7 @@ if(exists("debugModeOverride")){
 
 
 
-awrMinerPlotVersion <- '4.0.9'
+awrMinerPlotVersion <- '4.0.8'
 
 filePattern <- "^awr-hist*.*(\\.out|\\.gz)$"
 if(exists("filePatternOverride")){
@@ -324,16 +323,6 @@ getCPUcores <- function(){
 
 
 
-saveUniqueModules <- function(){
-  tylersModDir <- 'M:/Dropbox/MyFiles/GitHub/AWR-Miner/source/modules'
-  if (file.exists(tylersModDir)){
-    mods <- data.frame(module=unique(main$DF_SQL_BY_SNAPID$MODULE))
-    out_file <- tempfile(pattern = "modules-", tmpdir = tylersModDir , fileext = ".csv")
-    write.csv(mods,file=out_file,row.names=FALSE)
-  }
-  
-}
-
 
 
 #====================================================================================================================
@@ -538,22 +527,10 @@ set_date_break_vars <- function(DF_MAIN_IN){
   
   flog.trace(paste0('numDays: ',numDays),name='set_date_break_vars')
   
-  if(numDays > 60){
-    attr$date_break_major_var <<- date_breaks("7 day")
-    attr$date_break_minor_var <<- date_breaks("1 day")
-  }
-  else if (numDays > 31 & numDays <= 60){
-    attr$date_break_major_var <<- date_breaks("2 day")
-    attr$date_break_minor_var <<- date_breaks("1 day")
-  }
-  else if (numDays > 4 & numDays <= 31){
+  if(numDays > 2){
     attr$date_break_major_var <<- date_breaks("1 day")
     attr$date_break_minor_var <<- date_breaks("12 hour")
   }
-  else if (numDays > 1 & numDays <= 4){
-    attr$date_break_major_var <<- date_breaks("3 hour")
-    attr$date_break_minor_var <<- date_breaks("1 hour")
-  }  
   else{
     attr$date_break_major_var <<- date_breaks("1 hour")
     attr$date_break_minor_var <<- date_breaks("1 hour")
@@ -1557,19 +1534,16 @@ plot_aas_percent <- function(DF_AAS_INT){
   #   
   #   
   if( nrow(main$DF_TOP_N_EVENTS)>10){
-  
     DF_TOP_N_AGG1 <- main$DF_TOP_N_EVENTS %.%
       group_by(WAIT_CLASS,EVENT_NAME) %.%
-      summarise(TOTAL_TIME_S = sum(as.numeric(TOTAL_TIME_S))) %.%
+      summarise(TOTAL_TIME_S = sum(TOTAL_TIME_S)) %.%
       arrange(desc(TOTAL_TIME_S)) %.%
       head(25) %.%
       arrange(WAIT_CLASS)
     
     
     
-    if(nrow(subset(DF_TOP_N_AGG1,WAIT_CLASS == "DB CPU"))>0){
-      DF_TOP_N_AGG1[with(DF_TOP_N_AGG1, grepl("DB CPU", WAIT_CLASS)),]$WAIT_CLASS<-"CPU"
-    }
+    DF_TOP_N_AGG1[with(DF_TOP_N_AGG1, grepl("DB CPU", WAIT_CLASS)),]$WAIT_CLASS<-"CPU"
     total_time <- sum(DF_TOP_N_AGG1$TOTAL_TIME_S)
     
     DF_TOP_N_AGG1$pct_time <- (DF_TOP_N_AGG1$TOTAL_TIME_S/total_time)
@@ -1819,16 +1793,11 @@ plot_iostat_by_function <- function(DF_IOSTAT_FUNCTION_INT){
   #DF_IOSTAT_FUNCTION_INT$SM_W_REQS <- 2*DF_IOSTAT_FUNCTION_INT$SM_W_REQS
   #DF_IOSTAT_FUNCTION_INT$LG_W_REQS <- 2*DF_IOSTAT_FUNCTION_INT$LG_W_REQS
   iostat.melt <- melt(DF_IOSTAT_FUNCTION_INT,id.var = c("SNAP_ID","FUNCTION_NAME"),measure.var = c("SM_R_REQS","SM_W_REQS", "LG_R_REQS", "LG_W_REQS"))
- 
-  expanded_vals <- expand.grid(SNAP_ID = unique(iostat.melt$SNAP_ID),
-                               FUNCTION_NAME = unique(iostat.melt$FUNCTION_NAME))
-  
-  
+  expanded_vals <- expand.grid(SNAP_ID = unique(main$DF_IOSTAT_FUNCTION$SNAP_ID),
+                               FUNCTION_NAME = unique(main$DF_IOSTAT_FUNCTION$FUNCTION_NAME))
   
   iostat.melt <- merge(iostat.melt,expanded_vals)
-  
   iostat2.melt<- merge(iostat.melt,main$DF_SNAP_ID_DATE,by="SNAP_ID")
-  #iostat.melt.ext <<- iostat2.melt
   iostat2.melt <- transform(iostat2.melt, variable = as.character(variable))
   iostat2.melt[with(iostat2.melt, grepl("SM_R_REQS", variable)),]$variable<-"Small Read IOPs"
   iostat2.melt[with(iostat2.melt, grepl("SM_W_REQS", variable)),]$variable<-"Small Write IOPs *"
@@ -1841,7 +1810,6 @@ plot_iostat_by_function <- function(DF_IOSTAT_FUNCTION_INT){
   # find the FUNCTIONS for which we have no data and remove them
   iostat2.totals <- ddply(iostat2.melt, .(FUNCTION_NAME), summarise, 
                           value=sum(as.numeric(value)))
-  #tyler removed for testing
   idx_iostat_rm <- !with(iostat2.melt, FUNCTION_NAME %in% subset(iostat2.totals,value==0)$FUNCTION_NAME)
   iostat2.melt<- iostat2.melt[idx_iostat_rm,]
   
@@ -2438,8 +2406,6 @@ main$mainFunction <- function(f){
   c(main$DF_MAIN_BY_SNAP) := summarise_dfs_by_snap()
   main$DF_SNAP_ID_DATE2 <- build_snap_to_date_df()
   
-  saveUniqueModules()
-  
   outFileName <- paste(main$current_db_name,min(main$DF_MAIN$snap),max(main$DF_MAIN$snap),outFileSuffix,sep='-')
   
   if(debugMode){
@@ -2506,45 +2472,30 @@ main$mainFunction <- function(f){
   tblText3 <- tableGrob(DF_HOSTS_INT,show.rownames = FALSE, gpar.coretext = gpar(fontsize=8),gpar.coltext = gpar(fontsize=8),padding.v = unit(1, "mm"),padding.h = unit(2, "mm"),show.colnames = FALSE,col.just = "left")
   flog.trace(str(tblText3),name='mainFunction')
   
- if(okToPrintPlot('aas1') | okToPrintPlot('page1')){
-    c(aas_pct1, aas_pct2) := plot_aas_percent(main$DF_AAS)
   
-    c(aas_plot, aas_plot2_gt,aas_plot2_line) := plot_aas_chart(main$DF_AAS)
- }
+  c(aas_pct1, aas_pct2) := plot_aas_percent(main$DF_AAS)
   
- 
- plotPDF <- TRUE
- 
- if(exists("plotOverride")){
-   if(!is.null(plotOverride) & is.element('NONE', plotOverride)){
-     flog.debug("PDF Output is Disabled")
-     plotPDF <- FALSE
-   }
- }
- 
-  if(plotPDF){
-    flog.debug("PDF Output is Enabled")
-    pdf(paste(outFileName,"-plot.pdf",sep=""), width = 11, height = 8.5,useDingbats=FALSE)
-  }
+  c(aas_plot, aas_plot2_gt,aas_plot2_line) := plot_aas_chart(main$DF_AAS)
+  
+  
+  
+  pdf(paste(outFileName,"-plot.pdf",sep=""), width = 11, height = 8.5,useDingbats=FALSE)
   
   #x <- grid.arrange(box_plots, ncol = 1, heights=c(1))
   #x <- grid.arrange(tblText ,box_plots, ncol = 1, heights=c(1,1))
   #x <- grid.arrange(tblText,tblText2,tblText3, box_plots, ncol = 1, heights=c(1,1,1,8))
   #x <- grid.arrange(tblText,tblText2,tblText3, aas_plot2_line,box_plots, ncol = 1, heights=c(1,1,1,8,8))
   if(debugMode){
-    if(plotPDF){
-      debugVars$tblText <- tblText
-      debugVars$tblText2 <- tblText2
-      debugVars$tblText3 <- tblText3
-      debugVars$aas_plot2_line <- aas_plot2_line
-      debugVars$box_plots <- box_plots
-    }
+    debugVars$tblText <- tblText
+    debugVars$tblText2 <- tblText2
+    debugVars$tblText3 <- tblText3
+    debugVars$aas_plot2_line <- aas_plot2_line
+    debugVars$box_plots <- box_plots
     
     
     save(debugVars,file=paste(outFileName,"-debugVars.Rda",sep=""))
-    if(okToPrintPlot('page1')){ 
-      x <- grid.arrange(tblText,tblText2,tblText3, arrangeGrob(aas_pct1, aas_pct2, ncol=2),box_plots, ncol = 1, heights=c(1,1,1,8,8))
-    }
+    
+    x <- grid.arrange(tblText,tblText2,tblText3, arrangeGrob(aas_pct1, aas_pct2, ncol=2),box_plots, ncol = 1, heights=c(1,1,1,8,8))
     #x <- grid.arrange(tblText,tblText2,tblText3, box_plots, ncol = 1, heights=c(1,1,1,8))
     #x <- grid.arrange(tblText ,tblText2,tblText3, ncol = 1, heights=c(1,1,1))
   }
@@ -2678,25 +2629,9 @@ main$mainFunction <- function(f){
     }
   }
   
-  if(plotPDF){
-    dev.off()
-  }
+  dev.off()
   
   main$plot_attributes <- rbind(main$plot_attributes,main$current_plot_attributes)
- 
- # tyler added to move files to a done dir
- doneDir <- paste0(dirname(f),"/done/")
- if (!file.exists(doneDir)){
-   dir.create(doneDir)
- }
- 
- 
-  if(debugMode){
-    file.rename(from=f,
-               to=paste0(dirname(f),"/done/",basename(f))
-    )
-  }
- 
   flog.debug(paste0('Database - ',main$current_db_name," - end"))
   flog.info(paste0('Finished DB: ',main$current_db_name))
   flog.info(paste0('Finished DB: ',main$current_db_name," - ",main$current_dbid),name='status')
@@ -2746,7 +2681,6 @@ main$mainLoop <- function(){
     awrM$debug.unitTimesWide$duration <- difftime(awrM$debug.unitTimesWide$time.end , awrM$debug.unitTimesWide$time.start , unit="secs")
     print(head(awrM$debug.unitTimesWide,30))
     save(awrM,file="awrM.Rda")
-    
     
   
   }

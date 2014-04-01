@@ -19,8 +19,8 @@ column cnt_dbid_1 new_value CNT_DBID noprint
 
 define NUM_DAYS = 30
 define SQL_TOP_N = 100
-define AWR_MINER_VER = 3.0.21
-define CAPTURE_HOST_NAMES = 'YES'
+define AWR_MINER_VER = 4.0.8
+define CAPTURE_HOST_NAMES = 'NO'
 
 alter session set cursor_sharing = exact;
 
@@ -311,13 +311,6 @@ BEGIN
 	l_hosts := rtrim(l_hosts,',');
 	dbms_output.put_line(rpad('HOSTS',l_pad_length)||' '||l_hosts);
 	
-	FOR c5 IN (SELECT sys_context('USERENV', 'MODULE') module FROM DUAL)
-    loop
-        dbms_output.put_line(rpad('MODULE',l_pad_length)||' '||c5.module);
-    end loop; --c5  
-	
-	
-	
 	dbms_output.put_line(rpad('AWR_MINER_VER',l_pad_length)||' &AWR_MINER_VER');
 	dbms_output.put_line('~~END-OS-INFORMATION~~');
 END;
@@ -510,8 +503,6 @@ REPFOOTER PAGE LEFT '~~END-MAIN-METRICS~~'
 max(decode(metric_name,'Database CPU Time Ratio',                   round(average,1),null)) "db_cpu_ratio",
 max(decode(metric_name,'CPU Usage Per Sec',                   round(average/100,3),null)) "cpu_per_s",
 max(decode(metric_name,'CPU Usage Per Sec',                   round(STANDARD_DEVIATION/100,3),null)) "cpu_per_s_sd",
-max(decode(metric_name,'Host CPU Usage Per Sec',                   round(average/100,3),null)) "h_cpu_per_s",
-max(decode(metric_name,'Host CPU Usage Per Sec',                   round(STANDARD_DEVIATION/100,3),null)) "h_cpu_per_s_sd",
 max(decode(metric_name,'Average Active Sessions',                   average,null)) "aas",
 max(decode(metric_name,'Average Active Sessions',                   STANDARD_DEVIATION,null)) "aas_sd",
 max(decode(metric_name,'Average Active Sessions',                   maxval,null)) "aas_max",
@@ -559,7 +550,7 @@ where dbid = &DBID
  and snap_id between &SNAP_ID_MIN and &SNAP_ID_MAX
  --and snap_id = 920
  --and instance_number = 4
- and metric_name in ('Host CPU Utilization (%)','CPU Usage Per Sec','Host CPU Usage Per Sec','Average Active Sessions','Database Time Per Sec',
+ and metric_name in ('Host CPU Utilization (%)','CPU Usage Per Sec','Average Active Sessions','Database Time Per Sec',
  'Executions Per Sec','Hard Parse Count Per Sec','Logical Reads Per Sec','Logons Per Sec',
  'Physical Read Total Bytes Per Sec','Physical Read Total IO Requests Per Sec','Physical Reads Per Sec','Physical Write Total Bytes Per Sec',
  'Redo Generated Per Sec','User Commits Per Sec','Current Logons Count','DB Block Gets Per Sec','DB Block Changes Per Sec',
@@ -953,65 +944,6 @@ prompt
 
 
 
-REPHEADER PAGE LEFT '~~BEGIN-SYSSTAT~~'
-REPFOOTER PAGE LEFT '~~END-SYSSTAT~~'
-SELECT SNAP_ID,
-  MAX(DECODE(event_name,'cell flash cache read hits', event_val_diff,NULL)) "cell_flash_hits",
-  MAX(DECODE(event_name,'physical read total IO requests', event_val_diff,NULL)) "read_iops",
-  ROUND(MAX(DECODE(event_name,'physical read total bytes', event_val_diff,NULL))                                 /1024/1024,1) "read_mb",
-  ROUND(MAX(DECODE(event_name,'physical read total bytes optimized', event_val_diff,NULL))                       /1024/1024,1) "read_mb_opt",
-  ROUND(MAX(DECODE(event_name,'cell physical IO interconnect bytes', event_val_diff,NULL))                       /1024/1024,1) "cell_int_mb",
-  ROUND(MAX(DECODE(event_name,'cell physical IO interconnect bytes returned by smart scan', event_val_diff,NULL))/1024/1024,1) "cell_int_ss_mb",
-  MAX(DECODE(event_name,'EHCC Conventional DMLs', event_val_diff,NULL)) "ehcc_con_dmls"
-FROM
-  (SELECT snap_id,
-    event_name,
-    ROUND(SUM(val_per_s),1) event_val_diff
-  FROM
-    (SELECT snap_id,
-      instance_number,
-      event_name,
-      event_val_diff,
-      (event_val_diff/ela) val_per_s
-    FROM
-      (SELECT (CAST (s.end_interval_time AS DATE) - CAST (s.begin_interval_time AS DATE)) * 24 * 3600 ela,
-        s.snap_id,
-        s.instance_number,
-        t.stat_name wait_class,
-        t.stat_name event_name,
-        CASE
-          WHEN s.begin_interval_time = s.startup_time
-          THEN t.value
-          ELSE t.value - lag (value) over (partition BY stat_id, t.dbid, t.instance_number, s.startup_time order by t.snap_id)
-        END event_val_diff
-      FROM dba_hist_snapshot s,
-        dba_hist_sysstat t
-      WHERE s.dbid = t.dbid
-      AND s.dbid   = &DBID
-      AND s.instance_number = t.instance_number
-      AND s.snap_id         = t.snap_id
-      AND s.snap_id BETWEEN &SNAP_ID_MIN AND &SNAP_ID_MAX
-      AND t.snap_id BETWEEN &SNAP_ID_MIN AND &SNAP_ID_MAX
-      AND t.stat_name IN ('cell flash cache read hits','physical read total IO requests', 'cell physical IO bytes saved by storage index',
-      'EHCC Conventional DMLs', 'cell physical IO interconnect bytes','cell physical IO interconnect bytes returned by smart scan', 
-      'physical read total bytes','physical read total bytes optimized' )
-      )
-    WHERE event_val_diff IS NOT NULL
-    )
-  GROUP BY snap_id,
-    event_name
-  )
-GROUP BY snap_id
-ORDER BY SNAP_ID ASC;
-
-
-
-prompt 
-prompt 
-
--- ##############################################################################################
-
-
 
 
 REPHEADER PAGE LEFT '~~BEGIN-TOP-SQL-SUMMARY~~'
@@ -1050,10 +982,6 @@ WHERE elap_rank <= &SQL_TOP_N
  or exec_rank <= &SQL_TOP_N
  order by elap_rank asc nulls last;
 
- 
- 
- 
- 
 column PARSING_SCHEMA_NAME format a32
 REPHEADER PAGE LEFT '~~BEGIN-TOP-SQL-BY-SNAPID~~'
 REPFOOTER PAGE LEFT '~~END-TOP-SQL-BY-SNAPID~~'	
