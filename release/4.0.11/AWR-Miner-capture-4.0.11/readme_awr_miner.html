@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+  <title>AWR Miner</title>
+  <meta name="generator" content="Amaya, see http://www.w3.org/Amaya/" />
+</head>
+
+<body>
+<h1>AWR Miner 4.0.11 Readme</h1>
+
+<p>Author: Tyler D Muth, tyler.muth@oracle.com</p>
+
+<p>URL: <a href="tylermuth.wordpress.com">tylermuth.wordpress.com</a></p>
+
+<p></p>
+
+<h2>What is AWR Miner?</h2>
+
+<p>This script queries the AWR repository and gathers key database metrics from
+each AWR snapshot over the last n days. These metrics can assist in sizing and
+tuning excercises. An AWR report provides much more detailed metrics but only
+between 2 snapshots. This script and the subsequent graphs produced from its
+data provide higher level aggregate data over a longer period of time.</p>
+
+<p></p>
+
+<h2>Diagnostic Pack License Required</h2>
+
+<p>This script queries DBA_HIST_ views in the Automatic Workload Repository
+(AWR). To generate AWR reports, take AWR snapshots, or queries these views
+requires a license for the Diagnostic Pack (<a
+href="http://docs.oracle.com/cd/E16655_01/license.121/e17614/options.htm#DBLIC165"
+ target="_blank">12.1 document</a>, <a
+href="http://docs.oracle.com/cd/E11882_01/license.112/e10594/options.htm#CIHIHDDJ"
+ target="_blank">11.2 document</a> or <a
+href="http://docs.oracle.com/cd/B19306_01/license.102/b14199/options.htm#sthref76" target="_blank">10.2
+document</a>). You should NOT run this script on any Database that is not
+licensed for the Diagnostic Pack .</p>
+
+<p></p>
+
+<h2>How to Run the Script</h2>
+<ol>
+  <li>Run this as sys or system (or a DBA account), preferably on the
+    production system(s). If the desired goal is sizing a production system,
+    output from a development system is of little benefit. </li>
+  <li>If this is a RAC cluster you only need to run this from 1 node as the
+    DBA_HIST_ views contain data from all nodes.</li>
+  <li>login.sql files found via the SQLPATH environment variable have caused problems in the past.
+  To avoid these, you can optionally unset the SQLPATH shell environment variable before logging in to sqlplus: <br />
+<pre>[bash] unset SQLPATH
+[windows] set SQLPATH=</pre><br />
+  </li>
+  <li>Run from sqlplus command-line connected as a dba, not TOAD or SQL Developer:<br />
+  <pre>SQL> @awr_miner</pre>
+  </li>
+  <li>Wait for the script to finish. It could take longer over slower network connections. The last line displayed on the screen will be 
+  <strong>~~END-TOP-SQL-BY-SNAPID~~</strong>, then standard SQL prompt will return.</li>
+  <li>Do NOT spool the output, it will automatically spool it to a file with a
+    specific name ( awr-hist*.out ). Do not change the file name as the
+	code to parse this file is looking for files with a specific pattern.</li>
+  <li>Optionally compress the awr-hist*.out file using gzip or zip and
+    email it back. The generated file will be anywhere from 1-30 MB and is
+    highly compressable. Compressed output should be under 300 KB - 2 MB. Variables 
+	that will increase the file size are longer AWR retention periods (but more 
+	information is better), shorter snapshot intervals (again, more information
+	is often better), and large numbers of RAC nodes.</li>
+</ol>
+
+<p></p>
+
+<h2>Will This Impact My System?</h2>
+
+<p>It should have little to no impact on your system. It generally takes less
+than 45 seconds to run on anything from a laptop to an Exadata Full Rack and
+incurs less load than generating 1 AWR report. All queries are serial so at
+most this will occupy 1 CPU core for under a minute. Absolutely no objects are
+created in the Database.</p>
+
+<p></p>
+
+<h2>Can I View the Output?</h2>
+
+<p>Absolutely. It's just a plain text file with stadard reports composed of
+rows and columns. Ultimately this file is parsed and plotted with an R script
+by someone at Oracle.</p>
+
+<h2>Troubleshooting</h2>
+Below are some common issues encountered in gathering this data and how to potentially avoid them.
+<ul>
+	<li><strong>Invalid File Names</strong> occur when the name of the .out file is changed. Do not change the file name or extension. It should be in the form:<br />
+	awr-hist-dbid-dbname-snapidmin-snapidmax.out . If compressed using gzip, it should have a trailing .gz suffix.</li>
+	<li><strong>Unparseable content</strong> This almost always occurs when the .out file has been edited to search and replace for schema names or host names. The file
+	layout is columnar so if you replace the schema name SCOTT with XX, that will shift the columns 3 positions to the left for those rows, making it impossible to parse.</li>
+	<li><strong>Truncated output</strong> has been a minor but persistent problem. The reason for this is unknown at this time, but could be due to a very slow
+	connection to the server which causes longer than expected run times for the script. If possible, run the script directly from the database host. 
+	Make sure to wait for the script to end. The last line will be <strong>~~END-TOP-SQL-BY-SNAPID~~</strong>. There should be 9 or more sections which you can verify with grep (the number at the end of the file name is the
+	the count of sections):<br />
+	<pre>grep -c "~~END" *.out
+awr-hist-148658377-TWELVE1-1225-1320.out:12
+awr-hist-3107787169-TENTWO-227-307.out:12
+awr-hist-3107787169-TENTWO-251-330.out:12
+awr-hist-3846920754-RAC81P-289-1209.out:12
+awr-hist-389926331-ORCL-775-985.out:10
+	</pre>
+	</li>
+</ul>
+</body>
+</html>
