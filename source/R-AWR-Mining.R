@@ -21,14 +21,18 @@ lapply(list.of.packages, function(x) {
   library(x,character.only=TRUE,quietly = TRUE)
 })
 
+
+if(interactive()){
+  #WORK_DIR <- 'E:/Portable-AWR-Miner/CSVs'
+}else{
+  WORK_DIR <- (commandArgs(TRUE)[1])
+  setwd(WORK_DIR)
+  #print("arg")
+  #print(args[1])
+}
+
 #====================================================================================================================
 # Change Variables in this sections as needed 
-
-#WORK_DIR <- 'E:/Portable-AWR-Miner'
-#setwd(WORK_DIR)
-
-#filePatternOverride <- "^awr-hist.+DB110g.+(\\.out|\\.gz)$"
-#rm(filePatternOverride)
 
 MAX_DAYS <- 30
 
@@ -68,7 +72,7 @@ if(exists("debugModeOverride")){
 
 
 
-awrMinerPlotVersion <- '4.0.10'
+awrMinerPlotVersion <- '4.0.11'
 
 filePattern <- "^awr-hist*.*(\\.out|\\.gz)$"
 if(exists("filePatternOverride")){
@@ -104,19 +108,6 @@ flog.info(paste0('for files that match the pattern: ',filePattern),name='status'
 # print(getwd())
 # print(paste0('for files that match the pattern: ',filePattern))
 Sys.sleep(2)
-
-
-
-
-if(interactive()){
-  #WORK_DIR <- 'E:/Portable-AWR-Miner/CSVs'
-}else{
-  WORK_DIR <- (commandArgs(TRUE)[1])
-  setwd(WORK_DIR)
-  #print("arg")
-  #print(args[1])
-}
-
 
 
 main <- new.env()
