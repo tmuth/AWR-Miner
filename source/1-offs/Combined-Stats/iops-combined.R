@@ -2,11 +2,12 @@ source("M:/Dropbox/MyFiles/GitHub/AWR-Miner/source/commonFunctions.R")
 
 #setwd("M:/Dropbox/MyFiles/Accounts/Federal/FAA/AWR-Sizing-Sept-2013")
 #setwd("M:/Dropbox/MyFiles/Accounts/Federal/World Bank/WB-share/AWR-Miner-Oct-2-2013")
-setwd("M:/Dropbox/MyFiles/Accounts/Federal/World Bank/WB-share/AWR-Miner-Oct-22")
+#setwd("M:/Dropbox/MyFiles/Accounts/Federal/World Bank/WB-share/AWR-Miner-Oct-22")
 
 
 DF_TEMP <- data.frame()
 DF_TEMP2 <- data.frame()
+#DF_TEMP3 <- data.frame()
 DF_IOPS_COMBINED <- data.frame()
 
 
@@ -30,11 +31,23 @@ getIOPsDF <- function(file){
                               #write_iops_direct_max=sum(write_iops_direct_max)*2
                    
                    ) 
+  # round to the nearest hour
+  DF_TEMP$end <<- round_date(DF_TEMP$end,"hour")
+  
+  # group by snap,db,end, max(iops): to get only max iops per hour (in case of 15 min snapshots for example)
+  DF_TEMP <<- ddply(DF_TEMP, .(snap,db,end), summarise, 
+                     read_iops=max(read_iops),
+                     read_iops_max=max(read_iops_max),
+                     write_iops=max(write_iops)*2,
+                     write_iops_max=max(write_iops_max)*2
+  )
+  
+  
   DF_TEMP$total_iops <<- DF_TEMP$read_iops + DF_TEMP$write_iops
   DF_TEMP$total_iops_max <<- DF_TEMP$read_iops_max + DF_TEMP$write_iops_max
   #DF_TEMP$total_iops_direct <<- DF_TEMP$read_iops_direct + DF_TEMP$write_iops_direct
   #DF_TEMP$total_iops_direct_max <<- DF_TEMP$read_iops_direct_max + DF_TEMP$write_iops_direct_max
-  DF_TEMP$end <<- round_date(DF_TEMP$end,"hour")
+  
   
   # need to avg by(snap,db,end) for all metrics to account for 15 min snapshots
   
@@ -50,6 +63,9 @@ for (f in rdaFiles) {
   print(f)
   getIOPsDF(f)
 }
+
+rm(DF_TEMP)
+rm(DF_TEMP2)
 
 # getIOPsDF("ETMSB1-28487-29206-1-debugVars.Rda")
 # getIOPsDF("ETMSE1-28408-29127-1-debugVars.Rda")
@@ -75,7 +91,8 @@ max_vals <- ddply(DF_IOPS_COMBINED_MAX, .(format(end,"%y/%m/%d")), subset, subse
 
 ggplot(data=DF_IOPS_COMBINED,aes(x=end,y=total_iops))+
   #geom_line(aes(color=db), size=.2)
-  geom_area(aes(fill=db),stat='identity',position='stack',alpha=0.9)+
+  #geom_area(aes(fill=db),stat='identity',position='stack',alpha=0.9)+
+  geom_bar(aes(fill=db),stat='identity',position='stack',alpha=0.9)+
   geom_point(data=max_vals, aes(x=end, y=total_iops), size=2, shape=21)+
   geom_text(data=max_vals, aes(x=end, y=total_iops,label=total_iops),size=3, vjust=-.8, hjust=1.5,alpha=0.7)+
   scale_fill_stata()+
@@ -86,7 +103,8 @@ max_vals <- ddply(DF_IOPS_COMBINED, .(db,format(end,"%y/%m/%d")), subset, subset
 
 ggplot(data=DF_IOPS_COMBINED,aes(x=end,y=total_iops,group=db))+
   #geom_line(aes(color=db), size=.2)
-  geom_area(aes(fill=db),stat='identity',position='stack',alpha=0.9)+
+  #geom_area(aes(fill=db),stat='identity',position='stack',alpha=0.9)+
+  geom_bar(aes(fill=db),stat='identity',position='stack',alpha=0.9)+
   geom_point(data=max_vals, aes(x=end, y=total_iops), size=2, shape=21)+
   geom_text(data=max_vals, aes(x=end, y=total_iops,label=total_iops),size=2, vjust=-.8, hjust=1.5,alpha=0.7)+
   scale_fill_stata()+
@@ -127,7 +145,8 @@ max_vals <- ddply(DF_IOPS_COMBINED_MAX, .(format(end,"%y/%m/%d")), subset, subse
 
 ggplot(data=DF_IOPS_COMBINED,aes(x=end,y=total_iops_max))+
   #geom_line(aes(color=db), size=.2)
-  geom_area(aes(fill=db),stat='identity',position='stack')+
+  #geom_area(aes(fill=db),stat='identity',position='stack')+
+  geom_bar(aes(fill=db),stat='identity',position='stack')+
   geom_point(data=max_vals, aes(x=end, y=total_iops_max), size=2, shape=21)+
   geom_text(data=max_vals, aes(x=end, y=total_iops_max,label=total_iops_max),size=3, vjust=-.8, hjust=1.5,alpha=0.7)+
   scale_fill_stata()+
@@ -139,7 +158,8 @@ max_vals <- ddply(DF_IOPS_COMBINED, .(db,format(end,"%y/%m/%d")), subset, subset
 
 ggplot(data=DF_IOPS_COMBINED,aes(x=end,y=total_iops_max,group=db))+
   #geom_line(aes(color=db), size=.2)
-  geom_area(aes(fill=db),stat='identity',position='stack')+
+  #geom_area(aes(fill=db),stat='identity',position='stack')+
+  geom_bar(aes(fill=db),stat='identity',position='stack')+
   geom_point(data=max_vals, aes(x=end, y=total_iops_max), size=2, shape=21)+
   geom_text(data=max_vals, aes(x=end, y=total_iops_max,label=total_iops_max),size=2, vjust=-.8, hjust=1.5,alpha=0.7)+
   scale_fill_stata()+
