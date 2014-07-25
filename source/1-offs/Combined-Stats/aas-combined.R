@@ -61,15 +61,30 @@ for (f in rdaFiles) {
 rm(DF_AAS_TEMP)
 rm(DF_AAS_TEMP2)
 
+DF_AAS_COMBINED_SUM <<- ddply(DF_AAS_COMBINED, .(end), summarise, 
+                              AVG_SESS=sum(AVG_SESS)
+)
+
+quant_val <- 0.99
+
+quant_high_sum <- quantile(DF_AAS_COMBINED_SUM$AVG_SESS,probs=c(quant_val[[1]]),type=4)
+
 # DF_AAS_COMBINED_SAVE <- DF_AAS_COMBINED
 # filter results above a certain quantile to keep outliers from skewing the plots
-quant_high <- quantile(DF_AAS_COMBINED$AVG_SESS,probs=c(0.99),type=4)
-DF_AAS_COMBINED <- subset(DF_AAS_COMBINED,AVG_SESS < quant_high[[1]],rownames=FALSE,stringsasfactors=TRUE)
+
+quant_high <- quantile(DF_AAS_COMBINED$AVG_SESS,probs=c(quant_val[[1]]),type=4)
+
 
 pdf("Combined-AAS.pdf", width = 11, height = 8.5,useDingbats=FALSE)
 
 DF_AAS_COMBINED_MAX <- ddply(DF_AAS_COMBINED, .(end), summarise,AVG_SESS=sum(AVG_SESS))
 max_vals <- ddply(DF_AAS_COMBINED_MAX, .(format(end,"%y/%m/%d")), subset, subset = rank(-AVG_SESS) <= 1)
+
+
+
+#DF_ANNOTATE_INT <- data.frame(x=quantile(DF_AAS_COMBINED$end,0.10),y=quantile(DF_AAS_COMBINED$AVG_SESS,probs=(0.99),type=4),
+DF_ANNOTATE_INT <- data.frame(x=quantile(DF_AAS_COMBINED$end,0.05),y=quant_high_sum[[1]],
+                              labs=paste0("Data with total values over ",round(quant_val[[1]]*100),"th percentile (",quant_high_sum[[1]],") removed"))
 
 ggplot(data=DF_AAS_COMBINED,aes(x=end,y=AVG_SESS))+
   #geom_line(aes(color=db), size=.2)
@@ -79,9 +94,12 @@ ggplot(data=DF_AAS_COMBINED,aes(x=end,y=AVG_SESS))+
   geom_text(data=max_vals, aes(x=end, y=AVG_SESS,label=AVG_SESS),size=3, vjust=-.8, hjust=1.5,alpha=0.7)+
   scale_fill_stata()+
   labs(title="Combined Average Active Sessions (AAS)")+
-  scale_x_datetime(labels = date_format("%a, %b %d %I%p"),breaks = date_breaks("1 day"))
+  scale_x_datetime(labels = date_format("%a, %b %d %I%p"),breaks = date_breaks("1 day"))+
+  ylim(0,quant_high_sum[[1]])+
+  geom_text(data=DF_ANNOTATE_INT,aes(x=x,y=y,label=labs),size=2,alpha=.4)
 
 max_vals <- ddply(DF_AAS_COMBINED, .(db,format(end,"%y/%m/%d")), subset, subset = rank(-AVG_SESS) <= 1)
+
 
 ggplot(data=DF_AAS_COMBINED,aes(x=end,y=AVG_SESS,group=db))+
   #geom_line(aes(color=db), size=.2)
@@ -92,6 +110,7 @@ ggplot(data=DF_AAS_COMBINED,aes(x=end,y=AVG_SESS,group=db))+
   scale_fill_stata()+
   facet_grid(db ~ . )+
   labs(title="Combined Average Active Sessions (AAS) - Facet by Database")+
-  scale_x_datetime(labels = date_format("%a, %b %d %I%p"),breaks = date_breaks("1 day"))
+  scale_x_datetime(labels = date_format("%a, %b %d %I%p"),breaks = date_breaks("1 day"))+
+  ylim(0,quant_high[[1]])
 
 dev.off()
