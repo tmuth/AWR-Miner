@@ -11,7 +11,7 @@ ALTER SESSION SET WORKAREA_SIZE_POLICY = manual;
 ALTER SESSION SET SORT_AREA_SIZE = 268435456;
 
 
-set timing off
+set timing on
 
 set serveroutput on
 set verify off

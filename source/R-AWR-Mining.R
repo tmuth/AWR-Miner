@@ -2,6 +2,7 @@
 
 
 #debugModeOverride <- TRUE  | rm(debugModeOverride)
+#debugMoveFiles <- TRUE  | rm(debugModeOverride)
 #dumpCSV <- TRUE  | rm(dumpCSV)
 #filePatternOverride <- "^awr-hist.+DB110g.+(\\.out|\\.gz)$" | rm(filePatternOverride)
 #plotOverride <- "ALL" [ALL|NONE|SOME|PAGE1|AAS] | rm(plotOverride) | plotOverride <- c("SOME","PAGE1,"AAS")
@@ -577,7 +578,7 @@ getSectionInt <- function(inFile,blockName,decSep='.',searchPatternIn=NULL,repla
   beginBlock <- paste0('~~BEGIN-',blockName,'~~')
   endBlock <- paste0('~~END-',blockName,'~~')
   thePattern <- paste0(beginBlock,'(.*)',endBlock)
-  body <- str_extract(paste(inFile, collapse='\n'), thePattern)
+  body <- str_extract(inFile, thePattern)
   #print(str(body))
   if(is.na(body)){
     flog.debug(paste0("getSection - ",blockName," - section not in capture"),name="getSection")
@@ -690,23 +691,31 @@ getSection <- function(inFile,blockName,decSep='.',searchPatternIn=NULL,replaceP
 
 
 
-# get_capture_times <- function(theFile){
-#   timingVector <- str_extract_all(theFileTXT, "~~END.+?\nElapsed.+?\n")
-#   print(timingVector)
-#   timingVector <- unlist(timingVector)
-#   timingVector <- gsub('~~END\\-(.+)~~\n','\\1\n', timingVector)
-#   timingVector <- gsub('Elapsed: ','', timingVector)
-#   
-#   timing_DF <- colsplit(timingVector, "\n", names=c("section", "elapsed"))
-#   options(digits.secs=2)
-#   timing_DF$seconds <- second(strptime(timing_DF$elapsed,"%H:%M:%OS"))
-#   head(timing_DF)
-#   
-#   
-#   timing_DF$seconds <- seconds(hms(timing_DF$elapsed))
-#   
-#   foo <- sum(timing_DF$seconds)
-# }
+get_capture_times <- function(inFileTXT){
+  
+  timingVector <- str_extract_all(inFileTXT, "~~END.+?\nElapsed.+?\n")
+  timingVector <- unlist(timingVector)
+  
+  if(length(timingVector) < 3){
+    flog.debug("No capture timing available")
+    return(data.frame())
+  }
+  
+  timingVector <- gsub('~~END\\-(.+)~~\n','\\1\n', timingVector)
+  timingVector <- gsub('Elapsed: ','', timingVector)
+  
+  timing_DF <- colsplit(timingVector, "\n", names=c("section", "elapsed"))
+  options(digits.secs=2)
+  timing_DF$seconds <- second(strptime(timing_DF$elapsed,"%H:%M:%OS"))
+  #head(timing_DF)
+  
+  
+  #timing_DF$seconds <- seconds(hms(timing_DF$elapsed))
+  
+  #foo <- sum(timing_DF$seconds)
+  
+  return(timing_DF)
+}
 
 build_data_frames <- function(fileName) {
   flog.debug("build_data_frames - start",name="build_data_frames")
@@ -716,31 +725,36 @@ build_data_frames <- function(fileName) {
   flog.info(fileName,name='status')
   flog.info(paste0("File size (kb): ",round(file.info(fileName)[1,"size"]/1024)),name='status')
   theFile <- readLines(fileName)
+  theFileTXT <- paste(theFile,collapse="\n")
   flog.debug(length(theFile))
-  numSections <- str_count(paste(theFile,collapse="\n"), "~~BEGIN")
+  unlink(theFile)
+  rm(theFile)
+  
+  
+  numSections <- str_count(theFileTXT, "~~BEGIN")
   flog.info(paste0("Number of sections: ",numSections),name='status')
   
-  oraErrors <- str_count(paste(theFile,collapse="\n"), perl("\nERROR at line .+\n"))
+  oraErrors <- str_count(theFileTXT, perl("\nERROR at line .+\n"))
   
   
   if(oraErrors > 0){
     flog.info(paste0("Capture file has ",oraErrors," errors"),name='status')
     
     #if(debugMode){
-      errorDir <- paste0(dirname(fileName),"/error/")
-      if(!(file.exists(errorDir))){
-        dir.create(errorDir,showWarnings = FALSE)
-      }
-      
-      file.copy(fileName, paste0(dirname(fileName),"/error/")
-      
-      #file.rename(from=fileName,
-       #           to=paste0(dirname(fileName),"/error/",basename(fileName))
-      )
+    errorDir <- paste0(dirname(fileName),"/error/")
+    if(!(file.exists(errorDir))){
+      dir.create(errorDir,showWarnings = FALSE)
+    }
+    
+    file.copy(fileName, paste0(dirname(fileName),"/error/")
+              
+              #file.rename(from=fileName,
+              #           to=paste0(dirname(fileName),"/error/",basename(fileName))
+    )
     #}
     
     if(debugMode){
-    
+      
     }
     else{
       stop(paste0("Capture file has ",oraErrors," errors"))   
@@ -749,9 +763,11 @@ build_data_frames <- function(fileName) {
     
   }
   
-
   
-  DF_TEMP <- getSection(theFile,'MEMORY')
+  main$capture_times <<- get_capture_times(theFileTXT)
+  
+  
+  DF_TEMP <- getSection(theFileTXT,'MEMORY')
   countDecimals <- sum(str_count(DF_TEMP$PGA,'\\.'))+sum(str_count(DF_TEMP$SGA,'\\.'))
   countCommas <- sum(str_count(DF_TEMP$PGA,'\\,'))+sum(str_count(DF_TEMP$SGA,'\\,'))
   
@@ -764,27 +780,27 @@ build_data_frames <- function(fileName) {
   
   DATA_FRAME_INT <- NULL
   #file_pattern=paste(WORK_DIR,paste(dbname,dbid,sep="-"),sep="/")
-  DF_OS_INT <- getSection(theFile,'OS-INFORMATION',computedDecSep)
+  DF_OS_INT <- getSection(theFileTXT,'OS-INFORMATION',computedDecSep)
   
   DF_OS_INT[with(DF_OS_INT, grepl("PHYSICAL_MEMORY_GB", STAT_NAME)),]$STAT_VALUE<-gsub(",", ".",
                                                                                        DF_OS_INT[with(DF_OS_INT, grepl("PHYSICAL_MEMORY_GB", STAT_NAME)),]$STAT_VALUE)
   
-
+  
   flog.trace('DF_OS_INT',DF_OS_INT,name="build_data_frames",capture=TRUE)
-  DF_MEMORY_INT <- getSection(theFile,'MEMORY',computedDecSep)
+  DF_MEMORY_INT <- getSection(theFileTXT,'MEMORY',computedDecSep)
   
-  DF_MEMORY_INT <- getSection(theFile,'MEMORY',computedDecSep)
+  DF_MEMORY_INT <- getSection(theFileTXT,'MEMORY',computedDecSep)
   
-  DF_MEMORY_SGA_ADVICE_INT <- getSection(theFile,'MEMORY-SGA-ADVICE',computedDecSep)
-  DF_MEMORY_PGA_ADVICE_INT <- getSection(theFile,'MEMORY-PGA-ADVICE',computedDecSep)
+  DF_MEMORY_SGA_ADVICE_INT <- getSection(theFileTXT,'MEMORY-SGA-ADVICE',computedDecSep)
+  DF_MEMORY_PGA_ADVICE_INT <- getSection(theFileTXT,'MEMORY-PGA-ADVICE',computedDecSep)
   
   #flog.trace('DF_MEMORY_INT',DF_MEMORY_INT,name="build_data_frames",capture=TRUE)
-  DF_SPACE_INT <- getSection(theFile,'SIZE-ON-DISK',computedDecSep)
-  DF_MAIN_INT <- getSection(theFile,'MAIN-METRICS',computedDecSep)
+  DF_SPACE_INT <- getSection(theFileTXT,'SIZE-ON-DISK',computedDecSep)
+  DF_MAIN_INT <- getSection(theFileTXT,'MAIN-METRICS',computedDecSep)
   
   DF_MAIN_INT <- data.table(DF_MAIN_INT)
   flog.trace("YEP0.1",name="build_data_frames")
-  DF_DB_PARAMETERS_INT <- getSection(theFile,'DATABASE-PARAMETERS',computedDecSep)
+  DF_DB_PARAMETERS_INT <- getSection(theFileTXT,'DATABASE-PARAMETERS',computedDecSep)
   flog.trace("YEP0.2",name="build_data_frames")
   index1 <- with(DF_DB_PARAMETERS_INT, grepl("(log_archive|db_create|user_dump_dest|dg_broke)",DF_DB_PARAMETERS_INT$PARAMETER_NAME))
   index2 <- with(DF_DB_PARAMETERS_INT, grepl("DESCRIPTION",DF_DB_PARAMETERS_INT$VALUE))
@@ -799,8 +815,8 @@ build_data_frames <- function(fileName) {
   flog.trace("YEP1",name="build_data_frames")
   searchPattern <- "\n([[:digit:] ]{10}) ([[:print:] ]{20}) ([[:print:] ]{10})"
   replacePattern <- "\n'\\1' '\\2' '\\3'"
-  #DF_AAS_INT <- getSection(theFile,'AVERAGE-ACTIVE-SESSIONS',computedDecSep,searchPattern,replacePattern)
-  DF_AAS_INT <- getSection(theFile,'AVERAGE-ACTIVE-SESSIONS',computedDecSep)
+  #DF_AAS_INT <- getSection(theFileTXT,'AVERAGE-ACTIVE-SESSIONS',computedDecSep,searchPattern,replacePattern)
+  DF_AAS_INT <- getSection(theFileTXT,'AVERAGE-ACTIVE-SESSIONS',computedDecSep)
   flog.trace("YEP2",name="build_data_frames")
   DF_AAS_INT$SNAP_ID <- as.numeric(DF_AAS_INT$SNAP_ID)
   DF_AAS_INT$AVG_SESS <- as.numeric(DF_AAS_INT$AVG_SESS)
@@ -810,19 +826,19 @@ build_data_frames <- function(fileName) {
   flog.trace("DF_AAS_INT1",DF_AAS_INT,name="build_data_frames",capture=TRUE)
   
   
-  DF_TOP_N_EVENTS_INT <- getSection(theFile,'TOP-N-TIMED-EVENTS',computedDecSep)
+  DF_TOP_N_EVENTS_INT <- getSection(theFileTXT,'TOP-N-TIMED-EVENTS',computedDecSep)
   
   searchPattern <- "\n([[:digit:] ]{10}) ([[:print:] ]{20}) ([[:print:] ]{37}) ([[:print:] ]{15}) ([[:print:] ]{10})"
   replacePattern <- "\n'\\1' '\\2' '\\3' '\\4' '\\5' "
-  DF_IO_WAIT_HIST_INT <- getSection(theFile,'IO-WAIT-HISTOGRAM',computedDecSep,searchPattern,replacePattern)
+  DF_IO_WAIT_HIST_INT <- getSection(theFileTXT,'IO-WAIT-HISTOGRAM',computedDecSep,searchPattern,replacePattern)
   DF_IO_WAIT_HIST_INT$SNAP_ID <- as.numeric(DF_IO_WAIT_HIST_INT$SNAP_ID)
   DF_IO_WAIT_HIST_INT$WAIT_TIME_MILLI <- as.numeric(DF_IO_WAIT_HIST_INT$WAIT_TIME_MILLI)
   DF_IO_WAIT_HIST_INT$WAIT_COUNT <- as.numeric(DF_IO_WAIT_HIST_INT$WAIT_COUNT)
   
-  DF_IOSTAT_FUNCTION_INT <- getSection(theFile,'IOSTAT-BY-FUNCTION',computedDecSep)
+  DF_IOSTAT_FUNCTION_INT <- getSection(theFileTXT,'IOSTAT-BY-FUNCTION',computedDecSep)
   
-  DF_IO_BY_OBJECT_TYPE_INT <- getSection(theFile,'IO-OBJECT-TYPE',computedDecSep)
-  DF_SQL_SUMMARY_INT <- getSection(theFile,'TOP-SQL-SUMMARY',computedDecSep)
+  DF_IO_BY_OBJECT_TYPE_INT <- getSection(theFileTXT,'IO-OBJECT-TYPE',computedDecSep)
+  DF_SQL_SUMMARY_INT <- getSection(theFileTXT,'TOP-SQL-SUMMARY',computedDecSep)
   
   
   if(nrow(DF_SQL_SUMMARY_INT)>5){
@@ -833,22 +849,22 @@ build_data_frames <- function(fileName) {
       DF_SQL_SUMMARY_INT$MODULE <- NA
     }
     
-  
+    
     
     tryCatch(  DF_SQL_SUMMARY_INT[with(DF_SQL_SUMMARY_INT, grepl("PL/SQLEXECUTE", COMMAND_NAME)),]$COMMAND_NAME<-"PL/SQL",
-             #DF_ATTRIBUTES_INT <- subset(DF_ATTRIBUTES_INT, db == main$current_db_name),
-             error = function(e) {
-               #traceback()
-               #browser()
-               
-             }
+               #DF_ATTRIBUTES_INT <- subset(DF_ATTRIBUTES_INT, db == main$current_db_name),
+               error = function(e) {
+                 #traceback()
+                 #browser()
+                 
+               }
     )
   }
   
-  DF_SQL_BY_SNAPID_INT <- getSection(theFile,'TOP-SQL-BY-SNAPID',computedDecSep)
-  unlink(theFile)
-  rm(theFile)
-
+  DF_SQL_BY_SNAPID_INT <- getSection(theFileTXT,'TOP-SQL-BY-SNAPID',computedDecSep)
+  
+  rm(theFileTXT)
+  
   
   # Normalize dates by snap_id
   
@@ -931,17 +947,17 @@ build_data_frames <- function(fileName) {
   DF_OS_INT <- rbind(DF_OS_INT,data.frame(STAT_NAME='DAYS',STAT_VALUE=round(numDaysTotal,1)))
   DF_OS_INT <- rbind(DF_OS_INT,data.frame(STAT_NAME='DAYS_FILTERED',STAT_VALUE=round(numDaysFiltered,1)))
   
-   flog.trace("DF_AAS_INT2.1",head(DF_AAS_INT),name="build_data_frames",capture=TRUE)
-
-#   DF_AAS_INT<-data.frame(DF_AAS_INT)
+  flog.trace("DF_AAS_INT2.1",head(DF_AAS_INT),name="build_data_frames",capture=TRUE)
+  
+  #   DF_AAS_INT<-data.frame(DF_AAS_INT)
   DF_AAS_INT<-filter_n_days(DF_AAS_INT)
   DF_TOP_N_EVENTS_INT<-filter_n_days(DF_TOP_N_EVENTS_INT)
-   flog.trace("DF_AAS_INT2.2",head(DF_AAS_INT),name="build_data_frames",capture=TRUE)
+  flog.trace("DF_AAS_INT2.2",head(DF_AAS_INT),name="build_data_frames",capture=TRUE)
   DF_MEMORY_INT<-filter_n_days(DF_MEMORY_INT)
   DF_MEMORY_SGA_ADVICE_INT<-filter_n_days(DF_MEMORY_SGA_ADVICE_INT)
   DF_MEMORY_PGA_ADVICE_INT<-filter_n_days(DF_MEMORY_PGA_ADVICE_INT)
-
-
+  
+  
   DF_SQL_BY_SNAPID_INT<-filter_n_days(DF_SQL_BY_SNAPID_INT)
   
   flog.trace("DF_SNAP_ID_DATE_INT1",head(DF_SNAP_ID_DATE_INT),name="build_data_frames",capture=TRUE)
@@ -954,12 +970,12 @@ build_data_frames <- function(fileName) {
   #DF_SNAP_ID_DATE_INT<-data.frame(DF_SNAP_ID_DATE_INT)
   flog.trace("DF_AAS_INT2.4",head(DF_AAS_INT),name="build_data_frames",capture=TRUE)
   DF_AAS_INT <- merge(DF_AAS_INT,DF_SNAP_ID_DATE_INT)
-
+  
   DF_MEMORY_INT <- merge(DF_MEMORY_INT,DF_SNAP_ID_DATE_INT)
   DF_MEMORY_SGA_ADVICE_INT <- merge(DF_MEMORY_SGA_ADVICE_INT,DF_SNAP_ID_DATE_INT)
   DF_MEMORY_PGA_ADVICE_INT <- merge(DF_MEMORY_PGA_ADVICE_INT,DF_SNAP_ID_DATE_INT)
-
-
+  
+  
   DF_SQL_BY_SNAPID_INT <- merge(DF_SQL_BY_SNAPID_INT,DF_SNAP_ID_DATE_INT)
   #print(head(DF_AAS_INT))
   
@@ -1102,6 +1118,10 @@ gen_summary_data <- function(){
                           AWR.Miner.Capture=get_os_stat_string("AWR_MINER_VER"),
                           AWR.Miner.Graph=awrMinerPlotVersion
   )
+  
+  if(nrow(main$capture_times)>0){
+    DF_OS_INT$Capture.Sec <- sum(main$capture_times$seconds)
+  }
   
   
   # begin 10g fixup for missing data if missing and if we have it
@@ -2592,6 +2612,7 @@ main$current_db_name=""
 main$attributes_file="attributes.csv"
 main$plot_attributes <- NULL
 main$current_plot_attributes <- NULL
+main$capture_times <- data.frame()
 
 main$cpu_plot<-NULL
 main$RAC_plot<-NULL
@@ -2625,6 +2646,7 @@ main$mainFunction <- function(f){
   main$DF_MAIN_BY_SNAP <- NULL
   main$DF_IO_WAIT_HIST <- NULL
   main$current_plot_attributes <- NULL
+  main$capture_times <<- data.frame()
   
   if(debugMode){
     main$current_plot_attributes <- load_plot_attributes()
@@ -2932,16 +2954,20 @@ main$mainFunction <- function(f){
  
  
   if(debugMode){
-    
-    # tyler added to move files to a done dir
-    doneDir <- paste0(dirname(f),"/done/")
-    if (!file.exists(doneDir)){
-      dir.create(doneDir)
+    if(exists(debugMoveFiles)){
+      if(debugMoveFiles){
+        # tyler added to move files to a done dir
+        doneDir <- paste0(dirname(f),"/done/")
+        if (!file.exists(doneDir)){
+          dir.create(doneDir)
+        }
+        
+        file.rename(from=f,
+                    to=paste0(dirname(f),"/done/",basename(f))
+        )
+      }
     }
     
-    file.rename(from=f,
-               to=paste0(dirname(f),"/done/",basename(f))
-    )
   }
  
   flog.debug(paste0('Database - ',main$current_db_name," - end"))
