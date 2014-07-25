@@ -689,6 +689,25 @@ getSection <- function(inFile,blockName,decSep='.',searchPatternIn=NULL,replaceP
 }
 
 
+
+# get_capture_times <- function(theFile){
+#   timingVector <- str_extract_all(theFileTXT, "~~END.+?\nElapsed.+?\n")
+#   print(timingVector)
+#   timingVector <- unlist(timingVector)
+#   timingVector <- gsub('~~END\\-(.+)~~\n','\\1\n', timingVector)
+#   timingVector <- gsub('Elapsed: ','', timingVector)
+#   
+#   timing_DF <- colsplit(timingVector, "\n", names=c("section", "elapsed"))
+#   options(digits.secs=2)
+#   timing_DF$seconds <- second(strptime(timing_DF$elapsed,"%H:%M:%OS"))
+#   head(timing_DF)
+#   
+#   
+#   timing_DF$seconds <- seconds(hms(timing_DF$elapsed))
+#   
+#   foo <- sum(timing_DF$seconds)
+# }
+
 build_data_frames <- function(fileName) {
   flog.debug("build_data_frames - start",name="build_data_frames")
   flog.info("-",name='status')
@@ -720,7 +739,13 @@ build_data_frames <- function(fileName) {
       )
     #}
     
-    stop(paste0("Capture file has ",oraErrors," errors")) 
+    if(debugMode){
+    
+    }
+    else{
+      stop(paste0("Capture file has ",oraErrors," errors"))   
+    }
+    
     
   }
   
@@ -747,6 +772,12 @@ build_data_frames <- function(fileName) {
 
   flog.trace('DF_OS_INT',DF_OS_INT,name="build_data_frames",capture=TRUE)
   DF_MEMORY_INT <- getSection(theFile,'MEMORY',computedDecSep)
+  
+  DF_MEMORY_INT <- getSection(theFile,'MEMORY',computedDecSep)
+  
+  DF_MEMORY_SGA_ADVICE_INT <- getSection(theFile,'MEMORY-SGA-ADVICE',computedDecSep)
+  DF_MEMORY_PGA_ADVICE_INT <- getSection(theFile,'MEMORY-PGA-ADVICE',computedDecSep)
+  
   #flog.trace('DF_MEMORY_INT',DF_MEMORY_INT,name="build_data_frames",capture=TRUE)
   DF_SPACE_INT <- getSection(theFile,'SIZE-ON-DISK',computedDecSep)
   DF_MAIN_INT <- getSection(theFile,'MAIN-METRICS',computedDecSep)
@@ -907,6 +938,10 @@ build_data_frames <- function(fileName) {
   DF_TOP_N_EVENTS_INT<-filter_n_days(DF_TOP_N_EVENTS_INT)
    flog.trace("DF_AAS_INT2.2",head(DF_AAS_INT),name="build_data_frames",capture=TRUE)
   DF_MEMORY_INT<-filter_n_days(DF_MEMORY_INT)
+  DF_MEMORY_SGA_ADVICE_INT<-filter_n_days(DF_MEMORY_SGA_ADVICE_INT)
+  DF_MEMORY_PGA_ADVICE_INT<-filter_n_days(DF_MEMORY_PGA_ADVICE_INT)
+
+
   DF_SQL_BY_SNAPID_INT<-filter_n_days(DF_SQL_BY_SNAPID_INT)
   
   flog.trace("DF_SNAP_ID_DATE_INT1",head(DF_SNAP_ID_DATE_INT),name="build_data_frames",capture=TRUE)
@@ -919,12 +954,20 @@ build_data_frames <- function(fileName) {
   #DF_SNAP_ID_DATE_INT<-data.frame(DF_SNAP_ID_DATE_INT)
   flog.trace("DF_AAS_INT2.4",head(DF_AAS_INT),name="build_data_frames",capture=TRUE)
   DF_AAS_INT <- merge(DF_AAS_INT,DF_SNAP_ID_DATE_INT)
+
   DF_MEMORY_INT <- merge(DF_MEMORY_INT,DF_SNAP_ID_DATE_INT)
+  DF_MEMORY_SGA_ADVICE_INT <- merge(DF_MEMORY_SGA_ADVICE_INT,DF_SNAP_ID_DATE_INT)
+  DF_MEMORY_PGA_ADVICE_INT <- merge(DF_MEMORY_PGA_ADVICE_INT,DF_SNAP_ID_DATE_INT)
+
+
   DF_SQL_BY_SNAPID_INT <- merge(DF_SQL_BY_SNAPID_INT,DF_SNAP_ID_DATE_INT)
   #print(head(DF_AAS_INT))
   
   flog.trace("DF_AAS_INT3",DF_AAS_INT,name="build_data_frames",capture=TRUE)
-  DF_AAS_INT[with(DF_AAS_INT, grepl("DB CPU", WAIT_CLASS)),]$WAIT_CLASS<-"CPU"
+  
+  if(("WAIT_CLASS" %in% names(DF_AAS_INT))){
+    DF_AAS_INT[with(DF_AAS_INT, grepl("DB CPU", WAIT_CLASS)),]$WAIT_CLASS<-"CPU"
+  }
   # due to a bug in the 2.7 sql script
   #DF_AAS_INT[with(DF_AAS_INT, grepl("Administrati", WAIT_CLASS)),]$WAIT_CLASS<-"Administrative"
   
@@ -936,7 +979,9 @@ build_data_frames <- function(fileName) {
   
   #print(head(DF_OS_INT))
   flog.debug("build_data_frames - end",name="build_data_frames")
-  return(list(DF_OS_INT,DF_MAIN_INT,DF_MEMORY_INT,DF_SPACE_INT,DF_AAS_INT,DF_SQL_SUMMARY_INT,DF_SQL_BY_SNAPID_INT,DF_SNAP_ID_DATE_INT,
+  return(list(DF_OS_INT,DF_MAIN_INT,
+              DF_MEMORY_INT,DF_MEMORY_SGA_ADVICE_INT,DF_MEMORY_PGA_ADVICE_INT,
+              DF_SPACE_INT,DF_AAS_INT,DF_SQL_SUMMARY_INT,DF_SQL_BY_SNAPID_INT,DF_SNAP_ID_DATE_INT,
               DF_IO_WAIT_HIST_INT,DF_IOSTAT_FUNCTION_INT,
               DF_DB_PARAMETERS_INT,DF_IO_BY_OBJECT_TYPE_INT,DF_TOP_N_EVENTS_INT))
 }
@@ -2400,6 +2445,62 @@ plot_memory <- function(DF_MEMORY_INT){
 
 
 
+plot_memory_sga_advise <- function(df_in){
+  flog.debug('plot_memory_sga_advise - start',name='plot_memory_sga_advise')
+  DF_MEMORY_SGA_ADVICE_TMP <- df_in 
+  
+  DF_MEMORY_SGA_ADVICE_TMP <- subset(DF_MEMORY_SGA_ADVICE_TMP,ESTD_PHYSICAL_READS > 0)
+  
+  
+  DF_MEMORY_SGA_ADVICE_1_TMP <- subset(DF_MEMORY_SGA_ADVICE_TMP,SIZE_FACTOR==1)
+  DF_MEMORY_SGA_ADVICE_1_TMP <- DF_MEMORY_SGA_ADVICE_1_TMP[c("end","SNAP_ID","INSTANCE_NUMBER","ESTD_PHYSICAL_READS")]
+  
+  
+  setnames(DF_MEMORY_SGA_ADVICE_1_TMP, "ESTD_PHYSICAL_READS", "CURRENT_PHYSICAL_READS")
+  
+  DF_MEMORY_SGA_ADVICE_TMP <- merge(DF_MEMORY_SGA_ADVICE_TMP,DF_MEMORY_SGA_ADVICE_1_TMP,by=c('SNAP_ID','INSTANCE_NUMBER'))
+  rm(DF_MEMORY_SGA_ADVICE_1_TMP)
+  DF_MEMORY_SGA_ADVICE_TMP$pct_change <- (DF_MEMORY_SGA_ADVICE_TMP$ESTD_PHYSICAL_READS-DF_MEMORY_SGA_ADVICE_TMP$CURRENT_PHYSICAL_READS)/DF_MEMORY_SGA_ADVICE_TMP$CURRENT_PHYSICAL_READS
+  
+  
+  DF_MEMORY_SGA_ADVICE_TMP_AGG <- ddply(DF_MEMORY_SGA_ADVICE_TMP,.(INSTANCE_NUMBER,SGA_TARGET_GB),summarise,
+                                        pct_change=mean(pct_change),
+                                        SIZE_FACTOR=mean(SIZE_FACTOR))
+  
+  DF_MEMORY_SGA_ADVICE_TMP_AGG$color <- ifelse(DF_MEMORY_SGA_ADVICE_TMP_AGG$SIZE_FACTOR==1,"Current Value","Minor Change")
+  DF_MEMORY_SGA_ADVICE_TMP_AGG$color <- ifelse(DF_MEMORY_SGA_ADVICE_TMP_AGG$pct_change>=0.05,"Increased Physical Reads",DF_MEMORY_SGA_ADVICE_TMP_AGG$color)
+  DF_MEMORY_SGA_ADVICE_TMP_AGG$color <- ifelse(DF_MEMORY_SGA_ADVICE_TMP_AGG$pct_change<=-0.05,"Decreased Physical Reads",DF_MEMORY_SGA_ADVICE_TMP_AGG$color)
+  
+  DF_MEMORY_SGA_ADVICE_TMP_AGG$SGA_TARGET_GB <- factor(DF_MEMORY_SGA_ADVICE_TMP_AGG$SGA_TARGET_GB)
+  
+  DF_MEMORY_SGA_ADVICE_TMP_AGG$INSTANCE_NUMBER <- paste0("Node ",DF_MEMORY_SGA_ADVICE_TMP_AGG$INSTANCE_NUMBER)
+  
+  sga_colors <- c("Current Value" = "#000000", "Minor Change" = "#777777", 
+                  "Increased Physical Reads" = "#a60000",
+                  "Decreased Physical Reads" = "#008000")
+  
+  gg_sga_colors <- scale_colour_manual("", values = sga_colors)
+  gg_sga_fill<- scale_fill_manual("", values = sga_colors)
+  
+  
+  p <- ggplot(data=DF_MEMORY_SGA_ADVICE_TMP_AGG,aes(x=SGA_TARGET_GB,y=pct_change*100,colour=color,fill=color))+
+    geom_bar(stat="identity",alpha=.2)+
+    geom_text(aes(label=paste(round(pct_change * 100, 1), "%", sep = "")),size=2,colour="black",vjust=.5)+
+    facet_grid(INSTANCE_NUMBER ~ . )+
+    gg_sga_colors+gg_sga_fill+
+    scale_x_discrete(breaks=unique(DF_MEMORY_SGA_ADVICE_TMP_AGG$SGA_TARGET_GB))+
+    labs(title=paste("Average Percent Change in Physical Reads Relative To SGA_TARGET from SGA Target Advisory for ",main$current_db_name,sep=""))+
+    xlab("SGA_TARGET (GB)")+
+    ylab("Percent Change in Physical Reads (Negative is better)")+
+    theme(panel.grid.major.x = element_line("#aaaaaa", size = .1,linetype = "dotted"))
+  
+  flog.debug('plot_memory_sga_advise - end',name='plot_memory_sga_advise')
+ 
+ return(p)
+}
+
+
+
 plot_db_parameters <- function(){
   flog.debug('plot_db_parameters - start')
 
@@ -2474,6 +2575,8 @@ main$overall_combined_df <- NULL
 main$DATA_FRAME <- NULL
 main$DF_OS <- NULL
 main$DF_MEMORY <- NULL
+main$DF_MEMORY_SGA_ADVICE <- NULL
+main$DF_MEMORY_PGA_ADVICE <- NULL
 main$DF_MAIN <- NULL
 main$DF_SNAP_ID_DATE <- NULL
 main$DF_SNAP_ID_SUBSET <- NULL
@@ -2543,13 +2646,17 @@ main$mainFunction <- function(f){
   attr$filter_snap_min <<- as.numeric(attr$filter_snap_min)
   attr$filter_snap_max <<- as.numeric(attr$filter_snap_max)
   
-  c(main$DF_OS, main$DF_MAIN,main$DF_MEMORY,main$DF_SPACE,main$DF_AAS,main$DF_SQL_SUMMARY,main$DF_SQL_BY_SNAPID,
+  c(main$DF_OS, main$DF_MAIN,
+    main$DF_MEMORY,main$DF_MEMORY_SGA_ADVICE,main$DF_MEMORY_PGA_ADVICE,
+    main$DF_SPACE,main$DF_AAS,main$DF_SQL_SUMMARY,main$DF_SQL_BY_SNAPID,
     main$DF_SNAP_ID_DATE,
     main$DF_IO_WAIT_HIST,main$DF_IOSTAT_FUNCTION,
     main$DF_DB_PARAMETERS,main$DF_IO_BY_OBJECT_TYPE,
     #main$DF_TOP_N_EVENTS) := build_data_frames(f,main$current_db_name)
     main$DF_TOP_N_EVENTS) := build_data_frames(f)
+  
   c(main$DF_MAIN_BY_SNAP) := summarise_dfs_by_snap()
+  
   main$DF_SNAP_ID_DATE2 <- build_snap_to_date_df()
   
   saveUniqueModules()
@@ -2609,6 +2716,7 @@ main$mainFunction <- function(f){
   
   
   c(main$DF_SUMMARY_OS,main$DF_SUMMARY_MAIN,main$DF_SUMMARY_OVERALL) := gen_summary_data()
+  main$DF_SUMMARY_OVERALL$outFileName <- paste0(outFileName,"-plot.pdf")
   main$overall_summary_df <- rbind(main$overall_summary_df, main$DF_SUMMARY_OVERALL)
   box_plots <- plot_summary_boxplot_main()
   tblText <- tableGrob(main$DF_SUMMARY_OS,show.rownames = FALSE, gpar.coretext = gpar(fontsize=12),gpar.coltext = gpar(fontsize=8),padding.v = unit(1, "mm"),padding.h = unit(2, "mm"),show.colnames = TRUE,col.just = "left")
@@ -2622,7 +2730,8 @@ main$mainFunction <- function(f){
   tblText3 <- tableGrob(DF_HOSTS_INT,show.rownames = FALSE, gpar.coretext = gpar(fontsize=8),gpar.coltext = gpar(fontsize=8),padding.v = unit(1, "mm"),padding.h = unit(2, "mm"),show.colnames = FALSE,col.just = "left")
   flog.trace(str(tblText3),name='mainFunction')
   
- if(okToPrintPlot('aas1') | okToPrintPlot('page1')){
+ #if(okToPrintPlot('aas1') | okToPrintPlot('page1')){
+ if(okToPrintPlot('aas1')){
     c(aas_pct1, aas_pct2) := plot_aas_percent(main$DF_AAS)
   
     c(aas_plot, aas_plot2_gt,aas_plot2_line) := plot_aas_chart(main$DF_AAS)
@@ -2652,14 +2761,19 @@ main$mainFunction <- function(f){
       debugVars$tblText <- tblText
       debugVars$tblText2 <- tblText2
       debugVars$tblText3 <- tblText3
-      debugVars$aas_plot2_line <- aas_plot2_line
+      #debugVars$aas_plot2_line <- aas_plot2_line
       debugVars$box_plots <- box_plots
     }
     
     
     save(debugVars,file=paste(outFileName,"-debugVars.Rda",sep=""))
     if(okToPrintPlot('page1')){ 
-      x <- grid.arrange(tblText,tblText2,tblText3, arrangeGrob(aas_pct1, aas_pct2, ncol=2),box_plots, ncol = 1, heights=c(1,1,1,8,8))
+      if(exists("aas_pct1")){
+        x <- grid.arrange(tblText,tblText2,tblText3, arrangeGrob(aas_pct1, aas_pct2, ncol=2),box_plots, ncol = 1, heights=c(1,1,1,8,8))
+      }
+      else{
+        x <- grid.arrange(tblText ,tblText2,tblText3, ncol = 1, heights=c(1,1,1))
+      }
     }
     #x <- grid.arrange(tblText,tblText2,tblText3, box_plots, ncol = 1, heights=c(1,1,1,8))
     #x <- grid.arrange(tblText ,tblText2,tblText3, ncol = 1, heights=c(1,1,1))
@@ -2698,6 +2812,12 @@ main$mainFunction <- function(f){
   main_activity_plot <- plot_main_activity(main$DF_MAIN)
   
   memory_plot <- plot_memory(main$DF_MEMORY)
+ 
+  memory_sga_advise_plot <- NULL
+  if( nrow(main$DF_MEMORY_SGA_ADVICE)>10){
+    memory_sga_advise_plot <- plot_memory_sga_advise(main$DF_MEMORY_SGA_ADVICE)
+  }
+  
   
   RAC_activity_plot <- NULL
   
@@ -2712,7 +2832,9 @@ main$mainFunction <- function(f){
     )
   }
   
-  aas_bars_by_date_plot <- plot_aas_bars_by_date(main$DF_AAS)
+  if(okToPrintPlot('aas_bars_by_date')){  
+    aas_bars_by_date_plot <- plot_aas_bars_by_date(main$DF_AAS)
+  }
   
   #main$cpu_plot <<-cpu_plot
   if( nrow(main$DF_IO_WAIT_HIST)>10){
@@ -2784,6 +2906,12 @@ main$mainFunction <- function(f){
   print(memory_plot)
  }
  
+ if(okToPrintPlot('memory_plot_sga_advise')){ 
+   if( nrow(main$DF_MEMORY_SGA_ADVICE)>10){
+     print(memory_sga_advise_plot)
+   }
+ }
+ 
  if(okToPrintPlot('db_parameters')){
     plot_db_parameters()
  }
@@ -2846,6 +2974,15 @@ main$mainLoop <- function(){
     } #end else
     
   } #end for loop
+  
+  SUMMARY_DF_TMP <- main$overall_summary_df
+  SUMMARY_DF_TMP$link <- paste0('<a href="',SUMMARY_DF_TMP$outFileName,'">',SUMMARY_DF_TMP$outFileName,'</a>')
+  SUMMARY_DF_TMP <- subset(SUMMARY_DF_TMP,select=c(name,nodes,platform,cores,version,memused,sizegb,aas,link))
+  
+  SUMMARY_DF_TMP <- SUMMARY_DF_TMP[order(SUMMARY_DF_TMP$aas,decreasing = TRUE),]
+  
+  sjt.df(SUMMARY_DF_TMP,file=paste0("summary.html"),describe=FALSE,alternateRowColors=TRUE)
+  rm(SUMMARY_DF_TMP)
   write.csv(main$overall_summary_df,'OverallSummary.csv')
   if(length(main$plot_attributes) > 0){
     write.csv(main$plot_attributes,'attributes.csv',row.names=FALSE)
