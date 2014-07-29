@@ -11,7 +11,7 @@ ALTER SESSION SET WORKAREA_SIZE_POLICY = manual;
 ALTER SESSION SET SORT_AREA_SIZE = 268435456;
 
 
-set timing on
+set timing off
 
 set serveroutput on
 set verify off
@@ -145,6 +145,55 @@ end;
 
 whenever sqlerror continue
 
+
+
+
+declare
+  l_stat_rows number := 1;
+  l_actual_rows number;
+  l_pct_change number := 0;
+begin
+  select nvl(NUM_ROWS,1) into l_stat_rows from sys.DBA_TAB_STATISTICS where owner = 'SYS' and table_name = 'WRM$_SNAPSHOT';
+  select count(*) num_rows into l_actual_rows from sys.dba_hist_snapshot;
+    
+  if l_stat_rows is null or l_stat_rows < 1 then
+    l_stat_rows := 1;
+  end if;
+  --dbms_output.put_line('Stats: '||l_stat_rows);
+  --dbms_output.put_line('Actual: '||l_actual_rows);
+  
+  l_pct_change := abs(round((l_actual_rows-l_stat_rows)/l_stat_rows,3))*100;
+  --dbms_output.put_line('% Change: '||l_pct_change);
+  
+  if l_pct_change >= 30 then
+    dbms_output.put_line(' ');
+	dbms_output.put_line('*******************************************************************************');
+	dbms_output.put_line('****************************** WARNING !!! ************************************');
+    dbms_output.put_line('It appears that statistics on the SYS schema may be invalid.');
+    dbms_output.put_line('This can have serious, negative performance implications for this script ');
+    dbms_output.put_line('as well as AWR, ASH, and ADDM. Please review My Oracle Support Doc ID 457926.1');
+    dbms_output.put_line('for details on gathering stats on SYS objects.');
+    dbms_output.put_line('This script will now set dynamic_sampling to level 4 for this session to ');
+    dbms_output.put_line('compensate for the invalid statistics.');
+    dbms_output.put_line('****************************** WARNING !!! ************************************');
+	dbms_output.put_line('*******************************************************************************');
+    
+    execute immediate 'alter session set optimizer_dynamic_sampling=4';
+  end if;
+  
+end;
+/
+
+prompt Press Enter to run AWR-Miner now
+pause
+
+
+
+
+
+
+
+
 REM set heading off
 
 select '&DBID' a from dual;
@@ -227,6 +276,9 @@ SELECT max(snap_id) snap_max1
   
 column FILE_NAME new_value SPOOL_FILE_NAME noprint
 select 'awr-hist-'||'&DBID'||'-'||'&DBNAME'||'-'||ltrim('&SNAP_ID_MIN')||'-'||ltrim('&SNAP_ID_MAX')||'.out' FILE_NAME from dual;
+
+set timing on
+TIMING START full_capture_script
 spool &SPOOL_FILE_NAME
 
 
@@ -1122,6 +1174,7 @@ DENSE_RANK() OVER (PARTITION BY s.snap_id ORDER BY sum(ELAPSED_TIME_DELTA) DESC 
   
 REPHEADER OFF
 REPFOOTER OFF
- 
+TIMING STOP 
 spool off
+
 ALTER SESSION SET WORKAREA_SIZE_POLICY = AUTO;
