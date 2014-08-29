@@ -2,13 +2,17 @@
 
 
 #debugModeOverride <- TRUE  | rm(debugModeOverride)
-#debugMoveFiles <- TRUE  | rm(debugModeOverride)
+#debugMoveFiles <- TRUE  | rm(debugMoveFiles)
 #dumpCSV <- TRUE  | rm(dumpCSV)
 #filePatternOverride <- "^awr-hist.+DB110g.+(\\.out|\\.gz)$" | rm(filePatternOverride)
 #plotOverride <- "ALL" [ALL|NONE|SOME|PAGE1|AAS] | rm(plotOverride) | plotOverride <- c("SOME","PAGE1,"AAS")
 #parseOverride <- "ALL" [ALL|NONE|SOME|PAGE1|AAS] | rm(parseOverride) | c("SOME","aas_facet")
-#parseOverride <- c("!TOP-SQL-BY-SNAPID")
+parseOverride <- c("!TOP-SQL-BY-SNAPID")
+#parseOverride <- c("!TOP-SQL-BY-SNAPID","!TOP-SQL-SUMMARY","!TOP-N-TIMED-EVENTS","!IO-WAIT-HISTOGRAM","!IOSTAT-BY-FUNCTION")
 #plotOverride <- "NONE"
+
+#parseOverride <- c("SOME","OS-INFORMATION","MEMORY")
+
 
 list.of.packages <- c("futile.logger","ggplot2", "plyr","gridExtra","scales","reshape","xtable","ggthemes","stringr","data.table","lubridate","gplots","gtools","dplyr","sjPlot")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
@@ -603,7 +607,12 @@ getSectionInt <- function(inFile,blockName,decSep='.',searchPatternIn=NULL,repla
   
   # Get the dashes which we'll use to get a vector of column lengths
   dashesLine <- str_extract(body, '\n[- ]+\n')
+  if(is.na(dashesLine)){
+    dashesLine <- str_extract(body, '\n[= ]+\n')
+  }
+  
   #print(dashesLine)
+  #foo <<- dashesLine
   dashesLine <- gsub('\n', '', dashesLine)
   dashesVector <- str_split(dashesLine,' ')
   #print(dashesVector)
@@ -631,7 +640,18 @@ getSectionInt <- function(inFile,blockName,decSep='.',searchPatternIn=NULL,repla
   #     body <- gsub(searchPatternIn,replacePatternIn, body)
   #   }
   #print(body)
-  body <- gsub('\n[- ]+\n', '\n', body)
+  dashesTest <- str_extract(body, '\n[- ]+\n')
+  if(is.na(dashesTest)){
+    body <- gsub('\n[= ]+\n', '\n', body)
+  }
+  else{
+    body <- gsub('\n[- ]+\n', '\n', body)
+  }
+  
+  
+  
+  
+  
   
   body <- str_replace_all(body,theTitlesOrig,'')
   
@@ -2171,6 +2191,9 @@ plot_cpu_sd <- function(DF_MAIN_INT){
 
 plot_cpu <- function(DF_MAIN_INT){
   
+  # tyler made a 1-0ff change for army ERP
+  #p_gt <- plot_cpu_no_sd(DF_MAIN_INT)
+  #return(p_gt)
   
   if("cpu_per_s" %in% colnames(DF_MAIN_INT)){
     p_gt <- plot_cpu_sd(DF_MAIN_INT)
@@ -2469,6 +2492,10 @@ plot_memory_sga_advise <- function(df_in){
   flog.debug('plot_memory_sga_advise - start',name='plot_memory_sga_advise')
   DF_MEMORY_SGA_ADVICE_TMP <- df_in 
   
+  if(is.na(sum(main$DF_MEMORY_SGA_ADVICE$ESTD_PHYSICAL_READS))){
+    return(NULL)
+  }
+  
   DF_MEMORY_SGA_ADVICE_TMP <- subset(DF_MEMORY_SGA_ADVICE_TMP,ESTD_PHYSICAL_READS > 0)
   
   
@@ -2487,17 +2514,20 @@ plot_memory_sga_advise <- function(df_in){
                                         pct_change=mean(pct_change),
                                         SIZE_FACTOR=mean(SIZE_FACTOR))
   
+  DF_MEMORY_SGA_ADVICE_TMP_AGG$pct_change <- ifelse(DF_MEMORY_SGA_ADVICE_TMP_AGG$pct_change>=2,2,DF_MEMORY_SGA_ADVICE_TMP_AGG$pct_change)
+  
   DF_MEMORY_SGA_ADVICE_TMP_AGG$color <- ifelse(DF_MEMORY_SGA_ADVICE_TMP_AGG$SIZE_FACTOR==1,"Current Value","Minor Change")
   DF_MEMORY_SGA_ADVICE_TMP_AGG$color <- ifelse(DF_MEMORY_SGA_ADVICE_TMP_AGG$pct_change>=0.05,"Increased Physical Reads",DF_MEMORY_SGA_ADVICE_TMP_AGG$color)
   DF_MEMORY_SGA_ADVICE_TMP_AGG$color <- ifelse(DF_MEMORY_SGA_ADVICE_TMP_AGG$pct_change<=-0.05,"Decreased Physical Reads",DF_MEMORY_SGA_ADVICE_TMP_AGG$color)
   
   DF_MEMORY_SGA_ADVICE_TMP_AGG$SGA_TARGET_GB <- factor(DF_MEMORY_SGA_ADVICE_TMP_AGG$SGA_TARGET_GB)
   
-  DF_MEMORY_SGA_ADVICE_TMP_AGG$INSTANCE_NUMBER <- paste0("Node ",DF_MEMORY_SGA_ADVICE_TMP_AGG$INSTANCE_NUMBER)
+  #DF_MEMORY_SGA_ADVICE_TMP_AGG$INSTANCE_NUMBER <- paste0("Node ",DF_MEMORY_SGA_ADVICE_TMP_AGG$INSTANCE_NUMBER)
   
-  sga_colors <- c("Current Value" = "#000000", "Minor Change" = "#777777", 
-                  "Increased Physical Reads" = "#a60000",
-                  "Decreased Physical Reads" = "#008000")
+  
+  sga_colors <- c("Current Value" = "#000000", "Minor Change" = "#1a466e", 
+                  "Increased Physical Reads" = "#c10534",
+                  "Decreased Physical Reads" = "#54752e")
   
   gg_sga_colors <- scale_colour_manual("", values = sga_colors)
   gg_sga_fill<- scale_fill_manual("", values = sga_colors)
@@ -2505,19 +2535,96 @@ plot_memory_sga_advise <- function(df_in){
   
   p <- ggplot(data=DF_MEMORY_SGA_ADVICE_TMP_AGG,aes(x=SGA_TARGET_GB,y=pct_change*100,colour=color,fill=color))+
     geom_bar(stat="identity",alpha=.2)+
-    geom_text(aes(label=paste(round(pct_change * 100, 1), "%", sep = "")),size=2,colour="black",vjust=.5)+
+    geom_text(aes(label=paste(round(pct_change * 100, 1), "%", sep = "")),size=1.5,colour="black",vjust=0,angle=-90)+
     facet_grid(INSTANCE_NUMBER ~ . )+
     gg_sga_colors+gg_sga_fill+
     scale_x_discrete(breaks=unique(DF_MEMORY_SGA_ADVICE_TMP_AGG$SGA_TARGET_GB))+
-    labs(title=paste("Average Percent Change in Physical Reads Relative To SGA_TARGET from SGA Target Advisory for ",main$current_db_name,sep=""))+
+    labs(title=paste("Average Percent Change in Physical Reads \nRelative To SGA_TARGET from SGA Target Advisory for ",main$current_db_name,sep=""))+
     xlab("SGA_TARGET (GB)")+
-    ylab("Percent Change in Physical Reads (Negative is better)")+
-    theme(panel.grid.major.x = element_line("#aaaaaa", size = .1,linetype = "dotted"))
+    ylab("Percent Change in Physical Reads (Negative is better) \nValues over 200% are set to 200%")+
+    theme(panel.grid.major.x = element_line("#aaaaaa", size = .1,linetype = "dotted"),
+            strip.text.y = element_text(size = 7),
+            legend.key.size = unit(.25, "cm")
+          )
   
   flog.debug('plot_memory_sga_advise - end',name='plot_memory_sga_advise')
  
  return(p)
 }
+
+
+plot_memory_pga_advise <- function(df_in){
+  flog.debug('plot_memory_PGA_advise - start',name='plot_memory_PGA_advise')
+  
+  DF_MEMORY_PGA_ADVICE_TMP <- df_in 
+  #DF_MEMORY_PGA_ADVICE_TMP <- main$DF_MEMORY_PGA_ADVICE 
+  
+  
+  
+  
+  DF_MEMORY_PGA_ADVICE_1_TMP <- subset(DF_MEMORY_PGA_ADVICE_TMP,SIZE_FACTOR==1)
+  
+  
+  Mode <- function(x) names(which.max(table(x)))  
+  DF_MEMORY_PGA_ADVICE_TMP_MODE <- ddply(DF_MEMORY_PGA_ADVICE_1_TMP,.(INSTANCE_NUMBER),summarise,
+                                         PGA_TARGET_GB=Mode(PGA_TARGET_GB)
+  )
+  
+  DF_MEMORY_PGA_ADVICE_1_TMP <- DF_MEMORY_PGA_ADVICE_1_TMP[c("end","SNAP_ID","INSTANCE_NUMBER","ESTD_EXTRA_MB_RW")]
+  
+  setnames(DF_MEMORY_PGA_ADVICE_1_TMP, "ESTD_EXTRA_MB_RW", "CURRENT_MB_RW")
+  
+  DF_MEMORY_PGA_ADVICE_1_TMP$CURRENT_MB_RW <- ifelse(DF_MEMORY_PGA_ADVICE_1_TMP$CURRENT_MB_RW==0,0.1,DF_MEMORY_PGA_ADVICE_1_TMP$CURRENT_MB_RW) 
+  DF_MEMORY_PGA_ADVICE_TMP$ESTD_EXTRA_MB_RW <- ifelse(DF_MEMORY_PGA_ADVICE_TMP$ESTD_EXTRA_MB_RW==0,0.1,DF_MEMORY_PGA_ADVICE_TMP$ESTD_EXTRA_MB_RW) 
+  
+  DF_MEMORY_PGA_ADVICE_TMP <- merge(DF_MEMORY_PGA_ADVICE_TMP,DF_MEMORY_PGA_ADVICE_1_TMP,by=c('end','SNAP_ID','INSTANCE_NUMBER'))
+  rm(DF_MEMORY_PGA_ADVICE_1_TMP)
+  DF_MEMORY_PGA_ADVICE_TMP$pct_change <- (DF_MEMORY_PGA_ADVICE_TMP$ESTD_EXTRA_MB_RW-DF_MEMORY_PGA_ADVICE_TMP$CURRENT_MB_RW)/DF_MEMORY_PGA_ADVICE_TMP$CURRENT_MB_RW
+  
+  
+  DF_MEMORY_PGA_ADVICE_TMP_AGG <- ddply(DF_MEMORY_PGA_ADVICE_TMP,.(INSTANCE_NUMBER,PGA_TARGET_GB),summarise,
+                                        pct_change=mean(pct_change),
+                                        SIZE_FACTOR=mean(SIZE_FACTOR))
+  
+  DF_MEMORY_PGA_ADVICE_TMP_AGG$pct_change <- ifelse(DF_MEMORY_PGA_ADVICE_TMP_AGG$pct_change>=2,2,DF_MEMORY_PGA_ADVICE_TMP_AGG$pct_change)
+  
+  DF_MEMORY_PGA_ADVICE_TMP_AGG$color <- ifelse(DF_MEMORY_PGA_ADVICE_TMP_AGG$SIZE_FACTOR==1,"Current Value","Minor Change")
+  DF_MEMORY_PGA_ADVICE_TMP_AGG$color <- ifelse(DF_MEMORY_PGA_ADVICE_TMP_AGG$pct_change>=0.05,"Increased W/A MB Read/Written",DF_MEMORY_PGA_ADVICE_TMP_AGG$color)
+  DF_MEMORY_PGA_ADVICE_TMP_AGG$color <- ifelse(DF_MEMORY_PGA_ADVICE_TMP_AGG$pct_change<=-0.05,"Decreased W/A MB Read/Written",DF_MEMORY_PGA_ADVICE_TMP_AGG$color)
+  
+  DF_MEMORY_PGA_ADVICE_TMP_AGG$PGA_TARGET_GB <- factor(DF_MEMORY_PGA_ADVICE_TMP_AGG$PGA_TARGET_GB)
+  
+  DF_MEMORY_PGA_ADVICE_TMP_AGG$INSTANCE_NUMBER <- paste0("Node ",DF_MEMORY_PGA_ADVICE_TMP_AGG$INSTANCE_NUMBER)
+  
+  pga_colors <- c("Current Value" = "#000000", "Minor Change" = "#1a466e", 
+                  "Increased W/A MB Read/Written" = "#c10534",
+                  "Decreased W/A MB Read/Written" = "#54752e")
+  
+  gg_PGA_colors <- scale_colour_manual("", values = pga_colors)
+  gg_PGA_fill<- scale_fill_manual("", values = pga_colors)
+  
+  
+  p <- ggplot(data=DF_MEMORY_PGA_ADVICE_TMP_AGG,aes(x=PGA_TARGET_GB,y=pct_change*100,colour=color,fill=color))+
+    geom_bar(stat="identity",alpha=.2)+
+    geom_text(aes(label=paste(round(pct_change * 100, 1), "%", sep = "")),size=1,colour="black",vjust=0,angle=-90)+
+    facet_grid(INSTANCE_NUMBER ~ . )+
+    gg_PGA_colors+gg_PGA_fill+
+    scale_x_discrete(breaks=unique(DF_MEMORY_PGA_ADVICE_TMP_AGG$PGA_TARGET_GB))+
+    labs(title=paste("Average Percent Change in W/A MB Read/Written to Disk \nRelative To PGA_AGGREGATE_TARGET from PGA Target Advisory for ",main$current_db_name,sep=""))+
+    xlab("PGA_AGGREGATE_TARGET (GB)")+
+    ylab("Percent Change in W/A MB Read/Written to Disk (Negative is better) \nValues over 200% are set to 200%")+
+    theme(panel.grid.major.x = element_line("#aaaaaa", size = .1,linetype = "dotted"),
+          strip.text.y = element_text(size = 7),
+          legend.key.size = unit(.25, "cm")
+    )
+  #  p
+  flog.debug('plot_memory_PGA_advise - end',name='plot_memory_PGA_advise')
+  # str(p)
+  return(p)
+}
+
+
+
 
 
 
@@ -2823,6 +2930,14 @@ main$mainFunction <- function(f){
   
   cpu_plot <- NULL
   cpu_plot <- plot_cpu(main$DF_MAIN)
+ 
+ 
+ #tyler remove
+ cpu_plot_tmp <<- cpu_plot
+ #!!!!!!!!!!!!!!!!!!!!!!!
+ 
+ 
+ 
   io_plot <- plot_io(main$DF_MAIN_BY_SNAP)
   
   iostat_by_function_plot <- NULL
@@ -2836,8 +2951,29 @@ main$mainFunction <- function(f){
   memory_plot <- plot_memory(main$DF_MEMORY)
  
   memory_sga_advise_plot <- NULL
+ 
   if( nrow(main$DF_MEMORY_SGA_ADVICE)>10){
-    memory_sga_advise_plot <- plot_memory_sga_advise(main$DF_MEMORY_SGA_ADVICE)
+    
+    tryCatch(memory_sga_advise_plot <- plot_memory_sga_advise(main$DF_MEMORY_SGA_ADVICE), 
+             error = function(e) {
+               memory_sga_advise_plot <- NULL
+               #browser()
+             }
+             #,finally=print("finished")
+    )
+  }
+ 
+  memory_pga_advise_plot <- NULL
+ 
+  if( nrow(main$DF_MEMORY_PGA_ADVICE)>10){
+    
+    tryCatch(memory_pga_advise_plot <- plot_memory_pga_advise(main$DF_MEMORY_PGA_ADVICE), 
+             error = function(e) {
+               memory_pga_advise_plot <- NULL
+               #browser()
+             }
+             #,finally=print("finished")
+    )
   }
   
   
@@ -2879,6 +3015,8 @@ main$mainFunction <- function(f){
     }
  }
   
+ 
+ 
  if(okToPrintPlot('io_histogram')){ 
     if( nrow(main$DF_IO_WAIT_HIST)>10){
         x <- grid.arrange(io_hist_plot,io_hist_area_plot , ncol = 1, heights=c(1,4))
@@ -2900,8 +3038,10 @@ main$mainFunction <- function(f){
   }
   
   if(okToPrintPlot('main_activity')){
+    flog.debug('print_main_activity - start',name='print')
     grid.newpage()
     grid.draw(main_activity_plot)
+    flog.debug('print_main_activity - stop',name='print')
   }
   
   
@@ -2925,12 +3065,23 @@ main$mainFunction <- function(f){
  }
  
  if(okToPrintPlot('memory_plot')){
+   flog.debug('print_memory_plot - start',name='print')
   print(memory_plot)
+  flog.debug('print_memory_plot - stop',name='print')
  }
  
- if(okToPrintPlot('memory_plot_sga_advise')){ 
-   if( nrow(main$DF_MEMORY_SGA_ADVICE)>10){
-     print(memory_sga_advise_plot)
+ memory_sga_advise_plot_tmp <<- memory_sga_advise_plot
+ 
+ if(okToPrintPlot('memory_plot_sga_advise') && okToPrintPlot('memory_plot_pga_advise')){ 
+  if( nrow(main$DF_MEMORY_SGA_ADVICE)>10 && nrow(main$DF_MEMORY_PGA_ADVICE)>10){
+     #print(memory_sga_advise_plot)
+    if(inherits(memory_sga_advise_plot,what='ggplot') && inherits(memory_pga_advise_plot,what='ggplot')){
+      flog.debug('print_memory_advice_plot - start',name='print')
+      
+      x <- grid.arrange(memory_sga_advise_plot ,memory_pga_advise_plot, ncol = 2, widths=c(1,1))
+      
+      flog.debug('print_memory_advice_plot - stop',name='print')
+    }
    }
  }
  
@@ -2954,7 +3105,7 @@ main$mainFunction <- function(f){
  
  
   if(debugMode){
-    if(exists(debugMoveFiles)){
+    if(exists("debugMoveFiles")){
       if(debugMoveFiles){
         # tyler added to move files to a done dir
         doneDir <- paste0(dirname(f),"/done/")

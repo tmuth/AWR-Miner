@@ -74,8 +74,17 @@ rm(DF_TEMP2)
 # getIOPsDF("OFFLDB1-20030-20749-1-debugVars.Rda")
 # getIOPsDF("OFFLDR1-28267-28987-1-debugVars.Rda")
 
+# get the mean CPU per sec by db
+DF_IOPS_COMBINED_MEAN<- ddply(DF_IOPS_COMBINED, .(db), summarise,total_iops=mean(total_iops))
+# reorder the DBs by their mean CPU per sec
+DF_IOPS_COMBINED_MEAN <- DF_IOPS_COMBINED_MEAN[ order(DF_IOPS_COMBINED_MEAN$total_iops, decreasing=TRUE), ]
+# reorder the DB factors by the reordered DF
+DF_IOPS_COMBINED$db <- factor(as.character(DF_IOPS_COMBINED$db),levels=DF_IOPS_COMBINED_MEAN$db,ordered=TRUE)
 
-DF_IOPS_COMBINED$db <- factor(DF_IOPS_COMBINED$db)
+
+
+
+#DF_IOPS_COMBINED$db <- factor(DF_IOPS_COMBINED$db)
 
 #DF_IOPS_COMBINED <- subset(DF_IOPS_COMBINED,db != "RAC07P")
 #DF_IOPS_COMBINED <- subset(DF_IOPS_COMBINED,db != "RAC07T")

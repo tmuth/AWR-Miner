@@ -1,6 +1,7 @@
 set define '&'
 set concat '~'
 set colsep " "
+SET UNDERLINE '-'
 set pagesize 50000
 SET ARRAYSIZE 5000
 REPHEADER OFF
@@ -461,7 +462,7 @@ where dbid = &DBID
  and snap_id between &SNAP_ID_MIN and &SNAP_ID_MAX
  and metric_name = 'Database Time Per Sec'
  group by snap_id)
- where rnk <= 5)
+ where rnk <= 10)
 SELECT a.SNAP_ID,
   INSTANCE_NUMBER,
   ROUND(sga_size/1024,1) sga_target_gb,
@@ -510,7 +511,7 @@ FROM
     AND metric_name = 'Database Time Per Sec'
     GROUP BY snap_id
     )
-  WHERE rnk <= 5
+  WHERE rnk <= 10
   )
 SELECT a.SNAP_ID,
   INSTANCE_NUMBER,
