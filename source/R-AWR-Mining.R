@@ -144,7 +144,29 @@ flog.info(paste0("Files found (",length(main$awrFiles),"): \n",paste(main$awrFil
 
 # *UTILITY FUNCTIONS* ===============================================================================================
 
-
+data_frame_col_not_null <- function(df_in, column_in, min_rows_in = 1){
+  #return(TRUE)
+  foo <<- df_in
+  flog.debug(paste0("data_frame_col_not_null - ",column_in),name="data_frame_col_not_null")
+  
+  if((column_in %in% names(df_in))){
+    # the relevant column is in the data frame
+    if(nrow(df_in[!(is.na(df_in[[column_in]]))]) >= min_rows_in){
+      # there are at least min_rows_in number of rows in this df that are not NA
+      return(TRUE)
+    }
+    else{
+      # the column exists, but there are not min_rows_in rows that are not NA (common case would be a column with all NAs)
+      return(FALSE)
+    }
+  }
+  else{
+    # the relevant column is NOT in the data frame
+    return(FALSE)
+  }
+  # fall through, defaults to false
+  return(FALSE)
+}
 
 
 generate_snap_id_labels <- function(DF_SNAP_ID_DATE_INT){
@@ -385,7 +407,7 @@ get_db_name <- function(fileName){
     }
     
     main$current_db_name <<- getInitHeadInfo(theFileTXT,'DB_NAME')
-    main$current_dbid <<- getInitHeadInfo(theFileTXT,'DBSD')
+    main$current_dbid <<- getInitHeadInfo(theFileTXT,'DBID')
   }
   
   
@@ -860,9 +882,10 @@ build_data_frames <- function(fileName) {
   DF_IO_BY_OBJECT_TYPE_INT <- getSection(theFileTXT,'IO-OBJECT-TYPE',computedDecSep)
   DF_SQL_SUMMARY_INT <- getSection(theFileTXT,'TOP-SQL-SUMMARY',computedDecSep)
   
-  
+  DF_SQL_SUMMARY_INT_TMP <<- DF_SQL_SUMMARY_INT
   if(nrow(DF_SQL_SUMMARY_INT)>5){
     if(("MODULE" %in% names(DF_SQL_SUMMARY_INT))){
+    #if(data_frame_col_not_null(DF_SQL_SUMMARY_INT,"MODULE")){
       DF_SQL_SUMMARY_INT$MODULE <- str_sub(DF_SQL_SUMMARY_INT$MODULE,1,10)
     }
     else{
@@ -1001,7 +1024,8 @@ build_data_frames <- function(fileName) {
   
   flog.trace("DF_AAS_INT3",DF_AAS_INT,name="build_data_frames",capture=TRUE)
   
-  if(("WAIT_CLASS" %in% names(DF_AAS_INT))){
+  #if(("WAIT_CLASS" %in% names(DF_AAS_INT))){
+  if(data_frame_col_not_null(DF_AAS_INT,"WAIT_CLASS")){
     DF_AAS_INT[with(DF_AAS_INT, grepl("DB CPU", WAIT_CLASS)),]$WAIT_CLASS<-"CPU"
   }
   # due to a bug in the 2.7 sql script
@@ -2784,6 +2808,9 @@ main$mainFunction <- function(f){
     #main$DF_TOP_N_EVENTS) := build_data_frames(f,main$current_db_name)
     main$DF_TOP_N_EVENTS) := build_data_frames(f)
   
+  
+  # call write to .Rda
+  
   c(main$DF_MAIN_BY_SNAP) := summarise_dfs_by_snap()
   
   main$DF_SNAP_ID_DATE2 <- build_snap_to_date_df()
@@ -2933,7 +2960,7 @@ main$mainFunction <- function(f){
  
  
  #tyler remove
- cpu_plot_tmp <<- cpu_plot
+ #cpu_plot_tmp <<- cpu_plot
  #!!!!!!!!!!!!!!!!!!!!!!!
  
  
@@ -2979,7 +3006,8 @@ main$mainFunction <- function(f){
   
   RAC_activity_plot <- NULL
   
-  if(("gc_cr_rec_s" %in% names(main$DF_MAIN))){
+  #if(("gc_cr_rec_s" %in% names(main$DF_MAIN))){
+  if(data_frame_col_not_null(main$DF_MAIN,"gc_cr_rec_s")){
     tryCatch(RAC_activity_plot <- plot_RAC_activity(main$DF_MAIN), 
              error = function(e) {
                traceback()
@@ -3048,7 +3076,9 @@ main$mainFunction <- function(f){
   #if(!is.null(RAC_activity_plot)){
  if(okToPrintPlot('rac')){ 
     if(inherits(RAC_activity_plot,what='grob')){
-      if(("gc_cr_rec_s" %in% names(main$DF_MAIN))){
+      #if(("gc_cr_rec_s" %in% names(main$DF_MAIN))){
+      if(data_frame_col_not_null(main$DF_MAIN,"gc_cr_rec_s")){
+        
         grid.newpage()
         tryCatch(
           grid.draw(RAC_activity_plot), 
@@ -3152,9 +3182,12 @@ main$mainLoop <- function(){
     
   } #end for loop
   
+  TEST_DF <<- main$overall_summary_df
+  
   SUMMARY_DF_TMP <- main$overall_summary_df
   SUMMARY_DF_TMP$link <- paste0('<a href="',SUMMARY_DF_TMP$outFileName,'">',SUMMARY_DF_TMP$outFileName,'</a>')
-  SUMMARY_DF_TMP <- subset(SUMMARY_DF_TMP,select=c(name,nodes,platform,cores,version,memused,sizegb,aas,link))
+  #TEST_DF <<- SUMMARY_DF_TMP
+  SUMMARY_DF_TMP <- subset(SUMMARY_DF_TMP,,select=c(name,nodes,platform,cores,version,memused,sizegb,aas,link))
   
   SUMMARY_DF_TMP <- SUMMARY_DF_TMP[order(SUMMARY_DF_TMP$aas,decreasing = TRUE),]
   
