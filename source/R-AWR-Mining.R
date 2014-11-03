@@ -1418,8 +1418,7 @@ plot_summary_boxplot_main <- function(){
 plot_aas_chart <- function(DF_AAS_INT){
   flog.debug('plot_aas_chart - start',name='plot_aas_chart')
 #   log_it('plot_aas_chart - start')
-#   log_it(min(DF_AAS_INT$end))
-#   log_it(max(DF_AAS_INT$end))
+
 #   
 #   log_it(min(main$DF_SNAP_ID_SUBSET$end))
 #   log_it(max(main$DF_SNAP_ID_SUBSET$end))
