@@ -41,7 +41,7 @@ if(interactive()){
 
 MAX_DAYS <- 30
 
-outFileSuffix <- '1'
+outFileSuffix <- '2'
 
 
 #====================================================================================================================
@@ -326,17 +326,17 @@ okToParse <- function(sectionName){
 getCPUcores <- function(){
   cpuCoresInt <- NULL
   if(is.na(get_os_stat("NUM_CPU_CORES"))) {
-      if(is.na(get_os_stat("!CPU_CORE_COUNT"))) {
-          cpuCoresInt <- get_os_stat("NUM_CPUS")
-      }
-      else{
-        cpuCoresInt <- get_os_stat("!CPU_CORE_COUNT")/get_os_stat("INSTANCES")
-      }
+    if(is.na(get_os_stat("!CPU_CORE_COUNT"))) {
+      cpuCoresInt <- get_os_stat("NUM_CPUS")
     }
+    else{
+      cpuCoresInt <- get_os_stat("!CPU_CORE_COUNT")/get_os_stat("INSTANCES")
+    }
+  }
   else 
-    {
-      cpuCoresInt <- get_os_stat("NUM_CPU_CORES")
-    }
+  {
+    cpuCoresInt <- get_os_stat("NUM_CPU_CORES")
+  }
   return(cpuCoresInt)
 }
 
@@ -367,7 +367,7 @@ main$db_id = vector()
 
 get_db_names <- function(){
   flog.debug("get_db_name - start")
-
+  
   fullNamePattern <- "^awr-hist-([0-9]+)-([a-zA-Z0-9_]+)-([0-9]+)-([0-9]+)(\\.|out|gz)+$"
   str_detect('awr-hist-3846920754-RAC81P-289-1209.out',namePattern)
   
@@ -420,7 +420,7 @@ get_db_name <- function(fileName){
 # *ATTRIBUTE FUNCTIONS* ===============================================================================================
 
 myTheme <- theme_stata(scheme = "s2color") +
-#myTheme <- theme_few() +
+  #myTheme <- theme_few() +
   #myTheme <- theme_bw() +
   
   theme(legend.position =    "bottom",
@@ -474,9 +474,9 @@ load_plot_attributes <- function(){
                }
       )
       
-        
-      }
-  
+      
+    }
+    
   }
   
   if(nrow(DF_ATTRIBUTES_INT) > 0){
@@ -528,15 +528,15 @@ apply_current_attributes <- function(){
     DF_TEMP <- get_attrs('snap_id_filter')
     print(head(DF_TEMP))
     #if(nchar(as.character(DF_TEMP[1,]$value1))>1 | nchar(as.character(DF_TEMP[1,]$value2))>1 ){
-      if(nchar(as.character(DF_TEMP[1,]$value1))>1){
-        flog.debug('found begin snap',name='apply_current_attributes')
-        attr$filter_snap_min <<- as.vector(DF_TEMP$value1) 
-      }
-      if(nchar(as.character(DF_TEMP[1,]$value2))>1){
-        flog.debug('found end snap',name='apply_current_attributes')
-        attr$filter_snap_max <<- as.vector(DF_TEMP$value2) 
-      }
-      #attr$filter_snap_max <- as.vector(DF_TEMP$value2)
+    if(nchar(as.character(DF_TEMP[1,]$value1))>1){
+      flog.debug('found begin snap',name='apply_current_attributes')
+      attr$filter_snap_min <<- as.vector(DF_TEMP$value1) 
+    }
+    if(nchar(as.character(DF_TEMP[1,]$value2))>1){
+      flog.debug('found end snap',name='apply_current_attributes')
+      attr$filter_snap_max <<- as.vector(DF_TEMP$value2) 
+    }
+    #attr$filter_snap_max <- as.vector(DF_TEMP$value2)
     #}
   }
   
@@ -716,7 +716,7 @@ getSection <- function(inFile,blockName,decSep='.',searchPatternIn=NULL,replaceP
     df_int_try <- getSectionInt(inFile,blockName,decSep,searchPatternIn,replacePatternIn)
   }
   else{
-  
+    
     tryCatch(df_int_try <- getSectionInt(inFile,blockName,decSep,searchPatternIn,replacePatternIn), 
              error = function(e) {
                #traceback()
@@ -859,12 +859,15 @@ build_data_frames <- function(fileName) {
   replacePattern <- "\n'\\1' '\\2' '\\3'"
   #DF_AAS_INT <- getSection(theFileTXT,'AVERAGE-ACTIVE-SESSIONS',computedDecSep,searchPattern,replacePattern)
   DF_AAS_INT <- getSection(theFileTXT,'AVERAGE-ACTIVE-SESSIONS',computedDecSep)
+  DF_AAS_INT <- data.table(DF_AAS_INT)
+  
   flog.trace("YEP2",name="build_data_frames")
   DF_AAS_INT$SNAP_ID <- as.numeric(DF_AAS_INT$SNAP_ID)
   DF_AAS_INT$AVG_SESS <- as.numeric(DF_AAS_INT$AVG_SESS)
   idx_aas_ltz_rm <- with(DF_AAS_INT,AVG_SESS >= 0)
   DF_AAS_INT<- DF_AAS_INT[idx_aas_ltz_rm,]
-  DF_AAS_INT <- data.table(DF_AAS_INT)
+  
+  setkey(DF_AAS_INT, "WAIT_CLASS","AVG_SESS","SNAP_ID") 
   flog.trace("DF_AAS_INT1",DF_AAS_INT,name="build_data_frames",capture=TRUE)
   
   
@@ -885,7 +888,7 @@ build_data_frames <- function(fileName) {
   DF_SQL_SUMMARY_INT_TMP <<- DF_SQL_SUMMARY_INT
   if(nrow(DF_SQL_SUMMARY_INT)>5){
     if(("MODULE" %in% names(DF_SQL_SUMMARY_INT))){
-    #if(data_frame_col_not_null(DF_SQL_SUMMARY_INT,"MODULE")){
+      #if(data_frame_col_not_null(DF_SQL_SUMMARY_INT,"MODULE")){
       DF_SQL_SUMMARY_INT$MODULE <- str_sub(DF_SQL_SUMMARY_INT$MODULE,1,10)
     }
     else{
@@ -1417,15 +1420,7 @@ plot_summary_boxplot_main <- function(){
 
 plot_aas_chart <- function(DF_AAS_INT){
   flog.debug('plot_aas_chart - start',name='plot_aas_chart')
-#   log_it('plot_aas_chart - start')
-
-#   
-#   log_it(min(main$DF_SNAP_ID_SUBSET$end))
-#   log_it(max(main$DF_SNAP_ID_SUBSET$end))
-  #browser()
-  #DF_AAS_INT <- DF_AAS
   
-  #print(unique(main$DF_AAS$WAIT_CLASS))
   
   DF_AAS_INT$WAIT_CLASS <- str_trim(DF_AAS_INT$WAIT_CLASS)
   DF_AAS_INT$WAIT_CLASS <- factor(DF_AAS_INT$WAIT_CLASS,c("Other","Cluster","Queueing","Network","Administrative","Configuration","Commit","Application","Concurrency","System I/O","User I/O","Scheduler","CPU"))
@@ -1436,12 +1431,7 @@ plot_aas_chart <- function(DF_AAS_INT){
   
   DF_AAS_INT <- merge(vals,DF_AAS_INT)
   rm(vals)
-  #print(is.na(DF_AAS_INT))
-  #print(head(DF_AAS_INT))
   
-  #DF_AAS_INT[is.na(DF_AAS_INT)] <- 0
-  #df[df$column_name,]
-  #DF_AAS_INT <- DF_AAS_INT[DF_AAS_INT$end,]
   DF_AAS_INT <- subset(DF_AAS_INT,end != TRUE)
   DF_AAS_INT <- subset(DF_AAS_INT,end != FALSE)
   DF_AAS_INT$AVG_SESS[is.na(DF_AAS_INT$AVG_SESS)] <- 0
@@ -1486,15 +1476,8 @@ plot_aas_chart <- function(DF_AAS_INT){
     scale_x_datetime(labels = date_format_tz("%a, %b %d %I %p", tz="UTC"),breaks = attr$date_break_major_var,
                      minor_breaks = attr$date_break_minor_var,
                      limits = c(min(DF_AAS_INT$end),max(DF_AAS_INT$end))
-                     )
-  #                                      scale_x_datetime(labels = date_format("%a, %b %d %I%p"),breaks = date_breaks("1 days"),
-  #                                                       minor_breaks = date_breaks("12 hour"),
-  #                                                       limits = c(min(DF_AAS_INT$end),max(DF_AAS_INT$end))
-  #                                                       )
-  #ylim(-(ymax*0.025),ymax)
+    )
   
-  
-  plot_aas_wait_class_gt <- ggplot_gtable(ggplot_build(plot_aas_wait_class))
   
   sess_quantile2 <- quantile(DF_AAS_INT$AVG_SESS,probs=c(0.95),type=4)
   
@@ -1538,20 +1521,12 @@ plot_aas_chart <- function(DF_AAS_INT){
   
   plot_aas_wait_class2_line <- plot_aas_wait_class2_line+cpu_cores_line
   
-  plot_aas_wait_class2_gt <- ggplot_gtable(ggplot_build(plot_aas_wait_class2))
-  plot_aas_wait_class2_gt$layout$clip[plot_aas_wait_class2_gt$layout$name=="panel"] <- "off"
-  #print(plot_aas_wait_class_gt)
-  #grid.draw(plot_aas_wait_class2_gt)
-  
-  
- 
-  
-  
   
   
   
   flog.debug('plot_aas_chart - end',name='plot_aas_chart')
-  return(list(plot_aas_wait_class_gt,plot_aas_wait_class2_gt,plot_aas_wait_class2_line))
+  #return(list(plot_aas_wait_class_gt,plot_aas_wait_class2_gt,plot_aas_wait_class2_line))
+  return(list(plot_aas_wait_class,plot_aas_wait_class2,plot_aas_wait_class2_line))
   
   
 }
@@ -1570,7 +1545,7 @@ plot_aas_bars_by_date <- function(DF_AAS_INT){
   
   DF_AAS_INT <- merge(vals,DF_AAS_INT)
   rm(vals)
-
+  
   DF_AAS_INT <- subset(DF_AAS_INT,end != TRUE)
   DF_AAS_INT <- subset(DF_AAS_INT,end != FALSE)
   DF_AAS_INT$AVG_SESS[is.na(DF_AAS_INT$AVG_SESS)] <- 0
@@ -1680,7 +1655,7 @@ plot_aas_percent <- function(DF_AAS_INT){
   #   
   #   
   if( nrow(main$DF_TOP_N_EVENTS)>10){
-  
+    
     DF_TOP_N_AGG1 <- main$DF_TOP_N_EVENTS %.%
       group_by(WAIT_CLASS,EVENT_NAME) %.%
       summarise(TOTAL_TIME_S = sum(as.numeric(TOTAL_TIME_S))) %.%
@@ -1749,7 +1724,7 @@ plot_io <- function(DF_MAIN_BY_SNAP_INT){
   x.melt <- melt(DF_MAIN_INT2, id.var = c("end"), measure.var = c("read_iops", "read_iops_max","write_iops", "write_iops_max",
                                                                   "read_mb_s","read_mb_s_max","write_mb_s","write_mb_s_max"
                                                                   #"read_iops_direct","read_iops_direct_max","write_iops_direct","write_iops_direct_max"
-                                                                  ))
+  ))
   # add a "stat" column so we can facet by stat for avg-max
   x.melt$stat <- "Avg"
   x.melt$alphaSet <- .9  
@@ -1794,7 +1769,7 @@ plot_io <- function(DF_MAIN_BY_SNAP_INT){
   plot_io_int <- function(df_in){
     
     
-   
+    
     max_vals <- ddply(df_in, .(variable,stat,format(end,"%y/%m/%d")), subset, subset = rank(-value) <= 1)
     max_vals$label <- formatC(max_vals$value, format="d", big.mark=",")
     
@@ -1817,27 +1792,27 @@ plot_io <- function(DF_MAIN_BY_SNAP_INT){
       labs(title=paste("IO Avg and Max by IO Type for ",main$current_db_name,sep=""))+
       main$gg_hour_bars+
       attr$vertical_line + attr$vertical_text +
-          
+      
       scale_x_datetime(labels = date_format_tz("%a, %b %d %I %p", tz="UTC"),breaks = attr$date_break_major_var,
                        minor_breaks = attr$date_break_minor_var,
                        limits = c(min(x.melt$end),max(x.melt$end))
-                       )+
+      )+
       scale_alpha(guide = 'none')+
       theme(legend.key.size = unit(.25, "cm"),
-          strip.text.y = element_text(size = 6)
-          )
+            strip.text.y = element_text(size = 6)
+      )
     return(plot_int)
   }
   
   p <- plot_io_int(subset(x.melt,variable %in% c("Read IOPs Direct *","Write IOPs Direct *","Read IOPs","Write IOPs","Read MB/s","Write MB/s") & stat == "Avg"))
   
-  p_gt <- ggplot_gtable(ggplot_build(p))
-  p_gt$layout$clip[p_gt$layout$name=="panel"] <- "off"
+  #p_gt <- ggplot_gtable(ggplot_build(p))
+  #p_gt$layout$clip[p_gt$layout$name=="panel"] <- "off"
   
-
+  
   
   flog.debug('plot_io - end',name='plot_io')
-  return(p_gt)
+  return(p)
   #return(list(p_gt,io_hist_area_plot))
   #}
 }
@@ -1903,11 +1878,11 @@ plot_io_histograms <- function(DF_IO_WAIT_HIST_INT){
   io_hist_area_plot <- ggplot()+
     #ggplot(DF_IO_WAIT_HIST_INT, aes(x = end,
     #                                                       fill = WAIT_TIME_MILLI))+
- #   geom_bar(stat = "identity", position = "stack",right=FALSE,drop=TRUE,
-#             aes(y = WAIT_COUNT)+
+    #   geom_bar(stat = "identity", position = "stack",right=FALSE,drop=TRUE,
+    #             aes(y = WAIT_COUNT)+
     main$gg_hour_bars+
     geom_bar(data=DF_IO_WAIT_HIST_INT,aes(x = end, y = WAIT_COUNT,
-                                            fill = WAIT_TIME_MILLI),stat = "identity", position = "stack",alpha=1,width=barWidth)+
+                                          fill = WAIT_TIME_MILLI),stat = "identity", position = "stack",alpha=1,width=barWidth)+
     facet_grid(EVENT_NAME ~ .,scales="free_y")+
     gg_io_hist_colors2+
     
@@ -1918,7 +1893,7 @@ plot_io_histograms <- function(DF_IO_WAIT_HIST_INT){
     scale_x_datetime(labels = date_format_tz("%a, %b %d %I %p", tz="UTC"),breaks = attr$date_break_major_var,
                      minor_breaks = attr$date_break_minor_var,
                      limits = c(min(DF_IO_WAIT_HIST_INT$end),max(DF_IO_WAIT_HIST_INT$end))
-                     )+
+    )+
     #scale_y_continuous(labels = comma)+
     ylab("Wait Count")+
     theme(axis.title.x=element_blank(),legend.position =    "none" )
@@ -1942,7 +1917,7 @@ plot_iostat_by_function <- function(DF_IOSTAT_FUNCTION_INT){
   #DF_IOSTAT_FUNCTION_INT$SM_W_REQS <- 2*DF_IOSTAT_FUNCTION_INT$SM_W_REQS
   #DF_IOSTAT_FUNCTION_INT$LG_W_REQS <- 2*DF_IOSTAT_FUNCTION_INT$LG_W_REQS
   iostat.melt <- melt(DF_IOSTAT_FUNCTION_INT,id.var = c("SNAP_ID","FUNCTION_NAME"),measure.var = c("SM_R_REQS","SM_W_REQS", "LG_R_REQS", "LG_W_REQS"))
- 
+  
   expanded_vals <- expand.grid(SNAP_ID = unique(iostat.melt$SNAP_ID),
                                FUNCTION_NAME = unique(iostat.melt$FUNCTION_NAME))
   
@@ -2018,13 +1993,13 @@ plot_iostat_by_function <- function(DF_IOSTAT_FUNCTION_INT){
     scale_x_datetime(labels = date_format_tz("%a, %b %d %I %p", tz="UTC"),breaks = attr$date_break_major_var,
                      minor_breaks = attr$date_break_minor_var,
                      limits = c(min(iostat2.melt$end),max(iostat2.melt$end))
-                     )+
+    )+
     facet_grid(variable ~ . ,scales="free_y")+
     theme(axis.title.x=element_blank(),axis.title.y=element_blank() )+
     labs(title=paste("IO Requests by Size by Function - ",main$current_db_name,sep=""))
   
   return(iostat_plot_int)
-
+  
 }
 
 
@@ -2106,10 +2081,10 @@ plot_cpu_no_sd <- function(DF_MAIN_INT){
   #main$gg_bottom_panel
   
   #p
-  p_gt <- ggplot_gtable(ggplot_build(p))
+  #p_gt <- ggplot_gtable(ggplot_build(p))
   flog.debug('plot_cpu - end',name='plot_cpu')
   #   p_gt$layout$clip[p_gt$layout$name=="panel"] <- "off"
-  return(p_gt)
+  return(p)
   #}
 }
 
@@ -2192,7 +2167,7 @@ plot_cpu_sd <- function(DF_MAIN_INT){
     scale_x_datetime(labels = date_format_tz("%a, %b %d %I %p", tz="UTC"),breaks = attr$date_break_major_var,
                      minor_breaks = attr$date_break_minor_var,
                      limits = c(min(x.melt$end),max(x.melt$end))
-                     )+
+    )+
     main$gg_avg_max_fill+main$gg_avg_max_color+
     geom_text(data=DF_ANNOTATE_INT,aes(x=x,y=y,label=labs),size=2,alpha=.4)
   #annotate("text", x = median(x.melt$end), y = 105, label = "Standard Deviation shown as vertical lines over points",size=2,alpha=.4)
@@ -2202,10 +2177,10 @@ plot_cpu_sd <- function(DF_MAIN_INT){
   #main$gg_bottom_panel
   
   #p
-  p_gt <- ggplot_gtable(ggplot_build(p))
+  #p_gt <- ggplot_gtable(ggplot_build(p))
   flog.debug('plot_cpu - end',name='plot_cpu')
   
-  return(p_gt)
+  return(p)
   #}
 }
 
@@ -2246,17 +2221,17 @@ plot_main_activity <- function(DF_MAIN_INT){
                         se_sess=sum(se_sess),
                         px_sess=sum(px_sess),
                         redo_mb_s=sum(redo_mb_s)
-#                         ,
-#                         se_sess=sum(se_sess),
-#                        px_sess=sum(px_sess)
-                        )
-
+                        #                         ,
+                        #                         se_sess=sum(se_sess),
+                        #                        px_sess=sum(px_sess)
+  )
+  
   
   x.melt <- melt(DF_MAIN_INT2, id.var = c("end"), measure.var = c("se_sess", "px_sess","sql_res_t_cs", "logons_s",
                                                                   "logons_total","exec_s","hard_p_s","commits_s","redo_mb_s"
                                                                   #,
                                                                   #"se_sess","px_sess"
-                                                                  ))
+  ))
   #"db_block_gets_s","db_block_changes_s"))
   
   x.melt$value <- round(x.melt$value,2)
@@ -2324,21 +2299,21 @@ plot_main_activity <- function(DF_MAIN_INT){
     gg_aas_max_max +
     attr$vertical_line + attr$vertical_text +
     theme(
-          strip.text.y = element_text(size = 6)
+      strip.text.y = element_text(size = 6)
     )+
     scale_x_datetime(labels = date_format_tz("%a, %b %d %I %p", tz="UTC"),
                      breaks = attr$date_break_major_var,
                      minor_breaks = attr$date_break_minor_var,
                      limits = c(min(x.melt$end),max(x.melt$end))
-                     )
+    )
   #scale_colour_tableau("colorblind10")+scale_fill_tableau("colorblind10")
   
   
-  p_gt <- ggplot_gtable(ggplot_build(p))
-  p_gt$layout$clip[p_gt$layout$name=="panel"] <- "off"
+  #p_gt <- ggplot_gtable(ggplot_build(p))
+  #p_gt$layout$clip[p_gt$layout$name=="panel"] <- "off"
   flog.debug('plot_main_activity - end',name='plot_main_activity')
   #grid.draw(p_gt)
-  return(p_gt)
+  return(p)
   
   
 }
@@ -2381,7 +2356,7 @@ plot_RAC_activity <- function(DF_MAIN_INT){
   x.melt[with(x.melt, grepl("gc_cu_get_cs", variable)),]$variable<-"GC Avg Current Get cs"
   x.melt[with(x.melt, grepl("gc_bk_corrupted", variable)),]$variable<-"GC Blocks Corrupted"
   x.melt[with(x.melt, grepl("gc_bk_lost", variable)),]$variable<-"GC Blocks Lost"
-
+  
   flog.debug(nrow(subset(x.melt,variable == 'GC Blocks Corrupted')),name='plot_RAC_activity')
   flog.debug(nrow(subset(x.melt,variable == 'GC Blocks Corrupted' & value==0)),name='plot_RAC_activity')
   flog.debug(nrow(subset(x.melt,variable == 'GC Blocks Corrupted' & value==NA)),name='plot_RAC_activity')
@@ -2445,15 +2420,15 @@ plot_RAC_activity <- function(DF_MAIN_INT){
     scale_x_datetime(labels = date_format_tz("%a, %b %d %I %p", tz="UTC"),breaks = attr$date_break_major_var,
                      minor_breaks = attr$date_break_minor_var,
                      limits = c(min(x.melt$end),max(x.melt$end))
-                     )
+    )
   #scale_colour_tableau("colorblind10")+scale_fill_tableau("colorblind10")
   
   
-  p_gt <- ggplot_gtable(ggplot_build(p))
-  p_gt$layout$clip[p_gt$layout$name=="panel"] <- "off"
+  #p_gt <- ggplot_gtable(ggplot_build(p))
+  #p_gt$layout$clip[p_gt$layout$name=="panel"] <- "off"
   flog.debug('plot_RAC_activity - end',name='plot_RAC_activity')
   #grid.draw(p_gt)
-  return(p_gt)
+  return(p)
   
   
 }
@@ -2501,8 +2476,8 @@ plot_memory <- function(DF_MEMORY_INT){
     scale_x_datetime(labels = date_format_tz("%a, %b %d %I %p", tz="UTC"),breaks = attr$date_break_major_var,
                      minor_breaks = attr$date_break_minor_var,
                      limits = c(min(DF_MEMORY_INT_SUM$end),max(DF_MEMORY_INT_SUM$end))
-                     )
-    
+    )
+  
   p
   flog.debug('plot_memory - end',name='plot_memory')
   return(p)
@@ -2566,13 +2541,13 @@ plot_memory_sga_advise <- function(df_in){
     xlab("SGA_TARGET (GB)")+
     ylab("Percent Change in Physical Reads (Negative is better) \nValues over 200% are set to 200%")+
     theme(panel.grid.major.x = element_line("#aaaaaa", size = .1,linetype = "dotted"),
-            strip.text.y = element_text(size = 7),
-            legend.key.size = unit(.25, "cm")
-          )
+          strip.text.y = element_text(size = 7),
+          legend.key.size = unit(.25, "cm")
+    )
   
   flog.debug('plot_memory_sga_advise - end',name='plot_memory_sga_advise')
- 
- return(p)
+  
+  return(p)
 }
 
 
@@ -2653,7 +2628,7 @@ plot_memory_pga_advise <- function(df_in){
 
 plot_db_parameters <- function(){
   flog.debug('plot_db_parameters - start')
-
+  
   
   dbParametersCombined <- cbind(main$DF_DB_PARAMETERS[c(seq(1,80)),],main$DF_DB_PARAMETERS[c(seq(81,160)),],main$DF_DB_PARAMETERS[c(seq(161,240)),])
   
@@ -2665,7 +2640,7 @@ plot_db_parameters <- function(){
 
 plot_sql_text <- function(){
   flog.debug('plot_sql_text - start')
-
+  
   main$DF_SQL_SUMMARY$ELAP <-  main$DF_SQL_SUMMARY$ELAP / 1000000 # convert microseconds to seconds
   main$DF_SQL_SUMMARY$AVG_DOP <- main$DF_SQL_SUMMARY$PX_SERVERS_EXECS / main$DF_SQL_SUMMARY$EXECS
   main$DF_SQL_SUMMARY$ELAP_PER_EXEC_S <- (main$DF_SQL_SUMMARY$ELAP / main$DF_SQL_SUMMARY$EXECS)
@@ -2760,7 +2735,7 @@ main$RAC_plot<-NULL
 
 
 main$mainFunction <- function(f){
-
+  
   get_db_name(f)
   
   #main$current_db_name=main$db_name[which(main$db_id==f)]
@@ -2847,7 +2822,7 @@ main$mainFunction <- function(f){
   main$DF_SNAP_ID_SUBSET <- generate_snap_id_labels(main$DF_SNAP_ID_DATE)
   
   
- # if(is.na(get_os_stat("NUM_CPU_CORES"))) main$num_cpu_cores <- get_os_stat("NUM_CPUS") else main$num_cpu_cores <- get_os_stat("NUM_CPU_CORES")
+  # if(is.na(get_os_stat("NUM_CPU_CORES"))) main$num_cpu_cores <- get_os_stat("NUM_CPUS") else main$num_cpu_cores <- get_os_stat("NUM_CPU_CORES")
   
   # CPU_CORES Fixup should go here
   main$node_cpu_cores  <- getCPUcores()
@@ -2885,23 +2860,23 @@ main$mainFunction <- function(f){
   tblText3 <- tableGrob(DF_HOSTS_INT,show.rownames = FALSE, gpar.coretext = gpar(fontsize=8),gpar.coltext = gpar(fontsize=8),padding.v = unit(1, "mm"),padding.h = unit(2, "mm"),show.colnames = FALSE,col.just = "left")
   flog.trace(str(tblText3),name='mainFunction')
   
- #if(okToPrintPlot('aas1') | okToPrintPlot('page1')){
- if(okToPrintPlot('aas1')){
+  #if(okToPrintPlot('aas1') | okToPrintPlot('page1')){
+  if(okToPrintPlot('aas1')){
     c(aas_pct1, aas_pct2) := plot_aas_percent(main$DF_AAS)
-  
+    
     c(aas_plot, aas_plot2_gt,aas_plot2_line) := plot_aas_chart(main$DF_AAS)
- }
+  }
   
- 
- plotPDF <- TRUE
- 
- if(exists("plotOverride")){
-   if(!is.null(plotOverride) & is.element('NONE', plotOverride)){
-     flog.debug("PDF Output is Disabled")
-     plotPDF <- FALSE
-   }
- }
- 
+  
+  plotPDF <- TRUE
+  
+  if(exists("plotOverride")){
+    if(!is.null(plotOverride) & is.element('NONE', plotOverride)){
+      flog.debug("PDF Output is Disabled")
+      plotPDF <- FALSE
+    }
+  }
+  
   if(plotPDF){
     flog.debug("PDF Output is Enabled")
     pdf(paste(outFileName,"-plot.pdf",sep=""), width = 11, height = 8.5,useDingbats=FALSE)
@@ -2950,20 +2925,22 @@ main$mainFunction <- function(f){
   
   #flog.remove(main$current_db_name)
   if(okToPrintPlot('aas1')){ 
-    grid.newpage()
-    grid.draw(aas_plot)
+    
+    #grid.newpage()
+    #grid.draw(aas_plot)
+    print(aas_plot)
   }
   
   cpu_plot <- NULL
   cpu_plot <- plot_cpu(main$DF_MAIN)
- 
- 
- #tyler remove
- #cpu_plot_tmp <<- cpu_plot
- #!!!!!!!!!!!!!!!!!!!!!!!
- 
- 
- 
+  
+  
+  #tyler remove
+  #cpu_plot_tmp <<- cpu_plot
+  #!!!!!!!!!!!!!!!!!!!!!!!
+  
+  
+  
   io_plot <- plot_io(main$DF_MAIN_BY_SNAP)
   
   iostat_by_function_plot <- NULL
@@ -2975,9 +2952,9 @@ main$mainFunction <- function(f){
   main_activity_plot <- plot_main_activity(main$DF_MAIN)
   
   memory_plot <- plot_memory(main$DF_MEMORY)
- 
+  
   memory_sga_advise_plot <- NULL
- 
+  
   if( nrow(main$DF_MEMORY_SGA_ADVICE)>10){
     
     tryCatch(memory_sga_advise_plot <- plot_memory_sga_advise(main$DF_MEMORY_SGA_ADVICE), 
@@ -2988,9 +2965,9 @@ main$mainFunction <- function(f){
              #,finally=print("finished")
     )
   }
- 
+  
   memory_pga_advise_plot <- NULL
- 
+  
   if( nrow(main$DF_MEMORY_PGA_ADVICE)>10){
     
     tryCatch(memory_pga_advise_plot <- plot_memory_pga_advise(main$DF_MEMORY_PGA_ADVICE), 
@@ -3025,39 +3002,42 @@ main$mainFunction <- function(f){
   if( nrow(main$DF_IO_WAIT_HIST)>10){
     c(io_hist_plot, io_hist_area_plot) := plot_io_histograms(main$DF_IO_WAIT_HIST)
   }
- # main$RAC_plot <<-RAC_activity_plot
+  # main$RAC_plot <<-RAC_activity_plot
   if(okToPrintPlot('cpu')){ 
-    grid.newpage()
-    grid.draw(cpu_plot)
-  }
- 
-  if(okToPrintPlot('cpu')){ 
-    grid.newpage()
-    grid.draw(io_plot)
+    #grid.newpage()
+    #grid.draw(cpu_plot)
+    print(cpu_plot)
   }
   
- if(okToPrintPlot('iostat_function')){ 
+  if(okToPrintPlot('io')){ 
+    #grid.newpage()
+    #grid.draw(io_plot)
+    print(io_plot)
+    
+  }
+  
+  if(okToPrintPlot('iostat_function')){ 
     if( nrow(main$DF_IOSTAT_FUNCTION)>10){
       print(iostat_by_function_plot)
     }
- }
+  }
   
- 
- 
- if(okToPrintPlot('io_histogram')){ 
+  
+  
+  if(okToPrintPlot('io_histogram')){ 
     if( nrow(main$DF_IO_WAIT_HIST)>10){
-        x <- grid.arrange(io_hist_plot,io_hist_area_plot , ncol = 1, heights=c(1,4))
+      x <- grid.arrange(io_hist_plot,io_hist_area_plot , ncol = 1, heights=c(1,4))
     }
- }
+  }
   #head(main$DF_IO_WAIT_HIST)
- 
- 
- if(okToPrintPlot('aas_facet')){ 
+  
+  
+  if(okToPrintPlot('aas_facet')){ 
     #grid.newpage()
     #grid.arrange(aas_plot2_gt ,aas_bars_by_date_plot, ncol = 1, heights=c(1,1))
     #grid.draw(aas_plot2_gt)
-   print(aas_bars_by_date_plot)
- }
+    print(aas_bars_by_date_plot)
+  }
   
   #grid.newpage()
   if(okToPrintPlot('aas_by_day')){ 
@@ -3066,58 +3046,58 @@ main$mainFunction <- function(f){
   
   if(okToPrintPlot('main_activity')){
     flog.debug('print_main_activity - start',name='print')
-    grid.newpage()
-    grid.draw(main_activity_plot)
+    #grid.newpage()
+    #grid.draw(main_activity_plot)
+    print(main_activity_plot)
     flog.debug('print_main_activity - stop',name='print')
   }
   
   
   #if(!is.null(RAC_activity_plot)){
- if(okToPrintPlot('rac')){ 
-    if(inherits(RAC_activity_plot,what='grob')){
-      #if(("gc_cr_rec_s" %in% names(main$DF_MAIN))){
-      if(data_frame_col_not_null(main$DF_MAIN,"gc_cr_rec_s")){
+  if(okToPrintPlot('rac')){ 
+    #if(("gc_cr_rec_s" %in% names(main$DF_MAIN))){
+    if(data_frame_col_not_null(main$DF_MAIN,"gc_cr_rec_s")){
+      
+      #grid.newpage() 
+      tryCatch(
+        #grid.draw(RAC_activity_plot), 
+        print(RAC_activity_plot), 
+        error = function(e) {
+          traceback()
+          print(paste0("Error in ",main$current_db_name,": ",e))
+          #browser()
+        }
+        #,finally=print("finished")
+      )
+      
+    }
+  }
+  
+  if(okToPrintPlot('memory_plot')){
+    flog.debug('print_memory_plot - start',name='print')
+    print(memory_plot)
+    flog.debug('print_memory_plot - stop',name='print')
+  }
+  
+  memory_sga_advise_plot_tmp <<- memory_sga_advise_plot
+  
+  if(okToPrintPlot('memory_plot_sga_advise') && okToPrintPlot('memory_plot_pga_advise')){ 
+    if( nrow(main$DF_MEMORY_SGA_ADVICE)>10 && nrow(main$DF_MEMORY_PGA_ADVICE)>10){
+      #print(memory_sga_advise_plot)
+      if(inherits(memory_sga_advise_plot,what='ggplot') && inherits(memory_pga_advise_plot,what='ggplot')){
+        flog.debug('print_memory_advice_plot - start',name='print')
         
-        grid.newpage()
-        tryCatch(
-          grid.draw(RAC_activity_plot), 
-          error = function(e) {
-            traceback()
-            print(paste0("Error in ",main$current_db_name,": ",e))
-            #browser()
-          }
-          #,finally=print("finished")
-        )
+        x <- grid.arrange(memory_sga_advise_plot ,memory_pga_advise_plot, ncol = 2, widths=c(1,1))
         
+        flog.debug('print_memory_advice_plot - stop',name='print')
       }
     }
- }
- 
- if(okToPrintPlot('memory_plot')){
-   flog.debug('print_memory_plot - start',name='print')
-  print(memory_plot)
-  flog.debug('print_memory_plot - stop',name='print')
- }
- 
- memory_sga_advise_plot_tmp <<- memory_sga_advise_plot
- 
- if(okToPrintPlot('memory_plot_sga_advise') && okToPrintPlot('memory_plot_pga_advise')){ 
-  if( nrow(main$DF_MEMORY_SGA_ADVICE)>10 && nrow(main$DF_MEMORY_PGA_ADVICE)>10){
-     #print(memory_sga_advise_plot)
-    if(inherits(memory_sga_advise_plot,what='ggplot') && inherits(memory_pga_advise_plot,what='ggplot')){
-      flog.debug('print_memory_advice_plot - start',name='print')
-      
-      x <- grid.arrange(memory_sga_advise_plot ,memory_pga_advise_plot, ncol = 2, widths=c(1,1))
-      
-      flog.debug('print_memory_advice_plot - stop',name='print')
-    }
-   }
- }
- 
- if(okToPrintPlot('db_parameters')){
+  }
+  
+  if(okToPrintPlot('db_parameters')){
     plot_db_parameters()
- }
- 
+  }
+  
   if(okToPrintPlot('sql_text')){
     if(nrow(main$DF_SQL_SUMMARY)> 5){
       plot_sql_text()
@@ -3129,10 +3109,10 @@ main$mainFunction <- function(f){
   }
   
   main$plot_attributes <- rbind(main$plot_attributes,main$current_plot_attributes)
- 
- 
- 
- 
+  
+  
+  
+  
   if(debugMode){
     if(exists("debugMoveFiles")){
       if(debugMoveFiles){
@@ -3149,7 +3129,7 @@ main$mainFunction <- function(f){
     }
     
   }
- 
+  
   flog.debug(paste0('Database - ',main$current_db_name," - end"))
   flog.info(paste0('Finished DB: ',main$current_db_name))
   flog.info(paste0('Finished DB: ',main$current_db_name," - ",main$current_dbid),name='status')
@@ -3199,12 +3179,12 @@ main$mainLoop <- function(){
   
   if(debugMode){
     awrM$debug.unitTimes[awrM$debug.unitTimes == ""] <<- NA
-  
+    
     
     awrM$debug.unitTimesWide <<- reshape(subset(na.omit(awrM$debug.unitTimes),length(awrM$debug.unitTimes$opp)>2), 
-                 timevar = "opp",
-                 idvar = c("db", "level", "message"),
-                 direction = "wide")
+                                         timevar = "opp",
+                                         idvar = c("db", "level", "message"),
+                                         direction = "wide")
     
     awrM$debug.unitTimesWide$time.start <- as.POSIXct(awrM$debug.unitTimesWide$time.start, format = "%Y-%m-%d %H:%M:%S",tz="UTC")
     awrM$debug.unitTimesWide$time.end <- as.POSIXct(awrM$debug.unitTimesWide$time.end, format = "%Y-%m-%d %H:%M:%S",tz="UTC")
@@ -3213,7 +3193,7 @@ main$mainLoop <- function(){
     save(awrM,file="awrM.Rda")
     
     
-  
+    
   }
   
 }
