@@ -41,7 +41,7 @@ if(interactive()){
 
 MAX_DAYS <- 30
 
-outFileSuffix <- '2'
+outFileSuffix <- '1'
 
 
 #====================================================================================================================
@@ -56,6 +56,7 @@ if(file.exists('settings.R')){
   source('settings.R')
 }
 
+fullNamePattern <- "^awr-hist-([0-9]+)-([a-zA-Z0-9_]+)-([0-9]+)-([0-9]+)(\\.|out|gz)+$"
 
 #debugModeOverride <- TRUE  | rm(debugModeOverride)
 if(exists("debugModeOverride")){
@@ -597,6 +598,140 @@ date_format_tz <- function(format = "%a, %b %d %I %p", tz = "UTC") {
 
 
 # *DATA LOADING AND MANIPULATION FUNCTIONS* =========================================================================
+
+
+save_parsed_data <- function(){
+  
+  main.save <- new.env()
+  
+  for (objName in ls(main)) {
+    tmp <- get(objName,envir=main)
+    if(inherits(tmp,what='data.frame')){
+      if(!(objName %in% c('overall_summary_df','capture_times','current_plot_attributes','plot_attributes'))){        
+        print(objName)
+        main.save[[objName]] <- tmp
+      }
+    }
+    rm(tmp)
+  }
+  
+  main.save$parseOverride <- parseOverride
+  
+  snap_id_min <- as.numeric(min(main.save$DF_MAIN$snap))
+  snap_id_max <- as.numeric(max(main.save$DF_MAIN$snap))
+  
+  out_file_name <- paste0(main$current_db_name,"-",main$current_dbid,"-",snap_id_min,"-",snap_id_max)
+  save(main.save,file=paste0(out_file_name,"-parsed.Rda"))
+  #head(main.save$DF_AAS)
+  #ls(main.save)
+  
+}
+
+
+
+parsed_data_exists <- function(fileNameIn){
+  
+  if(!(str_detect(fileNameIn,fullNamePattern))){
+    return(FALSE)
+  }
+  else{
+    namePattern <- "awr-hist-([0-9]+)-([a-zA-Z0-9_]+)-([0-9]+)-([0-9]+).*"
+    fileDBID <- gsub(pattern = namePattern, replacement="\\1", fileNameIn)
+    fileDBName <- gsub(pattern = namePattern, replacement="\\2", fileNameIn)
+    fileSnapMin <- as.numeric(gsub(pattern = namePattern, replacement="\\3", fileNameIn))+1
+    fileSnapMax <- gsub(pattern = namePattern, replacement="\\4", fileNameIn)
+    
+    #     print(fileDBID)
+    #     print(fileDBName)
+    #     print(fileSnapMin)
+    #     print(fileSnapMax)
+    
+    # DHLS-1376736500-100-412-parsed.Rda
+    parsedFileName <- paste0(fileDBName,"-",fileDBID,"-",fileSnapMin,"-",fileSnapMax,"-parsed.Rda")
+    #print(parsedFileName)
+    if (file.exists(parsedFileName)){
+      return(parsedFileName)
+    }
+    else{
+      return(FALSE)
+    }
+  }
+}
+
+load_parsed_data <- function(fileNameIn){
+  load(fileNameIn)
+  for (objName in ls(main.save)) {
+    tmp <- get(objName,envir=main.save)
+    if(inherits(tmp,what='data.frame')){
+      if(!(objName %in% c('overall_summary_df','capture_times','current_plot_attributes','plot_attributes'))){        
+        print(objName)
+        print(nrow(tmp))
+        main[[objName]] <<- tmp
+      }
+    }
+    rm(tmp)
+  }
+}
+
+
+filter_parsed_data <- function(snapIdMinIn,snapIdMaxIn){
+  for (objName in ls(main)) {
+    tmp <- get(objName,envir=main)
+    if(inherits(tmp,what='data.frame')){
+      #if(!(objName %in% c('overall_summary_df','capture_times','current_plot_attributes','plot_attributes'))){        
+      if((objName %in% c('DF_MAIN','DF_AAS'))){        
+        print(objName)
+        print(nrow(tmp))
+        if(data_frame_col_not_null(tmp,'SNAP_ID')){
+          print('SNAP_ID')
+          tmp <- tmp[SNAP_ID >= snapIdMinIn & SNAP_ID <= snapIdMaxIn]
+        } else if(data_frame_col_not_null(tmp,'snap')){
+          print('snap')
+          tmp <- tmp[snap >= snapIdMinIn & snap <= snapIdMaxIn]
+        }
+        
+        print(nrow(tmp))
+        
+        main[[objName]] <<- tmp
+      }
+    }
+    rm(tmp)
+  }
+}
+
+
+date_to_snap_id <- function(dateIn,lowHigh = 'low'){
+  dateInPOSIXct <- NULL
+  
+  # try YMD first
+  dateInPOSIXct <- try(ymd(paste0(dateIn," UTC"),quiet=TRUE),silent=TRUE)
+  
+  if((is.na(dateInPOSIXct)) | (!(inherits(dateInPOSIXct,what='POSIXct')))){
+    # if it wasn't YMD, try YMD_HMS 
+    dateInPOSIXct <- try(ymd_hms(paste0(dateIn," UTC"),quiet=TRUE),silent=TRUE)
+    print("ymd_hms")
+  }
+  
+  if((is.na(dateInPOSIXct)) | (!(inherits(dateInPOSIXct,what='POSIXct')))){
+    return(FALSE)
+  }
+  
+  if(lowHigh == 'low'){
+    dateInPOSIXct <- floor_date(dateInPOSIXct,"hour")
+    snapReturn <- as.numeric(head(subset(main$DF_SNAP_ID_DATE,end >= dateInPOSIXct),n=1)$SNAP_ID)
+    return(snapReturn)
+    
+  }
+  else{
+    dateInPOSIXct <- ceiling_date(dateInPOSIXct,"hour")
+    snapReturn <- as.numeric(tail(subset(main$DF_SNAP_ID_DATE,end <= dateInPOSIXct),n=1)$SNAP_ID)
+    return(snapReturn)
+  }
+}
+
+
+
+
 
 
 getSectionInt <- function(inFile,blockName,decSep='.',searchPatternIn=NULL,replacePatternIn=NULL){
@@ -2491,7 +2626,7 @@ plot_memory_sga_advise <- function(df_in){
   DF_MEMORY_SGA_ADVICE_TMP <- df_in 
   
   if(is.na(sum(main$DF_MEMORY_SGA_ADVICE$ESTD_PHYSICAL_READS))){
-    return(NULL)
+  #  return(NULL)
   }
   
   DF_MEMORY_SGA_ADVICE_TMP <- subset(DF_MEMORY_SGA_ADVICE_TMP,ESTD_PHYSICAL_READS > 0)
@@ -2773,14 +2908,28 @@ main$mainFunction <- function(f){
   attr$filter_snap_min <<- as.numeric(attr$filter_snap_min)
   attr$filter_snap_max <<- as.numeric(attr$filter_snap_max)
   
-  c(main$DF_OS, main$DF_MAIN,
-    main$DF_MEMORY,main$DF_MEMORY_SGA_ADVICE,main$DF_MEMORY_PGA_ADVICE,
-    main$DF_SPACE,main$DF_AAS,main$DF_SQL_SUMMARY,main$DF_SQL_BY_SNAPID,
-    main$DF_SNAP_ID_DATE,
-    main$DF_IO_WAIT_HIST,main$DF_IOSTAT_FUNCTION,
-    main$DF_DB_PARAMETERS,main$DF_IO_BY_OBJECT_TYPE,
-    #main$DF_TOP_N_EVENTS) := build_data_frames(f,main$current_db_name)
-    main$DF_TOP_N_EVENTS) := build_data_frames(f)
+  parsedFile <- NULL
+  parsedFile <- parsed_data_exists(f)
+  
+  if(parsedFile==FALSE){
+    c(main$DF_OS, main$DF_MAIN,
+      main$DF_MEMORY,main$DF_MEMORY_SGA_ADVICE,main$DF_MEMORY_PGA_ADVICE,
+      main$DF_SPACE,main$DF_AAS,main$DF_SQL_SUMMARY,main$DF_SQL_BY_SNAPID,
+      main$DF_SNAP_ID_DATE,
+      main$DF_IO_WAIT_HIST,main$DF_IOSTAT_FUNCTION,
+      main$DF_DB_PARAMETERS,main$DF_IO_BY_OBJECT_TYPE,
+      #main$DF_TOP_N_EVENTS) := build_data_frames(f,main$current_db_name)
+      main$DF_TOP_N_EVENTS) := build_data_frames(f)
+      save_parsed_data()
+      # filter_parsed_data(200,300)
+  }
+  else{
+      load_parsed_data(parsedFile)
+      # filter_parsed_data(200,300)
+  }
+  
+  
+
   
   
   # call write to .Rda
@@ -3079,7 +3228,7 @@ main$mainFunction <- function(f){
     flog.debug('print_memory_plot - stop',name='print')
   }
   
-  memory_sga_advise_plot_tmp <<- memory_sga_advise_plot
+  #memory_sga_advise_plot_tmp <<- memory_sga_advise_plot
   
   if(okToPrintPlot('memory_plot_sga_advise') && okToPrintPlot('memory_plot_pga_advise')){ 
     if( nrow(main$DF_MEMORY_SGA_ADVICE)>10 && nrow(main$DF_MEMORY_PGA_ADVICE)>10){
