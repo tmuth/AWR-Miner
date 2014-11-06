@@ -49,7 +49,7 @@ options(scipen=999) # disable scientific notation
 debugMode <- FALSE
 flog.threshold(INFO) #TRACE, DEBUG, INFO, WARN, ERROR, FATAL
 #flog.threshold(ERROR,name='getSection') #TRACE, DEBUG, INFO, WARN, ERROR, FATAL 
-#flog.threshold(ERROR,name='build_data_frames') #TRACE, DEBUG, INFO, WARN, ERROR, FATAL 
+flog.threshold(DEBUG,name='print') #TRACE, DEBUG, INFO, WARN, ERROR, FATAL 
 #name: build_data_frames, mainFunction,set_date_break_vars,plot_RAC_activity
 
 if(file.exists('settings.R')){
@@ -601,7 +601,7 @@ date_format_tz <- function(format = "%a, %b %d %I %p", tz = "UTC") {
 
 
 save_parsed_data <- function(){
-  
+  flog.debug('save_parsed_data - start',name='save_parsed_data')
   main.save <- new.env()
   
   for (objName in ls(main)) {
@@ -624,21 +624,23 @@ save_parsed_data <- function(){
   save(main.save,file=paste0(out_file_name,"-parsed.Rda"))
   #head(main.save$DF_AAS)
   #ls(main.save)
-  
+  flog.debug('save_parsed_data - end',name='save_parsed_data')
 }
 
 
 
 parsed_data_exists <- function(fileNameIn){
-  
+  flog.debug('parsed_data_exists - start',name='parsed_data_exists')
   if(!(str_detect(fileNameIn,fullNamePattern))){
+    flog.debug("File name does not conform to standard")
     return(FALSE)
   }
   else{
     namePattern <- "awr-hist-([0-9]+)-([a-zA-Z0-9_]+)-([0-9]+)-([0-9]+).*"
     fileDBID <- gsub(pattern = namePattern, replacement="\\1", fileNameIn)
     fileDBName <- gsub(pattern = namePattern, replacement="\\2", fileNameIn)
-    fileSnapMin <- as.numeric(gsub(pattern = namePattern, replacement="\\3", fileNameIn))+1
+    fileSnapMin <- as.numeric(gsub(pattern = namePattern, replacement="\\3", fileNameIn))
+    fileSnapMin.1 <- as.numeric(gsub(pattern = namePattern, replacement="\\3", fileNameIn))+1
     fileSnapMax <- gsub(pattern = namePattern, replacement="\\4", fileNameIn)
     
     #     print(fileDBID)
@@ -648,17 +650,28 @@ parsed_data_exists <- function(fileNameIn){
     
     # DHLS-1376736500-100-412-parsed.Rda
     parsedFileName <- paste0(fileDBName,"-",fileDBID,"-",fileSnapMin,"-",fileSnapMax,"-parsed.Rda")
+    parsedFileName.1 <- paste0(fileDBName,"-",fileDBID,"-",fileSnapMin.1 ,"-",fileSnapMax,"-parsed.Rda")
     #print(parsedFileName)
+    flog.debug(paste0("Looking for parsed file: ",parsedFileName),name='parsed_data_exists')
+    flog.debug('parsed_data_exists - end',name='parsed_data_exists')
     if (file.exists(parsedFileName)){
+      flog.info(paste0("Found parsed data file ",parsedFileName),name='status')
+      return(parsedFileName)
+      
+    }
+    else if (file.exists(parsedFileName.1)){
+      flog.info(paste0("Found parsed data file ",parsedFileName),name='status')
       return(parsedFileName)
     }
     else{
+      flog.debug("No parsed data found")
       return(FALSE)
     }
   }
 }
 
 load_parsed_data <- function(fileNameIn){
+  flog.debug('load_parsed_data - start',name='load_parsed_data')
   load(fileNameIn)
   for (objName in ls(main.save)) {
     tmp <- get(objName,envir=main.save)
@@ -671,10 +684,13 @@ load_parsed_data <- function(fileNameIn){
     }
     rm(tmp)
   }
+  flog.debug('load_parsed_data - end',name='load_parsed_data')
+  return(TRUE)
 }
 
 
 filter_parsed_data <- function(snapIdMinIn,snapIdMaxIn){
+  flog.debug('filter_parsed_data - start',name='filter_parsed_data')
   for (objName in ls(main)) {
     tmp <- get(objName,envir=main)
     if(inherits(tmp,what='data.frame')){
@@ -697,6 +713,7 @@ filter_parsed_data <- function(snapIdMinIn,snapIdMaxIn){
     }
     rm(tmp)
   }
+  flog.debug('filter_parsed_data - end',name='filter_parsed_data')
 }
 
 
@@ -1525,7 +1542,7 @@ plot_summary_boxplot_main <- function(){
     geom_violin(aes(),fill="#4DAF4A",colour="#000000",size=0.05,alpha=0.6,adjust=0.5) +
     geom_boxplot(aes(),colour="#000000",alpha=.6,show_guide=FALSE,notch = FALSE,outlier.colour = "orange", outlier.size = 1,outlier.alpha=.4,outlier.shape=5)+
     attr$themeScaleColour+attr$themeScaleFill+
-    geom_jitter(alpha=.2,size=1,position = position_jitter(width = .2,height=0),aes(colour="gray"))+
+    #geom_jitter(alpha=.2,size=1,position = position_jitter(width = .2,height=0),aes(colour="gray"))+
     geom_text(data=median_vals,aes(y=value,label=round(value,1)),alpha=0.8,size=2,vjust=-0.8,hjust=0)+
     geom_text(data=summary_vals,aes(y=value,label=round(value,1)),alpha=0.8,size=2,vjust=-0.8,hjust=0,colour="#666666")+
     geom_text(data=mean_vals,aes(y=value,label=round(value,1)),alpha=0.8,size=2,vjust=-0.8,hjust=1.2,colour="#D62728")+
@@ -1791,11 +1808,11 @@ plot_aas_percent <- function(DF_AAS_INT){
   #   
   if( nrow(main$DF_TOP_N_EVENTS)>10){
     
-    DF_TOP_N_AGG1 <- main$DF_TOP_N_EVENTS %.%
-      group_by(WAIT_CLASS,EVENT_NAME) %.%
-      summarise(TOTAL_TIME_S = sum(as.numeric(TOTAL_TIME_S))) %.%
-      arrange(desc(TOTAL_TIME_S)) %.%
-      head(25) %.%
+    DF_TOP_N_AGG1 <- main$DF_TOP_N_EVENTS %>%
+      group_by(WAIT_CLASS,EVENT_NAME) %>%
+      summarise(TOTAL_TIME_S = sum(as.numeric(TOTAL_TIME_S))) %>%
+      arrange(desc(TOTAL_TIME_S)) %>%
+      head(25) %>%
       arrange(WAIT_CLASS)
     
     
@@ -2945,7 +2962,9 @@ main$mainFunction <- function(f){
   if(debugMode){
     debugVars$main <- main
     save(debugVars,file=paste(outFileName,"-debugVars.Rda",sep=""))
-    sjt.df(main$DF_SNAP_ID_DATE,file=paste0(outFileName,"-snapshots.html"),describe=FALSE,alternateRowColors=TRUE)
+    if(okToPrintPlot('snapshots_html')){
+      sjt.df(main$DF_SNAP_ID_DATE,file=paste0(outFileName,"-snapshots.html"),describe=FALSE,alternateRowColors=TRUE)
+    }
     
     if(exists("dumpCSV")){
       if(!is.null(dumpCSV)){
@@ -2997,20 +3016,17 @@ main$mainFunction <- function(f){
   c(main$DF_SUMMARY_OS,main$DF_SUMMARY_MAIN,main$DF_SUMMARY_OVERALL) := gen_summary_data()
   main$DF_SUMMARY_OVERALL$outFileName <- paste0(outFileName,"-plot.pdf")
   main$overall_summary_df <- rbind(main$overall_summary_df, main$DF_SUMMARY_OVERALL)
-  box_plots <- plot_summary_boxplot_main()
-  tblText <- tableGrob(main$DF_SUMMARY_OS,show.rownames = FALSE, gpar.coretext = gpar(fontsize=12),gpar.coltext = gpar(fontsize=8),padding.v = unit(1, "mm"),padding.h = unit(2, "mm"),show.colnames = TRUE,col.just = "left")
-  tblText2 <- tableGrob(main$DF_SUMMARY_MAIN,show.rownames = FALSE, gpar.coretext = gpar(fontsize=10),gpar.coltext = gpar(fontsize=8),padding.v = unit(1, "mm"),padding.h = unit(2, "mm"),show.colnames = TRUE,col.just = "left")
   
   flog.trace(nrow(subset(main$DF_OS,STAT_NAME == 'HOSTS')),name='mainFunction')
   DF_HOSTS_INT <- subset(main$DF_OS,STAT_NAME == 'HOSTS')
   if(nrow(DF_HOSTS_INT)==0){
     DF_HOSTS_INT <- data.frame(col1='HOSTS',col2='NA')
   }
-  tblText3 <- tableGrob(DF_HOSTS_INT,show.rownames = FALSE, gpar.coretext = gpar(fontsize=8),gpar.coltext = gpar(fontsize=8),padding.v = unit(1, "mm"),padding.h = unit(2, "mm"),show.colnames = FALSE,col.just = "left")
+  
   flog.trace(str(tblText3),name='mainFunction')
   
-  #if(okToPrintPlot('aas1') | okToPrintPlot('page1')){
-  if(okToPrintPlot('aas1')){
+  if(okToPrintPlot('aas1') | okToPrintPlot('page1')){
+  #if(okToPrintPlot('aas1')){
     c(aas_pct1, aas_pct2) := plot_aas_percent(main$DF_AAS)
     
     c(aas_plot, aas_plot2_gt,aas_plot2_line) := plot_aas_chart(main$DF_AAS)
@@ -3019,17 +3035,33 @@ main$mainFunction <- function(f){
   
   plotPDF <- TRUE
   
+  pdfFileSuffix <- NULL
+  
   if(exists("plotOverride")){
     if(!is.null(plotOverride) & is.element('NONE', plotOverride)){
       flog.debug("PDF Output is Disabled")
       plotPDF <- FALSE
     }
+    else{
+      pdfFileSuffix <- "-partial"
+    }
+      
   }
   
   if(plotPDF){
     flog.debug("PDF Output is Enabled")
-    pdf(paste(outFileName,"-plot.pdf",sep=""), width = 11, height = 8.5,useDingbats=FALSE)
+    pdf(paste(outFileName,pdfFileSuffix,"-plot.pdf",sep=""), width = 11, height = 8.5,useDingbats=FALSE)
   }
+  
+  
+  if(okToPrintPlot('page1')){ 
+    box_plots <- plot_summary_boxplot_main()
+    tblText <- tableGrob(main$DF_SUMMARY_OS,show.rownames = FALSE, gpar.coretext = gpar(fontsize=12),gpar.coltext = gpar(fontsize=8),padding.v = unit(1, "mm"),padding.h = unit(2, "mm"),show.colnames = TRUE,col.just = "left")
+    tblText2 <- tableGrob(main$DF_SUMMARY_MAIN,show.rownames = FALSE, gpar.coretext = gpar(fontsize=10),gpar.coltext = gpar(fontsize=8),padding.v = unit(1, "mm"),padding.h = unit(2, "mm"),show.colnames = TRUE,col.just = "left")
+    
+    tblText3 <- tableGrob(DF_HOSTS_INT,show.rownames = FALSE, gpar.coretext = gpar(fontsize=8),gpar.coltext = gpar(fontsize=8),padding.v = unit(1, "mm"),padding.h = unit(2, "mm"),show.colnames = FALSE,col.just = "left")
+  }
+    
   
   #x <- grid.arrange(box_plots, ncol = 1, heights=c(1))
   #x <- grid.arrange(tblText ,box_plots, ncol = 1, heights=c(1,1))
@@ -3037,28 +3069,31 @@ main$mainFunction <- function(f){
   #x <- grid.arrange(tblText,tblText2,tblText3, aas_plot2_line,box_plots, ncol = 1, heights=c(1,1,1,8,8))
   if(debugMode){
     if(plotPDF){
-      debugVars$tblText <- tblText
-      debugVars$tblText2 <- tblText2
-      debugVars$tblText3 <- tblText3
+      #debugVars$tblText <- tblText
+      #debugVars$tblText2 <- tblText2
+      #debugVars$tblText3 <- tblText3
       #debugVars$aas_plot2_line <- aas_plot2_line
-      debugVars$box_plots <- box_plots
+      #debugVars$box_plots <- box_plots
     }
     
     
     save(debugVars,file=paste(outFileName,"-debugVars.Rda",sep=""))
     if(okToPrintPlot('page1')){ 
+      flog.debug('print_page1 - start')
       if(exists("aas_pct1")){
         x <- grid.arrange(tblText,tblText2,tblText3, arrangeGrob(aas_pct1, aas_pct2, ncol=2),box_plots, ncol = 1, heights=c(1,1,1,8,8))
       }
       else{
         x <- grid.arrange(tblText ,tblText2,tblText3, ncol = 1, heights=c(1,1,1))
       }
+      flog.debug('print_page1 - end')
     }
     #x <- grid.arrange(tblText,tblText2,tblText3, box_plots, ncol = 1, heights=c(1,1,1,8))
     #x <- grid.arrange(tblText ,tblText2,tblText3, ncol = 1, heights=c(1,1,1))
   }
   else{
-    if(okToPrintPlot('page1')){ 
+    if(okToPrintPlot('page1')){
+      flog.debug('print_page1 - start')
       #tryCatch(x <- grid.arrange(tblText,tblText2,tblText3, aas_plot2_line,box_plots, ncol = 1, heights=c(1,1,1,8,8)), 
       tryCatch(x <- grid.arrange(tblText,tblText2,tblText3, arrangeGrob(aas_pct1, aas_pct2, ncol=2),box_plots, ncol = 1, heights=c(1,1,1,8,8)), 
                error = function(e) {
@@ -3069,6 +3104,7 @@ main$mainFunction <- function(f){
                  )
                }
       )
+      flog.debug('print_page1 - end')
     }
   }
   
@@ -3080,94 +3116,48 @@ main$mainFunction <- function(f){
     print(aas_plot)
   }
   
-  cpu_plot <- NULL
-  cpu_plot <- plot_cpu(main$DF_MAIN)
-  
   
   #tyler remove
   #cpu_plot_tmp <<- cpu_plot
   #!!!!!!!!!!!!!!!!!!!!!!!
   
   
+
   
-  io_plot <- plot_io(main$DF_MAIN_BY_SNAP)
-  
-  iostat_by_function_plot <- NULL
-  if( nrow(main$DF_IOSTAT_FUNCTION)>10){
-    iostat_by_function_plot <-  plot_iostat_by_function(main$DF_IOSTAT_FUNCTION)
+  if(okToPrintPlot('iostat_function')){ 
+    iostat_by_function_plot <- NULL
+    if( nrow(main$DF_IOSTAT_FUNCTION)>10){
+      iostat_by_function_plot <-  plot_iostat_by_function(main$DF_IOSTAT_FUNCTION)
+    }
   }
   
-  
-  main_activity_plot <- plot_main_activity(main$DF_MAIN)
-  
-  memory_plot <- plot_memory(main$DF_MEMORY)
-  
-  memory_sga_advise_plot <- NULL
-  
-  if( nrow(main$DF_MEMORY_SGA_ADVICE)>10){
-    
-    tryCatch(memory_sga_advise_plot <- plot_memory_sga_advise(main$DF_MEMORY_SGA_ADVICE), 
-             error = function(e) {
-               memory_sga_advise_plot <- NULL
-               #browser()
-             }
-             #,finally=print("finished")
-    )
-  }
-  
-  memory_pga_advise_plot <- NULL
-  
-  if( nrow(main$DF_MEMORY_PGA_ADVICE)>10){
-    
-    tryCatch(memory_pga_advise_plot <- plot_memory_pga_advise(main$DF_MEMORY_PGA_ADVICE), 
-             error = function(e) {
-               memory_pga_advise_plot <- NULL
-               #browser()
-             }
-             #,finally=print("finished")
-    )
-  }
+
   
   
-  RAC_activity_plot <- NULL
   
-  #if(("gc_cr_rec_s" %in% names(main$DF_MAIN))){
-  if(data_frame_col_not_null(main$DF_MAIN,"gc_cr_rec_s")){
-    tryCatch(RAC_activity_plot <- plot_RAC_activity(main$DF_MAIN), 
-             error = function(e) {
-               traceback()
-               print(paste0("Error in ",main$current_db_name,": ",e))
-               #browser()
-             }
-             #,finally=print("finished")
-    )
-  }
   
-  if(okToPrintPlot('aas_bars_by_date')){  
-    aas_bars_by_date_plot <- plot_aas_bars_by_date(main$DF_AAS)
-  }
   
-  #main$cpu_plot <<-cpu_plot
-  if( nrow(main$DF_IO_WAIT_HIST)>10){
-    c(io_hist_plot, io_hist_area_plot) := plot_io_histograms(main$DF_IO_WAIT_HIST)
-  }
-  # main$RAC_plot <<-RAC_activity_plot
+  
+  
+
   if(okToPrintPlot('cpu')){ 
-    #grid.newpage()
-    #grid.draw(cpu_plot)
+    cpu_plot <- NULL
+    cpu_plot <- plot_cpu(main$DF_MAIN)
     print(cpu_plot)
   }
   
   if(okToPrintPlot('io')){ 
-    #grid.newpage()
-    #grid.draw(io_plot)
+    io_plot <- plot_io(main$DF_MAIN_BY_SNAP)
     print(io_plot)
     
   }
   
   if(okToPrintPlot('iostat_function')){ 
     if( nrow(main$DF_IOSTAT_FUNCTION)>10){
+        iostat_by_function_plot <-  plot_iostat_by_function(main$DF_IOSTAT_FUNCTION)
+        flog.debug('print_iostat_function - start',name='print')
       print(iostat_by_function_plot)
+      flog.debug('print_iostat_function - end',name='print')
     }
   }
   
@@ -3175,6 +3165,7 @@ main$mainFunction <- function(f){
   
   if(okToPrintPlot('io_histogram')){ 
     if( nrow(main$DF_IO_WAIT_HIST)>10){
+      c(io_hist_plot, io_hist_area_plot) := plot_io_histograms(main$DF_IO_WAIT_HIST)
       x <- grid.arrange(io_hist_plot,io_hist_area_plot , ncol = 1, heights=c(1,4))
     }
   }
@@ -3182,21 +3173,15 @@ main$mainFunction <- function(f){
   
   
   if(okToPrintPlot('aas_facet')){ 
-    #grid.newpage()
-    #grid.arrange(aas_plot2_gt ,aas_bars_by_date_plot, ncol = 1, heights=c(1,1))
-    #grid.draw(aas_plot2_gt)
+    aas_bars_by_date_plot <- plot_aas_bars_by_date(main$DF_AAS)
     print(aas_bars_by_date_plot)
   }
   
-  #grid.newpage()
-  if(okToPrintPlot('aas_by_day')){ 
-    #print(aas_bars_by_date_plot)
-  }
-  
+
   if(okToPrintPlot('main_activity')){
+    main_activity_plot <- plot_main_activity(main$DF_MAIN)
+    
     flog.debug('print_main_activity - start',name='print')
-    #grid.newpage()
-    #grid.draw(main_activity_plot)
     print(main_activity_plot)
     flog.debug('print_main_activity - stop',name='print')
   }
@@ -3204,8 +3189,21 @@ main$mainFunction <- function(f){
   
   #if(!is.null(RAC_activity_plot)){
   if(okToPrintPlot('rac')){ 
-    #if(("gc_cr_rec_s" %in% names(main$DF_MAIN))){
+    
+    RAC_activity_plot <- NULL
+    
+    
+    
     if(data_frame_col_not_null(main$DF_MAIN,"gc_cr_rec_s")){
+      
+      tryCatch(RAC_activity_plot <- plot_RAC_activity(main$DF_MAIN), 
+               error = function(e) {
+                 traceback()
+                 print(paste0("Error in ",main$current_db_name,": ",e))
+                 #browser()
+               }
+               #,finally=print("finished")
+      )
       
       #grid.newpage() 
       tryCatch(
@@ -3223,6 +3221,10 @@ main$mainFunction <- function(f){
   }
   
   if(okToPrintPlot('memory_plot')){
+    flog.debug('generate_memory_plot - start',name='generate')
+    memory_plot <- plot_memory(main$DF_MEMORY)
+    flog.debug('generate_memory_plot - end',name='generate')
+    
     flog.debug('print_memory_plot - start',name='print')
     print(memory_plot)
     flog.debug('print_memory_plot - stop',name='print')
@@ -3231,6 +3233,34 @@ main$mainFunction <- function(f){
   #memory_sga_advise_plot_tmp <<- memory_sga_advise_plot
   
   if(okToPrintPlot('memory_plot_sga_advise') && okToPrintPlot('memory_plot_pga_advise')){ 
+    
+    memory_sga_advise_plot <- NULL
+    
+    if( nrow(main$DF_MEMORY_SGA_ADVICE)>10){
+      
+      tryCatch(memory_sga_advise_plot <- plot_memory_sga_advise(main$DF_MEMORY_SGA_ADVICE), 
+               error = function(e) {
+                 memory_sga_advise_plot <- NULL
+                 #browser()
+               }
+               #,finally=print("finished")
+      )
+    }
+    
+    memory_pga_advise_plot <- NULL
+    
+    if( nrow(main$DF_MEMORY_PGA_ADVICE)>10){
+      
+      tryCatch(memory_pga_advise_plot <- plot_memory_pga_advise(main$DF_MEMORY_PGA_ADVICE), 
+               error = function(e) {
+                 memory_pga_advise_plot <- NULL
+                 #browser()
+               }
+               #,finally=print("finished")
+      )
+    }
+    
+    
     if( nrow(main$DF_MEMORY_SGA_ADVICE)>10 && nrow(main$DF_MEMORY_PGA_ADVICE)>10){
       #print(memory_sga_advise_plot)
       if(inherits(memory_sga_advise_plot,what='ggplot') && inherits(memory_pga_advise_plot,what='ggplot')){
@@ -3239,6 +3269,12 @@ main$mainFunction <- function(f){
         x <- grid.arrange(memory_sga_advise_plot ,memory_pga_advise_plot, ncol = 2, widths=c(1,1))
         
         flog.debug('print_memory_advice_plot - stop',name='print')
+      }
+      else if(inherits(memory_sga_advise_plot,what='ggplot')){
+        x <- grid.arrange(memory_sga_advise_plot , ncol = 1, widths=c(1))
+      }
+      else if(inherits(memory_pga_advise_plot,what='ggplot')){
+        x <- grid.arrange(memory_pga_advise_plot , ncol = 1, widths=c(1))
       }
     }
   }
@@ -3310,17 +3346,23 @@ main$mainLoop <- function(){
     
   } #end for loop
   
-  TEST_DF <<- main$overall_summary_df
+  #TEST_DF <<- main$overall_summary_df
   
-  SUMMARY_DF_TMP <- main$overall_summary_df
-  SUMMARY_DF_TMP$link <- paste0('<a href="',SUMMARY_DF_TMP$outFileName,'">',SUMMARY_DF_TMP$outFileName,'</a>')
-  #TEST_DF <<- SUMMARY_DF_TMP
-  SUMMARY_DF_TMP <- subset(SUMMARY_DF_TMP,,select=c(name,nodes,platform,cores,version,memused,sizegb,aas,link))
+ 
   
-  SUMMARY_DF_TMP <- SUMMARY_DF_TMP[order(SUMMARY_DF_TMP$aas,decreasing = TRUE),]
+  if(okToPrintPlot('summary_html')){
+    SUMMARY_DF_TMP <- main$overall_summary_df
+    SUMMARY_DF_TMP$link <- paste0('<a href="',SUMMARY_DF_TMP$outFileName,'">',SUMMARY_DF_TMP$outFileName,'</a>')
+    #TEST_DF <<- SUMMARY_DF_TMP
+    SUMMARY_DF_TMP <- subset(SUMMARY_DF_TMP,,select=c(name,nodes,platform,cores,version,memused,sizegb,aas,link))
+    
+    SUMMARY_DF_TMP <- SUMMARY_DF_TMP[order(SUMMARY_DF_TMP$aas,decreasing = TRUE),]
+    sjt.df(SUMMARY_DF_TMP,file=paste0("summary.html"),describe=FALSE,alternateRowColors=TRUE)
+    rm(SUMMARY_DF_TMP)
+  }
   
-  sjt.df(SUMMARY_DF_TMP,file=paste0("summary.html"),describe=FALSE,alternateRowColors=TRUE)
-  rm(SUMMARY_DF_TMP)
+  
+  
   write.csv(main$overall_summary_df,'OverallSummary.csv')
   if(length(main$plot_attributes) > 0){
     write.csv(main$plot_attributes,'attributes.csv',row.names=FALSE)
