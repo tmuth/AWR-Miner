@@ -3,6 +3,13 @@ AWR-Miner
 
 A tool to mine and graph the AWR Repository of an Oracle 10.1+ database for performance data 
 
+# Basic Instructions
+- Install R 3.x+
+- Install RStudio
+- Open R-AWR-Mining.R file in RStudio
+- Set the working directory to the location of the .out or .out.gz files in RStudio via the "Session" menu > "Set Working Directory". You could also use ctrl+shift+H
+- "Source" the R-AWR-Mining.R in RStudio via the Source button in the top+right or press ctrl+shift+s
+
 # Options
 Options can be set interactively in an IDE like RStudio in the "console" section or through a file named very specifically *settings.R*. Using settings.R is the more reliable and preferred method. 
 
