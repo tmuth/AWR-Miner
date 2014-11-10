@@ -1,0 +1,797 @@
+INFO [2014-10-24 12:26:17] 
+
+--------------------------------------------------
+
+
+INFO [2014-10-24 12:26:17] ** Starting AWR-Miner ** 
+INFO [2014-10-24 12:26:17] Looking in this directory:
+INFO [2014-10-24 12:26:17] M:/Dropbox/MyFiles/GitHub/AWR-Miner/test-cases/dhls
+INFO [2014-10-24 12:26:17] for files that match the pattern: ^awr-hist*.*(\.out|\.gz)$
+INFO [2014-10-24 12:26:19] Files found (1): 
+awr-hist-1376736500-DHLS-99-412.out
+
+INFO [2014-10-24 12:26:19] -
+INFO [2014-10-24 12:26:19] dbname-dbid: DHLS-1376736500
+INFO [2014-10-24 12:26:19] awr-hist-1376736500-DHLS-99-412.out
+INFO [2014-10-24 12:26:19] File size (kb): 3191
+INFO [2014-10-24 12:26:21] Number of sections: 16
+INFO [2014-10-24 12:26:39] Num snap_id for IO_HIST: 312
+INFO [2014-10-24 12:26:47] Finished DB: DHLS - 1376736500
+INFO [2014-10-28 09:44:16] 
+
+--------------------------------------------------
+
+
+INFO [2014-10-28 09:44:16] ** Starting AWR-Miner ** 
+INFO [2014-10-28 09:44:16] Looking in this directory:
+INFO [2014-10-28 09:44:16] M:/Dropbox/MyFiles/GitHub/AWR-Miner/test-cases/dhls
+INFO [2014-10-28 09:44:16] for files that match the pattern: ^awr-hist*.*(\.out|\.gz)$
+INFO [2014-10-28 09:44:18] Files found (2): 
+awr-hist-1376736500-DHLS-99-412.out
+awr-hist-test.out
+
+INFO [2014-10-28 09:44:18] -
+INFO [2014-10-28 09:44:18] dbname-dbid: DHLS-1376736500
+INFO [2014-10-28 09:44:18] awr-hist-1376736500-DHLS-99-412.out
+INFO [2014-10-28 09:44:18] File size (kb): 3191
+INFO [2014-10-28 09:44:23] Number of sections: 16
+INFO [2014-10-28 09:44:47] Num snap_id for IO_HIST: 312
+INFO [2014-10-28 09:44:57] Finished DB: DHLS - 1376736500
+INFO [2014-10-28 09:44:57] -
+INFO [2014-10-28 09:44:57] dbname-dbid: DHLS-1376736500
+INFO [2014-10-28 09:44:57] awr-hist-test.out
+INFO [2014-10-28 09:44:57] File size (kb): 3191
+INFO [2014-10-28 09:45:02] Number of sections: 16
+INFO [2014-10-28 09:45:32] Num snap_id for IO_HIST: 312
+INFO [2014-10-28 09:45:40] Finished DB: DHLS - 1376736500
+INFO [2014-10-28 09:49:54] 
+
+--------------------------------------------------
+
+
+INFO [2014-10-28 09:49:54] ** Starting AWR-Miner ** 
+INFO [2014-10-28 09:49:54] Looking in this directory:
+INFO [2014-10-28 09:49:54] M:/Dropbox/MyFiles/GitHub/AWR-Miner/test-cases/dhls
+INFO [2014-10-28 09:49:54] for files that match the pattern: ^awr-hist*.*(\.out|\.gz)$
+INFO [2014-10-28 09:49:56] Files found (2): 
+awr-hist-1376736500-DHLS-99-412.out
+awr-hist-test.out
+
+INFO [2014-10-28 09:49:56] -
+INFO [2014-10-28 09:49:56] dbname-dbid: DHLS-1376736500
+INFO [2014-10-28 09:49:56] awr-hist-1376736500-DHLS-99-412.out
+INFO [2014-10-28 09:49:56] File size (kb): 3191
+INFO [2014-10-28 09:50:02] Number of sections: 16
+INFO [2014-10-28 09:50:44] Num snap_id for IO_HIST: 312
+INFO [2014-10-28 09:50:58] Finished DB: DHLS - 1376736500
+INFO [2014-10-28 09:50:58] -
+INFO [2014-10-28 09:50:58] dbname-dbid: DHLS-1376736500
+INFO [2014-10-28 09:50:58] awr-hist-test.out
+INFO [2014-10-28 09:50:58] File size (kb): 3191
+INFO [2014-10-28 09:51:05] Number of sections: 16
+INFO [2014-10-28 09:51:51] Num snap_id for IO_HIST: 312
+INFO [2014-10-28 09:51:59] Finished DB: DHLS - 1376736500
+INFO [2014-10-30 09:31:40] 
+
+--------------------------------------------------
+
+
+INFO [2014-10-30 09:31:40] ** Starting AWR-Miner ** 
+INFO [2014-10-30 09:31:40] Looking in this directory:
+INFO [2014-10-30 09:31:40] M:/Dropbox/MyFiles/GitHub/AWR-Miner/test-cases/dhls
+INFO [2014-10-30 09:31:40] for files that match the pattern: ^awr-hist*.*(\.out|\.gz)$
+INFO [2014-10-30 09:31:42] Files found (2): 
+awr-hist-1376736500-DHLS-99-412.out
+awr-hist-test.out
+
+INFO [2014-10-30 09:31:43] -
+INFO [2014-10-30 09:31:43] dbname-dbid: DHLS-1376736500
+INFO [2014-10-30 09:31:43] awr-hist-1376736500-DHLS-99-412.out
+INFO [2014-10-30 09:31:43] File size (kb): 3191
+INFO [2014-10-30 09:31:45] Number of sections: 16
+INFO [2014-10-30 09:32:04] Num snap_id for IO_HIST: 312
+INFO [2014-10-30 09:32:12] Finished DB: DHLS - 1376736500
+INFO [2014-10-30 09:32:12] -
+INFO [2014-10-30 09:32:12] dbname-dbid: DHLS-1376736500
+INFO [2014-10-30 09:32:12] awr-hist-test.out
+INFO [2014-10-30 09:32:12] File size (kb): 3191
+INFO [2014-10-30 09:32:14] Number of sections: 16
+INFO [2014-10-30 09:32:33] Num snap_id for IO_HIST: 312
+INFO [2014-10-30 09:32:41] Finished DB: DHLS - 1376736500
+INFO [2014-10-31 13:18:12] 
+
+--------------------------------------------------
+
+
+INFO [2014-10-31 13:18:12] ** Starting AWR-Miner ** 
+INFO [2014-10-31 13:18:12] Looking in this directory:
+INFO [2014-10-31 13:18:12] M:/Dropbox/MyFiles/GitHub/AWR-Miner/test-cases/dhls
+INFO [2014-10-31 13:18:12] for files that match the pattern: ^awr-hist*.*(\.out|\.gz)$
+INFO [2014-10-31 13:18:14] Files found (2): 
+awr-hist-1376736500-DHLS-99-412.out
+awr-hist-test.out
+
+INFO [2014-10-31 13:18:14] -
+INFO [2014-10-31 13:18:14] dbname-dbid: DHLS-1376736500
+INFO [2014-10-31 13:18:14] awr-hist-1376736500-DHLS-99-412.out
+INFO [2014-10-31 13:18:14] File size (kb): 3191
+INFO [2014-10-31 13:18:16] Number of sections: 16
+INFO [2014-10-31 13:18:35] Num snap_id for IO_HIST: 312
+INFO [2014-10-31 13:18:43] Finished DB: DHLS - 1376736500
+INFO [2014-10-31 13:18:43] -
+INFO [2014-10-31 13:18:43] dbname-dbid: DHLS-1376736500
+INFO [2014-10-31 13:18:43] awr-hist-test.out
+INFO [2014-10-31 13:18:43] File size (kb): 3191
+INFO [2014-10-31 13:18:45] Number of sections: 16
+INFO [2014-10-31 13:19:04] Num snap_id for IO_HIST: 312
+INFO [2014-10-31 13:19:11] Finished DB: DHLS - 1376736500
+INFO [2014-10-31 13:40:51] 
+
+--------------------------------------------------
+
+
+INFO [2014-10-31 13:40:51] ** Starting AWR-Miner ** 
+INFO [2014-10-31 13:40:51] Looking in this directory:
+INFO [2014-10-31 13:40:51] M:/Dropbox/MyFiles/GitHub/AWR-Miner/test-cases/dhls
+INFO [2014-10-31 13:40:51] for files that match the pattern: ^awr-hist*.*(\.out|\.gz)$
+INFO [2014-10-31 13:40:54] Files found (2): 
+awr-hist-1376736500-DHLS-99-412.out
+awr-hist-test.out
+
+INFO [2014-10-31 13:40:54] -
+INFO [2014-10-31 13:40:54] dbname-dbid: DHLS-1376736500
+INFO [2014-10-31 13:40:54] awr-hist-1376736500-DHLS-99-412.out
+INFO [2014-10-31 13:40:54] File size (kb): 3191
+INFO [2014-10-31 13:40:57] Number of sections: 16
+INFO [2014-10-31 13:41:05] -
+INFO [2014-10-31 13:41:05] dbname-dbid: DHLS-1376736500
+INFO [2014-10-31 13:41:05] awr-hist-test.out
+INFO [2014-10-31 13:41:05] File size (kb): 3191
+INFO [2014-10-31 13:41:09] Number of sections: 16
+INFO [2014-10-31 13:41:32] 
+
+--------------------------------------------------
+
+
+INFO [2014-10-31 13:41:32] ** Starting AWR-Miner ** 
+INFO [2014-10-31 13:41:32] Looking in this directory:
+INFO [2014-10-31 13:41:32] M:/Dropbox/MyFiles/GitHub/AWR-Miner/test-cases/dhls
+INFO [2014-10-31 13:41:32] for files that match the pattern: ^awr-hist*.*(\.out|\.gz)$
+INFO [2014-10-31 13:41:35] Files found (2): 
+awr-hist-1376736500-DHLS-99-412.out
+awr-hist-test.out
+
+INFO [2014-10-31 13:41:35] -
+INFO [2014-10-31 13:41:35] dbname-dbid: DHLS-1376736500
+INFO [2014-10-31 13:41:35] awr-hist-1376736500-DHLS-99-412.out
+INFO [2014-10-31 13:41:35] File size (kb): 3191
+INFO [2014-10-31 13:41:37] Number of sections: 16
+INFO [2014-10-31 13:41:46] -
+INFO [2014-10-31 13:41:46] dbname-dbid: DHLS-1376736500
+INFO [2014-10-31 13:41:46] awr-hist-test.out
+INFO [2014-10-31 13:41:46] File size (kb): 3191
+INFO [2014-10-31 13:41:50] Number of sections: 16
+INFO [2014-10-31 13:43:53] 
+
+--------------------------------------------------
+
+
+INFO [2014-10-31 13:43:53] ** Starting AWR-Miner ** 
+INFO [2014-10-31 13:43:53] Looking in this directory:
+INFO [2014-10-31 13:43:53] M:/Dropbox/MyFiles/GitHub/AWR-Miner/test-cases/dhls
+INFO [2014-10-31 13:43:53] for files that match the pattern: ^awr-hist*.*(\.out|\.gz)$
+INFO [2014-10-31 13:43:55] Files found (2): 
+awr-hist-1376736500-DHLS-99-412.out
+awr-hist-test.out
+
+INFO [2014-10-31 13:43:55] -
+INFO [2014-10-31 13:43:55] dbname-dbid: DHLS-1376736500
+INFO [2014-10-31 13:43:55] awr-hist-1376736500-DHLS-99-412.out
+INFO [2014-10-31 13:43:55] File size (kb): 3191
+INFO [2014-10-31 13:43:58] Number of sections: 16
+INFO [2014-10-31 13:44:08] -
+INFO [2014-10-31 13:44:08] dbname-dbid: DHLS-1376736500
+INFO [2014-10-31 13:44:08] awr-hist-test.out
+INFO [2014-10-31 13:44:08] File size (kb): 3191
+INFO [2014-10-31 13:44:11] Number of sections: 16
+INFO [2014-10-31 13:47:32] 
+
+--------------------------------------------------
+
+
+INFO [2014-10-31 13:47:32] ** Starting AWR-Miner ** 
+INFO [2014-10-31 13:47:32] Looking in this directory:
+INFO [2014-10-31 13:47:32] M:/Dropbox/MyFiles/GitHub/AWR-Miner/test-cases/dhls
+INFO [2014-10-31 13:47:32] for files that match the pattern: ^awr-hist*.*(\.out|\.gz)$
+INFO [2014-10-31 13:47:34] Files found (2): 
+awr-hist-1376736500-DHLS-99-412.out
+awr-hist-test.out
+
+INFO [2014-10-31 13:47:34] -
+INFO [2014-10-31 13:47:34] dbname-dbid: DHLS-1376736500
+INFO [2014-10-31 13:47:34] awr-hist-1376736500-DHLS-99-412.out
+INFO [2014-10-31 13:47:34] File size (kb): 3191
+INFO [2014-10-31 13:47:37] Number of sections: 16
+INFO [2014-10-31 13:47:54] Num snap_id for IO_HIST: 312
+INFO [2014-10-31 13:48:03] Finished DB: DHLS - 1376736500
+INFO [2014-10-31 13:48:03] -
+INFO [2014-10-31 13:48:03] dbname-dbid: DHLS-1376736500
+INFO [2014-10-31 13:48:03] awr-hist-test.out
+INFO [2014-10-31 13:48:03] File size (kb): 3191
+INFO [2014-10-31 13:48:05] Number of sections: 16
+INFO [2014-10-31 13:49:14] 
+
+--------------------------------------------------
+
+
+INFO [2014-10-31 13:49:14] ** Starting AWR-Miner ** 
+INFO [2014-10-31 13:49:14] Looking in this directory:
+INFO [2014-10-31 13:49:14] M:/Dropbox/MyFiles/GitHub/AWR-Miner/test-cases/dhls
+INFO [2014-10-31 13:49:14] for files that match the pattern: ^awr-hist*.*(\.out|\.gz)$
+INFO [2014-10-31 13:49:16] Files found (2): 
+awr-hist-1376736500-DHLS-99-412.out
+awr-hist-test.out
+
+INFO [2014-10-31 13:49:16] -
+INFO [2014-10-31 13:49:16] dbname-dbid: DHLS-1376736500
+INFO [2014-10-31 13:49:16] awr-hist-1376736500-DHLS-99-412.out
+INFO [2014-10-31 13:49:16] File size (kb): 3191
+INFO [2014-10-31 13:49:18] Number of sections: 16
+INFO [2014-10-31 13:49:38] Num snap_id for IO_HIST: 312
+INFO [2014-10-31 13:49:45] Finished DB: DHLS - 1376736500
+INFO [2014-10-31 13:49:45] -
+INFO [2014-10-31 13:49:45] dbname-dbid: DHLS-1376736500
+INFO [2014-10-31 13:49:45] awr-hist-test.out
+INFO [2014-10-31 13:49:45] File size (kb): 3191
+INFO [2014-10-31 13:49:48] Number of sections: 16
+INFO [2014-10-31 13:50:06] Num snap_id for IO_HIST: 312
+INFO [2014-10-31 13:50:14] Finished DB: DHLS - 1376736500
+INFO [2014-10-31 13:51:39] 
+
+--------------------------------------------------
+
+
+INFO [2014-10-31 13:51:39] ** Starting AWR-Miner ** 
+INFO [2014-10-31 13:51:39] Looking in this directory:
+INFO [2014-10-31 13:51:39] M:/Dropbox/MyFiles/GitHub/AWR-Miner/test-cases/dhls
+INFO [2014-10-31 13:51:39] for files that match the pattern: ^awr-hist*.*(\.out|\.gz)$
+INFO [2014-10-31 13:51:41] Files found (2): 
+awr-hist-1376736500-DHLS-99-412.out
+awr-hist-test.out
+
+INFO [2014-10-31 13:51:41] -
+INFO [2014-10-31 13:51:41] dbname-dbid: DHLS-1376736500
+INFO [2014-10-31 13:51:41] awr-hist-1376736500-DHLS-99-412.out
+INFO [2014-10-31 13:51:41] File size (kb): 3191
+INFO [2014-10-31 13:51:43] Number of sections: 16
+INFO [2014-10-31 13:51:59] Num snap_id for IO_HIST: 312
+INFO [2014-10-31 13:52:07] Finished DB: DHLS - 1376736500
+INFO [2014-10-31 13:52:07] -
+INFO [2014-10-31 13:52:07] dbname-dbid: DHLS-1376736500
+INFO [2014-10-31 13:52:07] awr-hist-test.out
+INFO [2014-10-31 13:52:07] File size (kb): 3191
+INFO [2014-10-31 13:52:09] Number of sections: 16
+INFO [2014-10-31 13:52:25] Num snap_id for IO_HIST: 312
+INFO [2014-10-31 13:52:32] Finished DB: DHLS - 1376736500
+INFO [2014-10-31 14:01:36] 
+
+--------------------------------------------------
+
+
+INFO [2014-10-31 14:01:36] ** Starting AWR-Miner ** 
+INFO [2014-10-31 14:01:36] Looking in this directory:
+INFO [2014-10-31 14:01:36] M:/Dropbox/MyFiles/GitHub/AWR-Miner/test-cases/dhls
+INFO [2014-10-31 14:01:36] for files that match the pattern: ^awr-hist*.*(\.out|\.gz)$
+INFO [2014-10-31 14:01:38] Files found (2): 
+awr-hist-1376736500-DHLS-99-412.out
+awr-hist-test.out
+
+INFO [2014-10-31 14:01:38] -
+INFO [2014-10-31 14:01:38] dbname-dbid: DHLS-1376736500
+INFO [2014-10-31 14:01:38] awr-hist-1376736500-DHLS-99-412.out
+INFO [2014-10-31 14:01:38] File size (kb): 3191
+INFO [2014-10-31 14:01:40] Number of sections: 16
+INFO [2014-10-31 14:01:54] Num snap_id for IO_HIST: 312
+INFO [2014-10-31 14:02:05] Finished DB: DHLS - 1376736500
+INFO [2014-10-31 14:02:05] -
+INFO [2014-10-31 14:02:05] dbname-dbid: DHLS-1376736500
+INFO [2014-10-31 14:02:05] awr-hist-test.out
+INFO [2014-10-31 14:02:05] File size (kb): 3191
+INFO [2014-10-31 14:02:07] Number of sections: 16
+INFO [2014-10-31 14:02:21] Num snap_id for IO_HIST: 312
+INFO [2014-10-31 14:02:32] Finished DB: DHLS - 1376736500
+INFO [2014-10-31 14:04:30] 
+
+--------------------------------------------------
+
+
+INFO [2014-10-31 14:04:30] ** Starting AWR-Miner ** 
+INFO [2014-10-31 14:04:30] Looking in this directory:
+INFO [2014-10-31 14:04:30] M:/Dropbox/MyFiles/GitHub/AWR-Miner/test-cases/dhls
+INFO [2014-10-31 14:04:30] for files that match the pattern: ^awr-hist*.*(\.out|\.gz)$
+INFO [2014-10-31 14:04:32] Files found (2): 
+awr-hist-1376736500-DHLS-99-412.out
+awr-hist-test.out
+
+INFO [2014-10-31 14:04:32] -
+INFO [2014-10-31 14:04:32] dbname-dbid: DHLS-1376736500
+INFO [2014-10-31 14:04:32] awr-hist-1376736500-DHLS-99-412.out
+INFO [2014-10-31 14:04:32] File size (kb): 3191
+INFO [2014-10-31 14:04:34] Number of sections: 16
+INFO [2014-10-31 14:04:48] Num snap_id for IO_HIST: 312
+INFO [2014-10-31 14:04:58] Finished DB: DHLS - 1376736500
+INFO [2014-10-31 14:04:58] -
+INFO [2014-10-31 14:04:58] dbname-dbid: DHLS-1376736500
+INFO [2014-10-31 14:04:58] awr-hist-test.out
+INFO [2014-10-31 14:04:58] File size (kb): 3191
+INFO [2014-10-31 14:05:01] Number of sections: 16
+INFO [2014-10-31 14:05:15] Num snap_id for IO_HIST: 312
+INFO [2014-10-31 14:05:25] Finished DB: DHLS - 1376736500
+INFO [2014-10-31 14:07:41] 
+
+--------------------------------------------------
+
+
+INFO [2014-10-31 14:07:41] ** Starting AWR-Miner ** 
+INFO [2014-10-31 14:07:41] Looking in this directory:
+INFO [2014-10-31 14:07:41] M:/Dropbox/MyFiles/GitHub/AWR-Miner/test-cases/dhls
+INFO [2014-10-31 14:07:41] for files that match the pattern: ^awr-hist*.*(\.out|\.gz)$
+INFO [2014-10-31 14:07:43] Files found (2): 
+awr-hist-1376736500-DHLS-99-412.out
+awr-hist-test.out
+
+INFO [2014-10-31 14:07:43] -
+INFO [2014-10-31 14:07:43] dbname-dbid: DHLS-1376736500
+INFO [2014-10-31 14:07:43] awr-hist-1376736500-DHLS-99-412.out
+INFO [2014-10-31 14:07:43] File size (kb): 3191
+INFO [2014-10-31 14:07:46] Number of sections: 16
+INFO [2014-10-31 14:08:00] Num snap_id for IO_HIST: 312
+INFO [2014-10-31 14:08:11] Finished DB: DHLS - 1376736500
+INFO [2014-10-31 14:08:11] -
+INFO [2014-10-31 14:08:11] dbname-dbid: DHLS-1376736500
+INFO [2014-10-31 14:08:11] awr-hist-test.out
+INFO [2014-10-31 14:08:11] File size (kb): 3191
+INFO [2014-10-31 14:08:13] Number of sections: 16
+INFO [2014-10-31 14:08:27] Num snap_id for IO_HIST: 312
+INFO [2014-10-31 14:08:38] Finished DB: DHLS - 1376736500
+INFO [2014-10-31 14:10:34] 
+
+--------------------------------------------------
+
+
+INFO [2014-10-31 14:10:34] ** Starting AWR-Miner ** 
+INFO [2014-10-31 14:10:34] Looking in this directory:
+INFO [2014-10-31 14:10:34] M:/Dropbox/MyFiles/GitHub/AWR-Miner/test-cases/dhls
+INFO [2014-10-31 14:10:34] for files that match the pattern: ^awr-hist*.*(\.out|\.gz)$
+INFO [2014-10-31 14:10:36] Files found (2): 
+awr-hist-1376736500-DHLS-99-412.out
+awr-hist-test.out
+
+INFO [2014-10-31 14:10:36] -
+INFO [2014-10-31 14:10:36] dbname-dbid: DHLS-1376736500
+INFO [2014-10-31 14:10:36] awr-hist-1376736500-DHLS-99-412.out
+INFO [2014-10-31 14:10:36] File size (kb): 3191
+INFO [2014-10-31 14:10:38] Number of sections: 16
+INFO [2014-10-31 14:11:00] Num snap_id for IO_HIST: 312
+INFO [2014-10-31 14:11:08] Finished DB: DHLS - 1376736500
+INFO [2014-10-31 14:11:08] -
+INFO [2014-10-31 14:11:08] dbname-dbid: DHLS-1376736500
+INFO [2014-10-31 14:11:08] awr-hist-test.out
+INFO [2014-10-31 14:11:08] File size (kb): 3191
+INFO [2014-10-31 14:11:11] Number of sections: 16
+INFO [2014-10-31 14:11:31] Num snap_id for IO_HIST: 312
+INFO [2014-10-31 14:11:39] Finished DB: DHLS - 1376736500
+INFO [2014-10-31 14:29:54] 
+
+--------------------------------------------------
+
+
+INFO [2014-10-31 14:29:54] ** Starting AWR-Miner ** 
+INFO [2014-10-31 14:29:54] Looking in this directory:
+INFO [2014-10-31 14:29:54] M:/Dropbox/MyFiles/GitHub/AWR-Miner/test-cases/dhls
+INFO [2014-10-31 14:29:54] for files that match the pattern: ^awr-hist*.*(\.out|\.gz)$
+INFO [2014-10-31 14:29:56] Files found (2): 
+awr-hist-1376736500-DHLS-99-412.out
+awr-hist-test.out
+
+INFO [2014-10-31 14:29:56] -
+INFO [2014-10-31 14:29:56] dbname-dbid: DHLS-1376736500
+INFO [2014-10-31 14:29:56] awr-hist-1376736500-DHLS-99-412.out
+INFO [2014-10-31 14:29:56] File size (kb): 3191
+INFO [2014-10-31 14:29:59] Number of sections: 16
+INFO [2014-10-31 14:30:01] -
+INFO [2014-10-31 14:30:01] dbname-dbid: DHLS-1376736500
+INFO [2014-10-31 14:30:01] awr-hist-test.out
+INFO [2014-10-31 14:30:01] File size (kb): 3191
+INFO [2014-10-31 14:30:04] Number of sections: 16
+INFO [2014-10-31 14:31:13] 
+
+--------------------------------------------------
+
+
+INFO [2014-10-31 14:31:13] ** Starting AWR-Miner ** 
+INFO [2014-10-31 14:31:13] Looking in this directory:
+INFO [2014-10-31 14:31:13] M:/Dropbox/MyFiles/GitHub/AWR-Miner/test-cases/dhls
+INFO [2014-10-31 14:31:13] for files that match the pattern: ^awr-hist*.*(\.out|\.gz)$
+INFO [2014-10-31 14:31:15] Files found (2): 
+awr-hist-1376736500-DHLS-99-412.out
+awr-hist-test.out
+
+INFO [2014-10-31 14:31:15] -
+INFO [2014-10-31 14:31:15] dbname-dbid: DHLS-1376736500
+INFO [2014-10-31 14:31:15] awr-hist-1376736500-DHLS-99-412.out
+INFO [2014-10-31 14:31:15] File size (kb): 3191
+INFO [2014-10-31 14:31:17] Number of sections: 16
+INFO [2014-10-31 14:31:20] -
+INFO [2014-10-31 14:31:20] dbname-dbid: DHLS-1376736500
+INFO [2014-10-31 14:31:20] awr-hist-test.out
+INFO [2014-10-31 14:31:20] File size (kb): 3191
+INFO [2014-10-31 14:31:22] Number of sections: 16
+INFO [2014-10-31 14:32:27] 
+
+--------------------------------------------------
+
+
+INFO [2014-10-31 14:32:27] ** Starting AWR-Miner ** 
+INFO [2014-10-31 14:32:27] Looking in this directory:
+INFO [2014-10-31 14:32:27] M:/Dropbox/MyFiles/GitHub/AWR-Miner/test-cases/dhls
+INFO [2014-10-31 14:32:27] for files that match the pattern: ^awr-hist*.*(\.out|\.gz)$
+INFO [2014-10-31 14:32:29] Files found (2): 
+awr-hist-1376736500-DHLS-99-412.out
+awr-hist-test.out
+
+INFO [2014-10-31 14:32:29] -
+INFO [2014-10-31 14:32:29] dbname-dbid: DHLS-1376736500
+INFO [2014-10-31 14:32:29] awr-hist-1376736500-DHLS-99-412.out
+INFO [2014-10-31 14:32:29] File size (kb): 3191
+INFO [2014-10-31 14:32:31] Number of sections: 16
+INFO [2014-10-31 14:32:45] Num snap_id for IO_HIST: 312
+INFO [2014-10-31 14:32:55] Finished DB: DHLS - 1376736500
+INFO [2014-10-31 14:32:55] -
+INFO [2014-10-31 14:32:55] dbname-dbid: DHLS-1376736500
+INFO [2014-10-31 14:32:55] awr-hist-test.out
+INFO [2014-10-31 14:32:55] File size (kb): 3191
+INFO [2014-10-31 14:32:58] Number of sections: 16
+INFO [2014-10-31 14:33:11] Num snap_id for IO_HIST: 312
+INFO [2014-10-31 14:33:21] Finished DB: DHLS - 1376736500
+INFO [2014-10-31 14:33:54] 
+
+--------------------------------------------------
+
+
+INFO [2014-10-31 14:33:54] ** Starting AWR-Miner ** 
+INFO [2014-10-31 14:33:54] Looking in this directory:
+INFO [2014-10-31 14:33:54] M:/Dropbox/MyFiles/GitHub/AWR-Miner/test-cases/dhls
+INFO [2014-10-31 14:33:54] for files that match the pattern: ^awr-hist*.*(\.out|\.gz)$
+INFO [2014-10-31 14:33:56] Files found (2): 
+awr-hist-1376736500-DHLS-99-412.out
+awr-hist-test.out
+
+INFO [2014-10-31 14:33:57] -
+INFO [2014-10-31 14:33:57] dbname-dbid: DHLS-1376736500
+INFO [2014-10-31 14:33:57] awr-hist-1376736500-DHLS-99-412.out
+INFO [2014-10-31 14:33:57] File size (kb): 3191
+INFO [2014-10-31 14:33:59] Number of sections: 16
+INFO [2014-10-31 14:34:13] Num snap_id for IO_HIST: 312
+INFO [2014-10-31 14:34:23] Finished DB: DHLS - 1376736500
+INFO [2014-10-31 14:34:23] -
+INFO [2014-10-31 14:34:23] dbname-dbid: DHLS-1376736500
+INFO [2014-10-31 14:34:23] awr-hist-test.out
+INFO [2014-10-31 14:34:23] File size (kb): 3191
+INFO [2014-10-31 14:34:26] Number of sections: 16
+INFO [2014-10-31 14:34:40] Num snap_id for IO_HIST: 312
+INFO [2014-10-31 14:34:53] Finished DB: DHLS - 1376736500
+INFO [2014-10-31 14:39:10] 
+
+--------------------------------------------------
+
+
+INFO [2014-10-31 14:39:10] ** Starting AWR-Miner ** 
+INFO [2014-10-31 14:39:10] Looking in this directory:
+INFO [2014-10-31 14:39:10] M:/Dropbox/MyFiles/GitHub/AWR-Miner/test-cases/dhls
+INFO [2014-10-31 14:39:10] for files that match the pattern: ^awr-hist*.*(\.out|\.gz)$
+INFO [2014-10-31 14:39:12] Files found (2): 
+awr-hist-1376736500-DHLS-99-412.out
+awr-hist-test.out
+
+INFO [2014-10-31 14:39:12] -
+INFO [2014-10-31 14:39:12] dbname-dbid: DHLS-1376736500
+INFO [2014-10-31 14:39:12] awr-hist-1376736500-DHLS-99-412.out
+INFO [2014-10-31 14:39:12] File size (kb): 3191
+INFO [2014-10-31 14:39:15] Number of sections: 16
+INFO [2014-10-31 14:39:29] Num snap_id for IO_HIST: 312
+INFO [2014-10-31 14:39:40] Finished DB: DHLS - 1376736500
+INFO [2014-10-31 14:39:40] -
+INFO [2014-10-31 14:39:40] dbname-dbid: DHLS-1376736500
+INFO [2014-10-31 14:39:40] awr-hist-test.out
+INFO [2014-10-31 14:39:40] File size (kb): 3191
+INFO [2014-10-31 14:39:42] Number of sections: 16
+INFO [2014-10-31 14:39:56] Num snap_id for IO_HIST: 312
+INFO [2014-10-31 14:40:07] Finished DB: DHLS - 1376736500
+INFO [2014-11-03 11:25:46] 
+
+--------------------------------------------------
+
+
+INFO [2014-11-03 11:25:46] ** Starting AWR-Miner ** 
+INFO [2014-11-03 11:25:46] Looking in this directory:
+INFO [2014-11-03 11:25:46] M:/Dropbox/MyFiles/GitHub/AWR-Miner/test-cases/dhls
+INFO [2014-11-03 11:25:46] for files that match the pattern: ^awr-hist*.*(\.out|\.gz)$
+INFO [2014-11-03 11:25:48] Files found (2): 
+awr-hist-1376736500-DHLS-99-412.out
+awr-hist-test.out
+
+INFO [2014-11-03 11:25:48] -
+INFO [2014-11-03 11:25:48] dbname-dbid: DHLS-1376736500
+INFO [2014-11-03 11:25:48] awr-hist-1376736500-DHLS-99-412.out
+INFO [2014-11-03 11:25:48] File size (kb): 3191
+INFO [2014-11-03 11:25:51] Number of sections: 16
+INFO [2014-11-03 11:26:06] Num snap_id for IO_HIST: 312
+INFO [2014-11-03 11:26:16] Finished DB: DHLS - 1376736500
+INFO [2014-11-03 11:26:16] -
+INFO [2014-11-03 11:26:16] dbname-dbid: DHLS-1376736500
+INFO [2014-11-03 11:26:16] awr-hist-test.out
+INFO [2014-11-03 11:26:16] File size (kb): 3191
+INFO [2014-11-03 11:26:19] Number of sections: 16
+INFO [2014-11-03 11:26:34] Num snap_id for IO_HIST: 312
+INFO [2014-11-03 11:26:45] Finished DB: DHLS - 1376736500
+INFO [2014-11-05 17:52:46] 
+
+--------------------------------------------------
+
+
+INFO [2014-11-05 17:52:46] ** Starting AWR-Miner ** 
+INFO [2014-11-05 17:52:46] Looking in this directory:
+INFO [2014-11-05 17:52:46] M:/Dropbox/MyFiles/GitHub/AWR-Miner/test-cases/dhls
+INFO [2014-11-05 17:52:46] for files that match the pattern: ^awr-hist*.*(\.out|\.gz)$
+INFO [2014-11-05 17:52:48] Files found (2): 
+awr-hist-1376736500-DHLS-99-412.out
+awr-hist-test.out
+
+INFO [2014-11-05 17:52:57] Num snap_id for IO_HIST: 312
+INFO [2014-11-05 17:53:08] -
+INFO [2014-11-05 17:53:08] dbname-dbid: DHLS-1376736500
+INFO [2014-11-05 17:53:08] awr-hist-test.out
+INFO [2014-11-05 17:53:08] File size (kb): 3191
+INFO [2014-11-05 17:53:11] Number of sections: 16
+INFO [2014-11-05 17:56:01] 
+
+--------------------------------------------------
+
+
+INFO [2014-11-05 17:56:01] ** Starting AWR-Miner ** 
+INFO [2014-11-05 17:56:01] Looking in this directory:
+INFO [2014-11-05 17:56:01] M:/Dropbox/MyFiles/GitHub/AWR-Miner/test-cases/dhls
+INFO [2014-11-05 17:56:01] for files that match the pattern: ^awr-hist*.*(\.out|\.gz)$
+INFO [2014-11-05 17:56:03] Files found (1): 
+awr-hist-1376736500-DHLS-99-412.out
+
+INFO [2014-11-05 17:56:12] Num snap_id for IO_HIST: 312
+INFO [2014-11-05 17:56:24] Finished DB: DHLS - 1376736500
+INFO [2014-11-05 17:57:09] 
+
+--------------------------------------------------
+
+
+INFO [2014-11-05 17:57:09] ** Starting AWR-Miner ** 
+INFO [2014-11-05 17:57:09] Looking in this directory:
+INFO [2014-11-05 17:57:09] M:/Dropbox/MyFiles/GitHub/AWR-Miner/test-cases/dhls
+INFO [2014-11-05 17:57:09] for files that match the pattern: ^awr-hist*.*(\.out|\.gz)$
+INFO [2014-11-05 17:57:12] Files found (1): 
+awr-hist-1376736500-DHLS-99-412.out
+
+INFO [2014-11-05 17:59:27] 
+
+--------------------------------------------------
+
+
+INFO [2014-11-05 17:59:27] ** Starting AWR-Miner ** 
+INFO [2014-11-05 17:59:27] Looking in this directory:
+INFO [2014-11-05 17:59:27] M:/Dropbox/MyFiles/GitHub/AWR-Miner/test-cases/dhls
+INFO [2014-11-05 17:59:27] for files that match the pattern: ^awr-hist*.*(\.out|\.gz)$
+INFO [2014-11-05 17:59:29] Files found (1): 
+awr-hist-1376736500-DHLS-99-412.out
+
+INFO [2014-11-05 17:59:38] Num snap_id for IO_HIST: 312
+INFO [2014-11-05 17:59:48] Finished DB: DHLS - 1376736500
+INFO [2014-11-05 18:00:27] 
+
+--------------------------------------------------
+
+
+INFO [2014-11-05 18:00:27] ** Starting AWR-Miner ** 
+INFO [2014-11-05 18:00:27] Looking in this directory:
+INFO [2014-11-05 18:00:27] M:/Dropbox/MyFiles/GitHub/AWR-Miner/test-cases/dhls
+INFO [2014-11-05 18:00:27] for files that match the pattern: ^awr-hist*.*(\.out|\.gz)$
+INFO [2014-11-05 18:00:29] Files found (1): 
+awr-hist-1376736500-DHLS-99-412.out
+
+INFO [2014-11-05 18:00:37] Num snap_id for IO_HIST: 312
+INFO [2014-11-05 18:00:48] Finished DB: DHLS - 1376736500
+INFO [2014-11-05 18:01:07] 
+
+--------------------------------------------------
+
+
+INFO [2014-11-05 18:01:07] ** Starting AWR-Miner ** 
+INFO [2014-11-05 18:01:07] Looking in this directory:
+INFO [2014-11-05 18:01:07] M:/Dropbox/MyFiles/GitHub/AWR-Miner/test-cases/dhls
+INFO [2014-11-05 18:01:07] for files that match the pattern: ^awr-hist*.*(\.out|\.gz)$
+INFO [2014-11-05 18:01:09] Files found (1): 
+awr-hist-1376736500-DHLS-99-412.out
+
+INFO [2014-11-05 18:01:18] Num snap_id for IO_HIST: 312
+INFO [2014-11-05 18:01:28] Finished DB: DHLS - 1376736500
+INFO [2014-11-05 18:01:46] 
+
+--------------------------------------------------
+
+
+INFO [2014-11-05 18:01:46] ** Starting AWR-Miner ** 
+INFO [2014-11-05 18:01:46] Looking in this directory:
+INFO [2014-11-05 18:01:46] M:/Dropbox/MyFiles/GitHub/AWR-Miner/test-cases/dhls
+INFO [2014-11-05 18:01:46] for files that match the pattern: ^awr-hist*.*(\.out|\.gz)$
+INFO [2014-11-05 18:01:49] Files found (1): 
+awr-hist-1376736500-DHLS-99-412.out
+
+INFO [2014-11-05 18:01:49] -
+INFO [2014-11-05 18:01:49] dbname-dbid: DHLS-1376736500
+INFO [2014-11-05 18:01:49] awr-hist-1376736500-DHLS-99-412.out
+INFO [2014-11-05 18:01:49] File size (kb): 3191
+INFO [2014-11-05 18:01:51] Number of sections: 16
+INFO [2014-11-05 18:02:05] Num snap_id for IO_HIST: 312
+INFO [2014-11-05 18:02:16] Finished DB: DHLS - 1376736500
+INFO [2014-11-05 18:02:31] 
+
+--------------------------------------------------
+
+
+INFO [2014-11-05 18:02:31] ** Starting AWR-Miner ** 
+INFO [2014-11-05 18:02:31] Looking in this directory:
+INFO [2014-11-05 18:02:31] M:/Dropbox/MyFiles/GitHub/AWR-Miner/test-cases/dhls
+INFO [2014-11-05 18:02:31] for files that match the pattern: ^awr-hist*.*(\.out|\.gz)$
+INFO [2014-11-05 18:02:33] Files found (1): 
+awr-hist-1376736500-DHLS-99-412.out
+
+INFO [2014-11-05 18:02:42] Num snap_id for IO_HIST: 312
+INFO [2014-11-05 18:02:52] Finished DB: DHLS - 1376736500
+INFO [2014-11-05 18:07:20] 
+
+--------------------------------------------------
+
+
+INFO [2014-11-05 18:07:20] ** Starting AWR-Miner ** 
+INFO [2014-11-05 18:07:20] Looking in this directory:
+INFO [2014-11-05 18:07:20] M:/Dropbox/MyFiles/GitHub/AWR-Miner/test-cases/dhls
+INFO [2014-11-05 18:07:20] for files that match the pattern: ^awr-hist*.*(\.out|\.gz)$
+INFO [2014-11-05 18:07:22] Files found (1): 
+awr-hist-1376736500-DHLS-99-412.out
+
+INFO [2014-11-05 18:07:31] Num snap_id for IO_HIST: 312
+INFO [2014-11-05 18:07:42] Finished DB: DHLS - 1376736500
+INFO [2014-11-05 18:07:56] 
+
+--------------------------------------------------
+
+
+INFO [2014-11-05 18:07:56] ** Starting AWR-Miner ** 
+INFO [2014-11-05 18:07:56] Looking in this directory:
+INFO [2014-11-05 18:07:56] M:/Dropbox/MyFiles/GitHub/AWR-Miner/test-cases/dhls
+INFO [2014-11-05 18:07:56] for files that match the pattern: ^awr-hist*.*(\.out|\.gz)$
+INFO [2014-11-05 18:07:58] Files found (1): 
+awr-hist-1376736500-DHLS-99-412.out
+
+INFO [2014-11-05 18:08:09] Num snap_id for IO_HIST: 312
+INFO [2014-11-05 18:08:20] Finished DB: DHLS - 1376736500
+INFO [2014-11-05 18:09:43] 
+
+--------------------------------------------------
+
+
+INFO [2014-11-05 18:09:43] ** Starting AWR-Miner ** 
+INFO [2014-11-05 18:09:43] Looking in this directory:
+INFO [2014-11-05 18:09:43] M:/Dropbox/MyFiles/GitHub/AWR-Miner/test-cases/dhls
+INFO [2014-11-05 18:09:43] for files that match the pattern: ^awr-hist*.*(\.out|\.gz)$
+INFO [2014-11-05 18:09:45] Files found (1): 
+awr-hist-1376736500-DHLS-99-412.out
+
+INFO [2014-11-05 18:09:57] Num snap_id for IO_HIST: 312
+INFO [2014-11-05 18:10:08] Finished DB: DHLS - 1376736500
+INFO [2014-11-06 15:15:47] 
+
+--------------------------------------------------
+
+
+INFO [2014-11-06 15:15:47] ** Starting AWR-Miner ** 
+INFO [2014-11-06 15:15:47] Looking in this directory:
+INFO [2014-11-06 15:15:47] M:/Dropbox/MyFiles/GitHub/AWR-Miner/test-cases/dhls
+INFO [2014-11-06 15:15:47] for files that match the pattern: ^awr-hist*.*(\.out|\.gz)$
+INFO [2014-11-06 15:15:49] Files found (1): 
+awr-hist-1376736500-DHLS-99-412.out
+
+INFO [2014-11-06 15:15:49] Found parsed data file DHLS-1376736500-99-412-parsed.Rda
+INFO [2014-11-06 15:16:03] 
+
+--------------------------------------------------
+
+
+INFO [2014-11-06 15:16:03] ** Starting AWR-Miner ** 
+INFO [2014-11-06 15:16:03] Looking in this directory:
+INFO [2014-11-06 15:16:03] M:/Dropbox/MyFiles/GitHub/AWR-Miner/test-cases/dhls
+INFO [2014-11-06 15:16:03] for files that match the pattern: ^awr-hist*.*(\.out|\.gz)$
+INFO [2014-11-06 15:16:06] Files found (1): 
+awr-hist-1376736500-DHLS-99-412.out
+
+INFO [2014-11-06 15:16:06] Found parsed data file DHLS-1376736500-99-412-parsed.Rda
+INFO [2014-11-06 15:16:16] 
+
+--------------------------------------------------
+
+
+INFO [2014-11-06 15:16:16] ** Starting AWR-Miner ** 
+INFO [2014-11-06 15:16:17] Looking in this directory:
+INFO [2014-11-06 15:16:17] M:/Dropbox/MyFiles/GitHub/AWR-Miner/test-cases/dhls
+INFO [2014-11-06 15:16:17] for files that match the pattern: ^awr-hist*.*(\.out|\.gz)$
+INFO [2014-11-06 15:16:19] Files found (1): 
+awr-hist-1376736500-DHLS-99-412.out
+
+INFO [2014-11-06 15:16:19] Found parsed data file DHLS-1376736500-99-412-parsed.Rda
+INFO [2014-11-06 15:16:42] 
+
+--------------------------------------------------
+
+
+INFO [2014-11-06 15:16:42] ** Starting AWR-Miner ** 
+INFO [2014-11-06 15:16:42] Looking in this directory:
+INFO [2014-11-06 15:16:42] M:/Dropbox/MyFiles/GitHub/AWR-Miner/test-cases/dhls
+INFO [2014-11-06 15:16:42] for files that match the pattern: ^awr-hist*.*(\.out|\.gz)$
+INFO [2014-11-06 15:16:45] Files found (1): 
+awr-hist-1376736500-DHLS-99-412.out
+
+INFO [2014-11-06 15:16:45] -
+INFO [2014-11-06 15:16:45] dbname-dbid: DHLS-1376736500
+INFO [2014-11-06 15:16:45] awr-hist-1376736500-DHLS-99-412.out
+INFO [2014-11-06 15:16:45] File size (kb): 3191
+INFO [2014-11-06 15:16:48] Number of sections: 16
+INFO [2014-11-06 15:16:58] Finished DB: DHLS - 1376736500
+INFO [2014-11-06 15:17:41] 
+
+--------------------------------------------------
+
+
+INFO [2014-11-06 15:17:41] ** Starting AWR-Miner ** 
+INFO [2014-11-06 15:17:41] Looking in this directory:
+INFO [2014-11-06 15:17:41] M:/Dropbox/MyFiles/GitHub/AWR-Miner/test-cases/dhls
+INFO [2014-11-06 15:17:41] for files that match the pattern: ^awr-hist*.*(\.out|\.gz)$
+INFO [2014-11-06 15:17:44] Files found (1): 
+awr-hist-1376736500-DHLS-99-412.out
+
+INFO [2014-11-06 15:17:44] Found parsed data file DHLS-1376736500-99-412-parsed.Rda
+INFO [2014-11-06 15:19:39] 
+
+--------------------------------------------------
+
+
+INFO [2014-11-06 15:19:39] ** Starting AWR-Miner ** 
+INFO [2014-11-06 15:19:39] Looking in this directory:
+INFO [2014-11-06 15:19:39] M:/Dropbox/MyFiles/GitHub/AWR-Miner/test-cases/dhls
+INFO [2014-11-06 15:19:39] for files that match the pattern: ^awr-hist*.*(\.out|\.gz)$
+INFO [2014-11-06 15:19:42] Files found (1): 
+awr-hist-1376736500-DHLS-99-412.out
+
+INFO [2014-11-06 15:19:42] Found parsed data file DHLS-1376736500-100-412-parsed.Rda
+INFO [2014-11-06 15:19:49] Finished DB: DHLS - 1376736500
+INFO [2014-11-06 15:19:55] 
+
+--------------------------------------------------
+
+
+INFO [2014-11-06 15:19:55] ** Starting AWR-Miner ** 
+INFO [2014-11-06 15:19:55] Looking in this directory:
+INFO [2014-11-06 15:19:55] M:/Dropbox/MyFiles/GitHub/AWR-Miner/test-cases/dhls
+INFO [2014-11-06 15:19:55] for files that match the pattern: ^awr-hist*.*(\.out|\.gz)$
+INFO [2014-11-06 15:19:58] Files found (1): 
+awr-hist-1376736500-DHLS-99-412.out
+
+INFO [2014-11-06 15:19:58] Found parsed data file DHLS-1376736500-100-412-parsed.Rda
+INFO [2014-11-06 15:20:03] Finished DB: DHLS - 1376736500

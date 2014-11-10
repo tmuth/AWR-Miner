@@ -1,0 +1,20 @@
+ERROR [2014-10-31 13:41:57] Error in awr-hist-test.out: Error in plot_aas_wait_class2_gt$layout$clip[plot_aas_wait_class2_gt$layout$name == : object 'plot_aas_wait_class2_gt' not found
+
+ERROR [2014-10-31 13:44:21] Error in awr-hist-test.out: Error in UseMethod("grid.draw"): no applicable method for 'grid.draw' applied to an object of class "c('gg', 'ggplot')"
+
+ERROR [2014-10-31 14:30:07] Error in awr-hist-test.out: Error in setkeyv(x, cols, verbose = verbose): some columns are not in the data.table: end
+
+ERROR [2014-10-31 14:30:07] plot_aas_chart.new(main$DF_AAS) at R-AWR-Mining.R#1060
+ERROR [2014-10-31 14:30:07] `:=`(c(aas_plot, aas_plot2_gt, aas_plot2_line), plot_aas_chart.new(main$DF_AAS))
+ERROR [2014-10-31 14:31:25] Error in awr-hist-test.out: Error in setkeyv(x, cols, verbose = verbose): some columns are not in the data.table: end
+
+ERROR [2014-10-31 14:31:25] c("subset.default(SUMMARY_DF_TMP, , select = c(name, nodes, platform, ", "    cores, version, memused, sizegb, aas, link))")
+ERROR [2014-10-31 14:31:25] c("subset(SUMMARY_DF_TMP, , select = c(name, nodes, platform, cores, ", "    version, memused, sizegb, aas, link)) at R-AWR-Mining.New1.R#3170")
+ERROR [2014-10-31 14:31:25] main$mainLoop() at R-AWR-Mining.New1.R#3203
+ERROR [2014-10-31 14:31:25] eval(expr, envir, enclos)
+ERROR [2014-10-31 14:31:25] eval(ei, envir)
+ERROR [2014-10-31 14:31:25] withVisible(eval(ei, envir))
+ERROR [2014-10-31 14:31:25] source("M:/Dropbox/MyFiles/GitHub/AWR-Miner/source/R-AWR-Mining.New1.R")
+ERROR [2014-11-05 17:53:17] Error in awr-hist-test.out: Error in rbind(deparse.level, ...): numbers of columns of arguments do not match
+
+ERROR [2014-11-05 17:53:17] parsed_data_exists("awr-hist-1376736500-DHLS-99-412.out")

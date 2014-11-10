@@ -1,0 +1,19 @@
+R version 3.1.2 (2014-10-31)
+Platform: x86_64-w64-mingw32/x64 (64-bit)
+
+locale:
+[1] LC_COLLATE=English_United States.1252  LC_CTYPE=English_United States.1252    LC_MONETARY=English_United States.1252 LC_NUMERIC=C                          
+[5] LC_TIME=English_United States.1252    
+
+attached base packages:
+[1] grid      stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] sjPlot_1.5          dplyr_0.3.0.2       gtools_3.4.1        gplots_2.14.2       lubridate_1.3.3     data.table_1.9.4    stringr_0.6.2       ggthemes_1.7.0     
+ [9] xtable_1.7-4        reshape_0.8.5       scales_0.2.4        gridExtra_0.9.1     plyr_1.8.1          ggplot2_1.0.0       futile.logger_1.3.7
+
+loaded via a namespace (and not attached):
+ [1] assertthat_0.1       bitops_1.0-6         car_2.0-21           caTools_1.17.1       chron_2.3-45         colorspace_1.2-4     DBI_0.3.1            digest_0.6.4        
+ [9] foreign_0.8-61       futile.options_1.0.0 gdata_2.13.3         gtable_0.1.2         KernSmooth_2.23-13   labeling_0.3         lambda.r_1.1.6       lazyeval_0.1.9      
+[17] magrittr_1.0.1       MASS_7.3-35          memoise_0.2.1        munsell_0.4.2        nnet_7.3-8           parallel_3.1.2       proto_0.3-10         psych_1.4.8.11      
+[25] Rcpp_0.11.3          reshape2_1.4         tools_3.1.2         

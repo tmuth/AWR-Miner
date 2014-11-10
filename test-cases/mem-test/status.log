@@ -1,0 +1,146 @@
+INFO [2014-10-28 09:25:48] 
+
+--------------------------------------------------
+
+
+INFO [2014-10-28 09:25:48] ** Starting AWR-Miner ** 
+INFO [2014-10-28 09:25:48] Looking in this directory:
+INFO [2014-10-28 09:25:48] M:/Dropbox/MyFiles/GitHub/AWR-Miner/test-cases/mem-test
+INFO [2014-10-28 09:25:48] for files that match the pattern: ^awr-hist*.*(\.out|\.gz)$
+INFO [2014-10-28 09:26:27] 
+
+--------------------------------------------------
+
+
+INFO [2014-10-28 09:26:27] ** Starting AWR-Miner ** 
+INFO [2014-10-28 09:26:27] Looking in this directory:
+INFO [2014-10-28 09:26:27] M:/Dropbox/MyFiles/GitHub/AWR-Miner/test-cases/mem-test
+INFO [2014-10-28 09:26:27] for files that match the pattern: ^awr-hist*.*(\.out|\.gz)$
+INFO [2014-10-28 09:26:29] Files found (3): 
+awr-hist-1376736500-DHLS-99-412.out
+awr-hist-389926331-USPS-775-985-timed.out
+awr-hist-85532427-USDA-0-2778.out
+
+INFO [2014-10-28 09:26:29] -
+INFO [2014-10-28 09:26:29] dbname-dbid: DHLS-1376736500
+INFO [2014-10-28 09:26:29] awr-hist-1376736500-DHLS-99-412.out
+INFO [2014-10-28 09:26:29] File size (kb): 3191
+INFO [2014-10-28 09:26:39] Number of sections: 16
+INFO [2014-10-28 09:27:22] Num snap_id for IO_HIST: 312
+INFO [2014-10-28 09:27:36] Finished DB: DHLS - 1376736500
+INFO [2014-10-28 09:27:36] -
+INFO [2014-10-28 09:27:36] dbname-dbid: USPS-389926331
+INFO [2014-10-28 09:27:36] awr-hist-389926331-USPS-775-985-timed.out
+INFO [2014-10-28 09:27:36] File size (kb): 5143
+INFO [2014-10-28 09:27:47] Number of sections: 15
+INFO [2014-10-28 09:28:54] Num snap_id for IO_HIST: 209
+INFO [2014-10-28 09:29:19] Finished DB: USPS - 389926331
+INFO [2014-10-28 09:29:19] -
+INFO [2014-10-28 09:29:19] dbname-dbid: USDA-85532427
+INFO [2014-10-28 09:29:19] awr-hist-85532427-USDA-0-2778.out
+INFO [2014-10-28 09:29:19] File size (kb): 17890
+INFO [2014-10-28 09:30:17] Number of sections: 16
+INFO [2014-10-28 09:32:54] Num snap_id for IO_HIST: 2778
+INFO [2014-10-28 09:33:29] Finished DB: USDA - 85532427
+INFO [2014-11-06 15:22:09] 
+
+--------------------------------------------------
+
+
+INFO [2014-11-06 15:22:09] ** Starting AWR-Miner ** 
+INFO [2014-11-06 15:22:09] Looking in this directory:
+INFO [2014-11-06 15:22:09] M:/Dropbox/MyFiles/GitHub/AWR-Miner/test-cases/mem-test
+INFO [2014-11-06 15:22:09] for files that match the pattern: ^awr-hist*.*(\.out|\.gz)$
+INFO [2014-11-06 15:22:12] Files found (3): 
+awr-hist-1376736500-DHLS-99-412.out
+awr-hist-389926331-USPS-775-985-timed.out
+awr-hist-85532427-USDA-0-2778.out
+
+INFO [2014-11-06 15:22:12] -
+INFO [2014-11-06 15:22:12] dbname-dbid: DHLS-1376736500
+INFO [2014-11-06 15:22:12] awr-hist-1376736500-DHLS-99-412.out
+INFO [2014-11-06 15:22:12] File size (kb): 3191
+INFO [2014-11-06 15:22:15] Number of sections: 16
+INFO [2014-11-06 15:22:25] Finished DB: DHLS - 1376736500
+INFO [2014-11-06 15:22:25] -
+INFO [2014-11-06 15:22:25] dbname-dbid: USPS-389926331
+INFO [2014-11-06 15:22:25] awr-hist-389926331-USPS-775-985-timed.out
+INFO [2014-11-06 15:22:25] File size (kb): 5143
+INFO [2014-11-06 15:22:29] Number of sections: 15
+INFO [2014-11-06 15:22:40] Finished DB: USPS - 389926331
+INFO [2014-11-06 15:22:40] -
+INFO [2014-11-06 15:22:40] dbname-dbid: USDA-85532427
+INFO [2014-11-06 15:22:40] awr-hist-85532427-USDA-0-2778.out
+INFO [2014-11-06 15:22:40] File size (kb): 17890
+INFO [2014-11-06 15:22:58] Number of sections: 16
+INFO [2014-11-06 15:25:24] 
+
+--------------------------------------------------
+
+
+INFO [2014-11-06 15:25:24] ** Starting AWR-Miner ** 
+INFO [2014-11-06 15:25:24] Looking in this directory:
+INFO [2014-11-06 15:25:24] M:/Dropbox/MyFiles/GitHub/AWR-Miner/test-cases/mem-test
+INFO [2014-11-06 15:25:24] for files that match the pattern: ^awr-hist.+USDA.+(\.out|\.gz)$
+INFO [2014-11-06 15:25:27] Files found (1): 
+awr-hist-85532427-USDA-0-2778.out
+
+INFO [2014-11-06 15:25:27] Found parsed data file USDA-85532427-1-2778-parsed.Rda
+INFO [2014-11-06 15:25:50] Finished DB: USDA - 85532427
+INFO [2014-11-06 18:17:45] 
+
+--------------------------------------------------
+
+
+INFO [2014-11-06 18:17:45] ** Starting AWR-Miner ** 
+INFO [2014-11-06 18:17:45] Looking in this directory:
+INFO [2014-11-06 18:17:45] M:/Dropbox/MyFiles/GitHub/AWR-Miner/test-cases/mem-test
+INFO [2014-11-06 18:17:45] for files that match the pattern: ^awr-hist*.*(\.out|\.gz)$
+INFO [2014-11-06 18:17:47] Files found (3): 
+awr-hist-1376736500-DHLS-99-412.out
+awr-hist-389926331-USPS-775-985-timed.out
+awr-hist-85532427-USDA-0-2778.out
+
+INFO [2014-11-06 18:17:48] Found parsed data file DHLS-1376736500-100-412-parsed.Rda
+INFO [2014-11-06 18:17:54] Finished DB: DHLS - 1376736500
+INFO [2014-11-06 18:17:54] -
+INFO [2014-11-06 18:17:54] dbname-dbid: USPS-389926331
+INFO [2014-11-06 18:17:54] awr-hist-389926331-USPS-775-985-timed.out
+INFO [2014-11-06 18:17:54] File size (kb): 5143
+INFO [2014-11-06 18:17:57] Number of sections: 15
+INFO [2014-11-06 18:18:41] 
+
+--------------------------------------------------
+
+
+INFO [2014-11-06 18:18:41] ** Starting AWR-Miner ** 
+INFO [2014-11-06 18:18:41] Looking in this directory:
+INFO [2014-11-06 18:18:41] M:/Dropbox/MyFiles/GitHub/AWR-Miner/test-cases/mem-test
+INFO [2014-11-06 18:18:41] for files that match the pattern: ^awr-hist*.*(\.out|\.gz)$
+INFO [2014-11-06 18:18:43] Files found (3): 
+awr-hist-1376736500-DHLS-99-412.out
+awr-hist-389926331-USPS-775-985-timed.out
+awr-hist-85532427-USDA-0-2778.out
+
+INFO [2014-11-06 18:18:44] Found parsed data file DHLS-1376736500-100-412-parsed.Rda
+INFO [2014-11-06 18:18:50] Finished DB: DHLS - 1376736500
+INFO [2014-11-06 18:18:50] -
+INFO [2014-11-06 18:18:50] dbname-dbid: USPS-389926331
+INFO [2014-11-06 18:18:50] awr-hist-389926331-USPS-775-985-timed.out
+INFO [2014-11-06 18:18:50] File size (kb): 5143
+INFO [2014-11-06 18:18:52] Number of sections: 15
+INFO [2014-11-06 19:26:52] 
+
+--------------------------------------------------
+
+
+INFO [2014-11-06 19:26:52] ** Starting AWR-Miner ** 
+INFO [2014-11-06 19:26:52] Looking in this directory:
+INFO [2014-11-06 19:26:52] M:/Dropbox/MyFiles/GitHub/AWR-Miner/test-cases/mem-test
+INFO [2014-11-06 19:26:52] for files that match the pattern: ^awr-hist.+DHLS.+(\.out|\.gz)$
+INFO [2014-11-06 19:26:54] Files found (1): 
+awr-hist-1376736500-DHLS-99-412.out
+
+INFO [2014-11-06 19:26:54] Found parsed data file DHLS-1376736500-100-412-parsed.Rda
+INFO [2014-11-06 19:27:07] Num snap_id for IO_HIST: 312
+INFO [2014-11-06 19:27:15] Finished DB: DHLS - 1376736500

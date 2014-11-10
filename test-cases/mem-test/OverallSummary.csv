@@ -1,0 +1,2 @@
+"","name","nodes","platform","version","sockets","cores","threads","mem","days","days.shown","AWR.Miner.Capture","AWR.Miner.Graph","cpu","r_iops","w_iops","r_mb_s","w_mb_s","logons_total","logons/core","exec_s","commits_s","aas","sga","pga","memused","sizegb","hosts","outFileName"
+"1","DHLS",2,"Solaris[tm]_OE_(64-bit)","12.1.0.2.0",8,128,1024,2045.5,3.4,3.4,"3.0.21","4.0.12",19.3,40946.7,32190.3,2201.1,5281.6,937.3,7,65117.9,6266.6,304.9,254,52,306,7026,"osc3cn01-d1,osc3cn02-d1","DHLS-100-412-1-plot.pdf"

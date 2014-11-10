@@ -65,8 +65,36 @@
             </exec>
         </sequential>
     </macrodef> 
+	
+	<macrodef name="git-checkout-file">
+        <attribute name="file-name" />
+        <sequential>
+            <exec executable="git" dir=".">
+                <arg value="fetch" />
+            </exec>
+            
+            <exec executable="git">
+                <arg value="checkout" />
+                <arg value="origin" />
+                <arg value="--" />
+				<arg value="@{file-name}" />
+            </exec>
+        </sequential>
+    </macrodef> 
        
   
+	<macrodef name="pandoc-convert">
+		<attribute name="input" />
+		<attribute name="output" />
+        <sequential>
+			<exec executable="pandoc" dir=".">
+                <arg line="--from=markdown_github " />
+                <arg line="--standalone" />
+				<arg line="-o @{output}" />
+                <arg line="@{input}" />
+            </exec>
+        </sequential>
+    </macrodef> 
   
     <target name="git-tag">
 		<!-- <input message="Tag Name" addproperty="tagName" /> -->
@@ -95,6 +123,7 @@
     <copy file="${doc.dir}/readme_awr_miner.html" todir="${build.dir}/capture" />
     
     <copy file="${src.dir}/R-AWR-Mining.R" todir="${build.dir}" />
+	<copy file="./readme.R-plots.html" todir="${build.dir}" />
   </target>
   
   
@@ -175,8 +204,19 @@
     </target>
 
     
-  
-  <target name="build" depends="copy-to-build,updateBuildNumber,replace-version-num,move-capture-dir,zip-capture-dir,move-to-release-dir,git-add-new-release,git-tag">
+	
+	
+	
+	<target name="git-checkout-README">
+        <git-checkout-file file-name="README.md"  />
+    </target>
+	
+	
+	<target name="pandoc-convert-readme" depends="git-checkout-README">
+        <pandoc-convert input="README.md" output="readme.R-plots.html" />
+    </target>
+	
+  <target name="build" depends="pandoc-convert-readme,copy-to-build,updateBuildNumber,replace-version-num,move-capture-dir,zip-capture-dir,move-to-release-dir,git-add-new-release,git-tag,git-push-tags">
     <description>Build</description>
   </target>
 
