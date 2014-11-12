@@ -7,7 +7,7 @@
 #filePatternOverride <- "^awr-hist.+DB110g.+(\\.out|\\.gz)$" | rm(filePatternOverride)
 #plotOverride <- "ALL" [ALL|NONE|SOME|PAGE1|AAS] | rm(plotOverride) | plotOverride <- c("SOME","PAGE1,"AAS")
 #parseOverride <- "ALL" [ALL|NONE|SOME|PAGE1|AAS] | rm(parseOverride) | c("SOME","aas_facet")
-parseOverride <- c("!TOP-SQL-BY-SNAPID")
+#parseOverride <- c("!TOP-SQL-BY-SNAPID")
 #parseOverride <- c("!TOP-SQL-BY-SNAPID","!TOP-SQL-SUMMARY","!TOP-N-TIMED-EVENTS","!IO-WAIT-HISTOGRAM","!IOSTAT-BY-FUNCTION")
 #plotOverride <- "NONE"
 
@@ -49,7 +49,8 @@ options(scipen=999) # disable scientific notation
 debugMode <- FALSE
 flog.threshold(INFO) #TRACE, DEBUG, INFO, WARN, ERROR, FATAL
 #flog.threshold(ERROR,name='getSection') #TRACE, DEBUG, INFO, WARN, ERROR, FATAL 
-flog.threshold(DEBUG,name='print') #TRACE, DEBUG, INFO, WARN, ERROR, FATAL 
+#flog.threshold(DEBUG,name='print') #TRACE, DEBUG, INFO, WARN, ERROR, FATAL 
+# flog.threshold(DEBUG,name='generate_plot_attributes') #TRACE, DEBUG, INFO, WARN, ERROR, FATAL 
 #name: build_data_frames, mainFunction,set_date_break_vars,plot_RAC_activity
 
 if(file.exists('settings.R')){
@@ -78,7 +79,7 @@ if(exists("debugModeOverride")){
 
 
 
-awrMinerPlotVersion <- '4.0.12'
+awrMinerPlotVersion <- '4.0.14'
 
 filePattern <- "^awr-hist*.*(\\.out|\\.gz)$"
 if(exists("filePatternOverride")){
@@ -147,12 +148,13 @@ flog.info(paste0("Files found (",length(main$awrFiles),"): \n",paste(main$awrFil
 
 data_frame_col_not_null <- function(df_in, column_in, min_rows_in = 1){
   #return(TRUE)
-  foo <<- df_in
+  #foo <<- df_in
   flog.debug(paste0("data_frame_col_not_null - ",column_in),name="data_frame_col_not_null")
   
   if((column_in %in% names(df_in))){
     # the relevant column is in the data frame
-    if(nrow(df_in[!(is.na(df_in[[column_in]]))]) >= min_rows_in){
+    #print(nrow(df_in[!(is.na(df_in[[column_in]]))]))
+    if(nrow(df_in[!(is.na(df_in[[column_in]])),]) >= min_rows_in){
       # there are at least min_rows_in number of rows in this df that are not NA
       return(TRUE)
     }
@@ -169,6 +171,11 @@ data_frame_col_not_null <- function(df_in, column_in, min_rows_in = 1){
   return(FALSE)
 }
 
+
+Mode <- function(x) {
+  ux <- unique(x)
+  ux[which.max(tabulate(match(x, ux)))]
+}
 
 generate_snap_id_labels <- function(DF_SNAP_ID_DATE_INT){
   #DF_SNAP_ID_DATE_INT <- DF_SNAP_ID_DATE
@@ -235,7 +242,9 @@ appender.fn <- function(lineIn) {
     awrM$debug.lastFunction <<- lineVars[[1]][3] 
   }
   
-  awrM$debug.unitTimes <<- rbind(awrM$debug.unitTimes,data.frame(db=main$current_db_name,level=lineVars[[1]][1],time=lineVars[[1]][2],message=lineVars[[1]][3],opp=oppCode))
+  if(debugMode){
+    awrM$debug.unitTimes <<- rbind(awrM$debug.unitTimes,data.frame(db=main$current_db_name,level=lineVars[[1]][1],time=lineVars[[1]][2],message=lineVars[[1]][3],opp=oppCode))
+  }
   print(lineIn,quote=FALSE)
 }
 
@@ -505,6 +514,7 @@ generate_plot_attributes <- function(DF_SNAP_ID_DATE_INT){
   
   
   df_plot_attr_int <- add_df_row(df_plot_attr_int,'$date_range',format(min(DF_SNAP_ID_DATE_INT$end),"%Y-%m-%d %H:%M:%S"),format(max(DF_SNAP_ID_DATE_INT$end),"%Y-%m-%d %H:%M:%S"))
+  df_plot_attr_int <- add_df_row(df_plot_attr_int,'date_range_filter','','')
   df_plot_attr_int <- add_df_row(df_plot_attr_int,'$snap_id_range',as.character(min(DF_SNAP_ID_DATE_INT$SNAP_ID)),as.character(max(DF_SNAP_ID_DATE_INT$SNAP_ID)))
   #df_plot_attr_int <- add_df_row(df_plot_attr_int,'date_filter','','')
   df_plot_attr_int <- add_df_row(df_plot_attr_int,'snap_id_filter','','')
@@ -525,21 +535,63 @@ apply_current_attributes <- function(){
   flog.debug('apply_current_attributes - start',name='apply_current_attributes')
   ## Filter by snap ID
   if(nrow(main$current_plot_attributes) > 0){
+    
+    DF_TEMP_DATE <- NULL
+    DF_TEMP_DATE <- get_attrs('date_range_filter')
+    
+    DATE_FILTER_FOUND <- FALSE
+    
+    
+    if(nchar(as.character(DF_TEMP_DATE[1,]$value1))>1){
+      flog.debug('found begin date_range',name='apply_current_attributes')
+      attr$filter_snap_min <<- date_to_snap_id(DF_TEMP_DATE$value1,'low')
+      flog.debug(paste0('filter_snap_min - ',attr$filter_snap_min),name='apply_current_attributes')
+      #attr$filter_snap_min <<- as.vector(DF_TEMP$value1) 
+      DATE_FILTER_FOUND <- TRUE
+    }
+    
+    if(nchar(as.character(DF_TEMP_DATE[1,]$value2))>1){
+      flog.debug('found end date_range',name='apply_current_attributes')
+      attr$filter_snap_max <<- date_to_snap_id(as.character(DF_TEMP_DATE$value2),'high')
+      flog.debug(paste0('filter_snap_max - ',attr$filter_snap_max),name='apply_current_attributes')
+      #attr$filter_snap_max <<- as.vector(DF_TEMP$value1) 
+      DATE_FILTER_FOUND <- TRUE
+    }
+    
+    
+    if(DATE_FILTER_FOUND){
+      flog.debug('apply_current_attributes - end',name='apply_current_attributes')
+      return(TRUE)
+    }
+    
     DF_TEMP <- NULL
     DF_TEMP <- get_attrs('snap_id_filter')
-    print(head(DF_TEMP))
-    #if(nchar(as.character(DF_TEMP[1,]$value1))>1 | nchar(as.character(DF_TEMP[1,]$value2))>1 ){
+    SNAP_ID_FILTER_FOUND <- FALSE
+    
+    
     if(nchar(as.character(DF_TEMP[1,]$value1))>1){
       flog.debug('found begin snap',name='apply_current_attributes')
-      attr$filter_snap_min <<- as.vector(DF_TEMP$value1) 
+      SNAP_ID_FILTER_FOUND <- TRUE
     }
     if(nchar(as.character(DF_TEMP[1,]$value2))>1){
       flog.debug('found end snap',name='apply_current_attributes')
       attr$filter_snap_max <<- as.vector(DF_TEMP$value2) 
+      SNAP_ID_FILTER_FOUND <- TRUE
     }
-    #attr$filter_snap_max <- as.vector(DF_TEMP$value2)
-    #}
   }
+  
+  
+  if(SNAP_ID_FILTER_FOUND){
+    flog.debug('apply_current_attributes - end',name='apply_current_attributes')
+    return(TRUE)
+  }
+  
+  min_date <- max(main$DF_MAIN$end) - days(MAX_DAYS)
+  
+  min_snap_id <- date_to_snap_id(min_date,'low')
+  flog.debug(paste0('min_date - ',min_date),name='apply_current_attributes')
+  flog.debug(paste0('min_snap_id - ',min_snap_id),name='apply_current_attributes')
+  attr$filter_snap_min <<- min_snap_id
   
   
   ## Filter by date
@@ -608,14 +660,16 @@ save_parsed_data <- function(){
     tmp <- get(objName,envir=main)
     if(inherits(tmp,what='data.frame')){
       if(!(objName %in% c('overall_summary_df','capture_times','current_plot_attributes','plot_attributes'))){        
-        print(objName)
+       # print(objName)
         main.save[[objName]] <- tmp
       }
     }
     rm(tmp)
   }
   
-  main.save$parseOverride <- parseOverride
+  if(exists("parseOverride")){
+    main.save$parseOverride <- parseOverride
+  }
   
   snap_id_min <- as.numeric(min(main.save$DF_MAIN$snap))
   snap_id_max <- as.numeric(max(main.save$DF_MAIN$snap))
@@ -660,8 +714,8 @@ parsed_data_exists <- function(fileNameIn){
       
     }
     else if (file.exists(parsedFileName.1)){
-      flog.info(paste0("Found parsed data file ",parsedFileName),name='status')
-      return(parsedFileName)
+      flog.info(paste0("Found parsed data file ",parsedFileName.1),name='status')
+      return(parsedFileName.1)
     }
     else{
       flog.debug("No parsed data found")
@@ -677,8 +731,9 @@ load_parsed_data <- function(fileNameIn){
     tmp <- get(objName,envir=main.save)
     if(inherits(tmp,what='data.frame')){
       if(!(objName %in% c('overall_summary_df','capture_times','current_plot_attributes','plot_attributes'))){        
-        print(objName)
-        print(nrow(tmp))
+      
+        flog.debug(paste0(objName,' - ',nrow(tmp)),name='load_parsed_data')
+      
         main[[objName]] <<- tmp
       }
     }
@@ -694,20 +749,25 @@ filter_parsed_data <- function(snapIdMinIn,snapIdMaxIn){
   for (objName in ls(main)) {
     tmp <- get(objName,envir=main)
     if(inherits(tmp,what='data.frame')){
-      #if(!(objName %in% c('overall_summary_df','capture_times','current_plot_attributes','plot_attributes'))){        
-      if((objName %in% c('DF_MAIN','DF_AAS'))){        
-        print(objName)
-        print(nrow(tmp))
+      if(!(objName %in% c('overall_summary_df','capture_times','current_plot_attributes','plot_attributes'))){        
+      #if((objName %in% c('DF_MAIN','DF_AAS'))){        
+           
+        flog.debug(paste0(objName,' - ',nrow(tmp)),name='filter_parsed_data')
         if(data_frame_col_not_null(tmp,'SNAP_ID')){
-          print('SNAP_ID')
-          tmp <- tmp[SNAP_ID >= snapIdMinIn & SNAP_ID <= snapIdMaxIn]
+          #print('SNAP_ID')
+          #tmp <- tmp[SNAP_ID >= snapIdMinIn & SNAP_ID <= snapIdMaxIn]
+          tmp <- subset(tmp,SNAP_ID >= snapIdMinIn & SNAP_ID <= snapIdMaxIn)
         } else if(data_frame_col_not_null(tmp,'snap')){
-          print('snap')
-          tmp <- tmp[snap >= snapIdMinIn & snap <= snapIdMaxIn]
+          #print('snap')
+          #tmp <- tmp[snap >= snapIdMinIn & snap <= snapIdMaxIn]
+          tmp <- subset(tmp,snap >= snapIdMinIn & snap <= snapIdMaxIn)
+        }
+        else{
+          NULL
         }
         
-        print(nrow(tmp))
         
+        flog.debug(paste0(objName,' - ',nrow(tmp)),name='filter_parsed_data')
         main[[objName]] <<- tmp
       }
     }
@@ -726,7 +786,7 @@ date_to_snap_id <- function(dateIn,lowHigh = 'low'){
   if((is.na(dateInPOSIXct)) | (!(inherits(dateInPOSIXct,what='POSIXct')))){
     # if it wasn't YMD, try YMD_HMS 
     dateInPOSIXct <- try(ymd_hms(paste0(dateIn," UTC"),quiet=TRUE),silent=TRUE)
-    print("ymd_hms")
+    # print("ymd_hms")
   }
   
   if((is.na(dateInPOSIXct)) | (!(inherits(dateInPOSIXct,what='POSIXct')))){
@@ -1035,6 +1095,10 @@ build_data_frames <- function(fileName) {
   DF_IOSTAT_FUNCTION_INT <- getSection(theFileTXT,'IOSTAT-BY-FUNCTION',computedDecSep)
   
   DF_IO_BY_OBJECT_TYPE_INT <- getSection(theFileTXT,'IO-OBJECT-TYPE',computedDecSep)
+  
+  
+  DF_OSSTAT_INT <- getSection(theFileTXT,'OSSTAT',computedDecSep)
+  
   DF_SQL_SUMMARY_INT <- getSection(theFileTXT,'TOP-SQL-SUMMARY',computedDecSep)
   
   DF_SQL_SUMMARY_INT_TMP <<- DF_SQL_SUMMARY_INT
@@ -1086,14 +1150,7 @@ build_data_frames <- function(fileName) {
   
   # load / generate attributes (attributes.csv) so we can use them to filter
   
-  main$current_plot_attributes <<- load_plot_attributes()
-  if(length(main$current_plot_attributes)<2){
-    main$current_plot_attributes <- generate_plot_attributes(DF_SNAP_ID_DATE_INT)
-  }
-  apply_current_attributes()
-  flog.trace(paste0('Snaps:',attr$filter_snap_min,' - ',attr$filter_snap_max))
-  attr$filter_snap_min <- as.numeric(attr$filter_snap_min)
-  attr$filter_snap_max <- as.numeric(attr$filter_snap_max)
+  
   
   
   setkey(DF_SNAP_ID_DATE_INT,SNAP_ID,end)
@@ -1101,62 +1158,30 @@ build_data_frames <- function(fileName) {
   setkey(DF_MAIN_INT,snap,end)
   
   
-  filter_n_days_int <- function(DF_IN){
-    #    filter_snap_min 
-    flog.trace(str(attr$filter_snap_min),name="build_data_frames")
-    flog.trace(str(attr$filter_snap_max),name="build_data_frames")
-    if(inherits(DF_IN,what='data.table')){
-      flog.trace('Its a data.table',name="build_data_frames")
-      
-      DF_IN_TMP <- DF_IN
-      setkey(DF_IN_TMP,SNAP_ID)
-      flog.trace(nrow(DF_IN_TMP),name="build_data_frames")
-      
-      DF_IN_TMP <- DF_IN_TMP[SNAP_ID >= attr$filter_snap_min & SNAP_ID <= attr$filter_snap_max]
-      flog.trace(nrow(DF_IN_TMP),name="build_data_frames")
-      return(DF_IN_TMP)
-    }
-    else{
-      flog.trace('Its a data.frame',name="build_data_frames")
-      return(subset(DF_IN, SNAP_ID >= attr$filter_snap_min & SNAP_ID <= attr$filter_snap_max))  
-    }
-    
-  }
+
   
+
   
-  filter_n_days <- function(DF_IN){
-    df_try <- data.frame()
-    tryCatch(df_try <- filter_n_days_int(DF_IN), 
-             error = function(e) {
-               #traceback()
-               return(df_try)
-             }
-    )
-    return(df_try)
-    
-  }
-  
-  DF_SNAP_ID_DATE_INT<-filter_n_days(DF_SNAP_ID_DATE_INT)
+  #DF_SNAP_ID_DATE_INT<-filter_n_days(DF_SNAP_ID_DATE_INT)
   #DF_SNAP_ID_DATE_INT <- subset(DF_SNAP_ID_DATE_INT, SNAP_ID >= attr$filter_snap_min & SNAP_ID <= attr$filter_snap_max)
   
   numDaysTotal <- difftime(max(DF_MAIN_INT$end), min(DF_MAIN_INT$end), unit="days")
-  DF_MAIN_INT <- subset(DF_MAIN_INT, snap >= attr$filter_snap_min & snap <= attr$filter_snap_max)
-  numDaysFiltered <- difftime(max(DF_MAIN_INT$end), min(DF_MAIN_INT$end), unit="days")
+
   DF_OS_INT <- rbind(DF_OS_INT,data.frame(STAT_NAME='DAYS',STAT_VALUE=round(numDaysTotal,1)))
-  DF_OS_INT <- rbind(DF_OS_INT,data.frame(STAT_NAME='DAYS_FILTERED',STAT_VALUE=round(numDaysFiltered,1)))
+  DF_OS_INT <- rbind(DF_OS_INT,data.frame(STAT_NAME='DAYS_FILTERED',STAT_VALUE=NA))
   
   flog.trace("DF_AAS_INT2.1",head(DF_AAS_INT),name="build_data_frames",capture=TRUE)
   
   #   DF_AAS_INT<-data.frame(DF_AAS_INT)
-  DF_AAS_INT<-filter_n_days(DF_AAS_INT)
-  DF_TOP_N_EVENTS_INT<-filter_n_days(DF_TOP_N_EVENTS_INT)
+  #DF_AAS_INT<-filter_n_days(DF_AAS_INT)
+  #DF_TOP_N_EVENTS_INT<-filter_n_days(DF_TOP_N_EVENTS_INT)
   flog.trace("DF_AAS_INT2.2",head(DF_AAS_INT),name="build_data_frames",capture=TRUE)
-  DF_MEMORY_INT<-filter_n_days(DF_MEMORY_INT)
-  DF_MEMORY_SGA_ADVICE_INT<-filter_n_days(DF_MEMORY_SGA_ADVICE_INT)
-  DF_MEMORY_PGA_ADVICE_INT<-filter_n_days(DF_MEMORY_PGA_ADVICE_INT)
+  #DF_MEMORY_INT<-filter_n_days(DF_MEMORY_INT)
+  #DF_MEMORY_SGA_ADVICE_INT<-filter_n_days(DF_MEMORY_SGA_ADVICE_INT)
+  #DF_MEMORY_PGA_ADVICE_INT<-filter_n_days(DF_MEMORY_PGA_ADVICE_INT)
   
   
-  DF_SQL_BY_SNAPID_INT<-filter_n_days(DF_SQL_BY_SNAPID_INT)
+  #DF_SQL_BY_SNAPID_INT<-filter_n_days(DF_SQL_BY_SNAPID_INT)
   
   flog.trace("DF_SNAP_ID_DATE_INT1",head(DF_SNAP_ID_DATE_INT),name="build_data_frames",capture=TRUE)
   flog.trace("DF_AAS_INT2.3",head(DF_AAS_INT),name="build_data_frames",capture=TRUE)
@@ -1194,7 +1219,7 @@ build_data_frames <- function(fileName) {
   
   #print(head(DF_OS_INT))
   flog.debug("build_data_frames - end",name="build_data_frames")
-  return(list(DF_OS_INT,DF_MAIN_INT,
+  return(list(DF_OS_INT,DF_MAIN_INT,DF_OSSTAT_INT,
               DF_MEMORY_INT,DF_MEMORY_SGA_ADVICE_INT,DF_MEMORY_PGA_ADVICE_INT,
               DF_SPACE_INT,DF_AAS_INT,DF_SQL_SUMMARY_INT,DF_SQL_BY_SNAPID_INT,DF_SNAP_ID_DATE_INT,
               DF_IO_WAIT_HIST_INT,DF_IOSTAT_FUNCTION_INT,
@@ -1280,7 +1305,9 @@ gen_summary_data <- function(){
     DF_MAIN_INT_SUM1 <- subset( DF_MAIN_INT_SUM1, select = -aas )
     
     DF_AAS_TMP <- ddply(main$DF_AAS, .(SNAP_ID), summarise, aas=sum(AVG_SESS) )
-    DF_AAS_TMP <- rename(DF_AAS_TMP, c("SNAP_ID"="snap"))
+    #DF_AAS_TMP <- rename(DF_AAS_TMP, replace=c("SNAP_ID" = "snap" ))
+    #names(d) <- sub("^alpha$", "one", names(d))
+    names(DF_AAS_TMP) <- sub("^SNAP_ID$", "snap", names(DF_AAS_TMP))
     
     DF_MAIN_INT_SUM1 <- merge(DF_MAIN_INT_SUM1,DF_AAS_TMP)
   }
@@ -1312,8 +1339,10 @@ gen_summary_data <- function(){
                           cores=(get_os_stat("NUM_CPU_CORES")*num_instances),
                           threads=(get_os_stat("NUM_CPUS")*num_instances),
                           mem=(get_os_stat("PHYSICAL_MEMORY_GB") * num_instances),
-                          days=get_os_stat("DAYS"),
+                          #days=get_os_stat("DAYS"),
+                          days=main$DAYS_OF_DATA,
                           "days shown"=get_os_stat("DAYS_FILTERED"),
+                          snap.min=Mode(main$DF_SNAP_ID_DATE$dur_m),
                           AWR.Miner.Capture=get_os_stat_string("AWR_MINER_VER"),
                           AWR.Miner.Graph=awrMinerPlotVersion
   )
@@ -1609,14 +1638,37 @@ plot_aas_chart <- function(DF_AAS_INT){
   
   ymax <- max(c(main$cpu_cores+(main$cpu_cores*0.2),(max(DF_AAS_SUM_INT$AVG_SESS)+(max(DF_AAS_SUM_INT$AVG_SESS)*0.2))))
   
+  
+  snapIntervalMode <- Mode(main$DF_SNAP_ID_DATE$dur_m)
+  # print(paste0("snapIntervalMode-",snapIntervalMode))
+  barChartWidthFudgeFactor <- NULL
+  
+  if(snapIntervalMode < 20){
+    barChartWidthFudgeFactor <- 0.5
+  }
+  else{
+    barChartWidthFudgeFactor <- 0.05
+  }
+  
+  #barWidth <- as.numeric(median(main$DF_SNAP_ID_DATE$dur_m))
+  #barWidth <- barWidth + (barWidth*0.1)
+  
+  DF_AAS_INT$barChartWidth <- DF_AAS_INT$dur_m*60
+  DF_AAS_INT$barChartWidth <- DF_AAS_INT$barChartWidth + (DF_AAS_INT$barChartWidth * barChartWidthFudgeFactor)
+  
   plot_aas_wait_class <- ggplot()+
-    geom_area(data=DF_AAS_INT, aes(x = end, y = AVG_SESS,
-                                   fill = WAIT_CLASS),stat = "identity", position = "stack",alpha=.95)+
+    main$gg_hour_bars+
+    #geom_area(data=DF_AAS_INT, aes(x = end, y = AVG_SESS,
+    #                               fill = WAIT_CLASS),stat = "identity", position = "stack",alpha=.95)+
+    geom_bar(data=DF_AAS_INT, aes(x = end, y = AVG_SESS,
+                                  fill = WAIT_CLASS,width=barChartWidth),stat = "identity", position = "stack")+
+    #geom_bar(data=DF_IO_WAIT_HIST_INT,aes(x = end, y = WAIT_COUNT,
+    #                                      fill = WAIT_TIME_MILLI),stat = "identity", position = "stack",alpha=1,width=barWidth)+
     gg_aas_colors+
     theme(axis.title.x  = element_blank(),axis.title.y  = element_blank(),
           legend.key.size =    unit(0.6, "lines"))+
     labs(title=paste("Average Active Sessions (AAS) for ",main$current_db_name,sep=""))+
-    main$gg_hour_bars+
+    
     geom_point(data=max_vals, aes(x=end, y=AVG_SESS), size=2, shape=21)+
     geom_text(data=max_vals, aes(x=end, y=AVG_SESS,label=AVG_SESS),size=3, vjust=-.8, hjust=1.5)+
     geom_text(data=main$DF_SNAP_ID_SUBSET,aes(x=end,y=0,label=SNAP_ID),angle=-20,size=1.5,alpha=0.2,hjust=-0.1,vjust=0.7)+                                     
@@ -1811,6 +1863,7 @@ plot_aas_percent <- function(DF_AAS_INT){
     DF_TOP_N_AGG1 <- main$DF_TOP_N_EVENTS %>%
       group_by(WAIT_CLASS,EVENT_NAME) %>%
       summarise(TOTAL_TIME_S = sum(as.numeric(TOTAL_TIME_S))) %>%
+      ungroup() %>%
       arrange(desc(TOTAL_TIME_S)) %>%
       head(25) %>%
       arrange(WAIT_CLASS)
@@ -2025,7 +2078,7 @@ plot_io_histograms <- function(DF_IO_WAIT_HIST_INT){
   
   barWidth <- (400000/length(unique(main$DF_IO_WAIT_HIST$SNAP_ID)))*2
   
-  flog.info(paste0("Num snap_id for IO_HIST: ",length(unique(main$DF_IO_WAIT_HIST$SNAP_ID))),name='status')
+  flog.debug(paste0("Num snap_id for IO_HIST: ",length(unique(main$DF_IO_WAIT_HIST$SNAP_ID))))
   
   io_hist_area_plot <- ggplot()+
     #ggplot(DF_IO_WAIT_HIST_INT, aes(x = end,
@@ -2085,6 +2138,9 @@ plot_iostat_by_function <- function(DF_IOSTAT_FUNCTION_INT){
   iostat2.melt[with(iostat2.melt, grepl("LG_R_REQS", variable)),]$variable<-"Large Read IOPs"
   iostat2.melt[with(iostat2.melt, grepl("LG_W_REQS", variable)),]$variable<-"Large Write IOPs *"
   
+  iostat2.melt <- subset(iostat2.melt,value > 0 )
+  
+  
   #convert absolute values to per-second values
   iostat2.melt$value_per_s <- round(iostat2.melt$value / (iostat2.melt$dur_m*60),0)
   
@@ -2128,10 +2184,34 @@ plot_iostat_by_function <- function(DF_IOSTAT_FUNCTION_INT){
   gg_iostat_colors <- scale_fill_manual("", values = iostat_colors)
   
   
+  
+  snapIntervalMode <- Mode(main$DF_SNAP_ID_DATE$dur_m)
+  
+  barChartWidthFudgeFactor <- NULL
+  
+  if(snapIntervalMode < 20){
+    barChartWidthFudgeFactor <- 0.5
+  }
+  else{
+    barChartWidthFudgeFactor <- 0.05
+  }
+  
+  barChartWidth <- snapIntervalMode * 60
+  barChartWidth <- barChartWidth + (barChartWidth * barChartWidthFudgeFactor)
+  
+  
+  #iostat2.melt$barChartWidth <- iostat2.melt$dur_m*60
+  #iostat2.melt$barChartWidth <- iostat2.melt$barChartWidth + (iostat2.melt$barChartWidth * barChartWidthFudgeFactor)
+  
+  
+  
+  
   iostat_plot_int <- ggplot()+
     main$gg_hour_bars+
-    geom_area(data=iostat2.melt, aes(x = end, y = value_per_s,
-                                     fill = FUNCTION_NAME),stat = "identity", position = "stack",alpha=.95)+
+    #geom_area(data=iostat2.melt, aes(x = end, y = value_per_s,
+     #                                fill = FUNCTION_NAME),stat = "identity", position = "stack",alpha=.95)+
+    geom_bar(data=iostat2.melt, aes(x = end, y = value_per_s,
+                                  fill = FUNCTION_NAME),stat = "identity", position = "stack",width=barChartWidth)+
     geom_point(data=max_vals, aes(x=end, y=value_per_s), size=2, shape=21)+
     geom_text(data=max_vals, aes(x=end, y=value_per_s,label=label),size=2, vjust=-.5, hjust=1)+
     gg_iostat_colors+
@@ -2795,11 +2875,18 @@ plot_sql_text <- function(){
   
   main$DF_SQL_SUMMARY$ELAP <-  main$DF_SQL_SUMMARY$ELAP / 1000000 # convert microseconds to seconds
   main$DF_SQL_SUMMARY$AVG_DOP <- main$DF_SQL_SUMMARY$PX_SERVERS_EXECS / main$DF_SQL_SUMMARY$EXECS
-  main$DF_SQL_SUMMARY$ELAP_PER_EXEC_S <- (main$DF_SQL_SUMMARY$ELAP / main$DF_SQL_SUMMARY$EXECS)
+  #main$DF_SQL_SUMMARY$ELAP_PER_EXEC_S <- (main$DF_SQL_SUMMARY$ELAP / (ifelse(main$DF_SQL_SUMMARY$EXECS > 0, main$DF_SQL_SUMMARY$EXECS ,1)))
+  main$DF_SQL_SUMMARY$ELAP_PER_EXEC_S <- ifelse(main$DF_SQL_SUMMARY$EXECS==0, 
+                                                main$DF_SQL_SUMMARY$ELAP, 
+                                                (main$DF_SQL_SUMMARY$ELAP / main$DF_SQL_SUMMARY$EXECS ))
   main$DF_SQL_SUMMARY$logRsGBperExec <- ((main$DF_SQL_SUMMARY$LOG_READS* 8)/main$DF_SQL_SUMMARY$EXECS)/1024/1024
   main$DF_SQL_SUMMARY$PhysRsGBperExec <- ((main$DF_SQL_SUMMARY$PHY_READ_GB)/main$DF_SQL_SUMMARY$EXECS)
   numVars <- sapply(main$DF_SQL_SUMMARY, is.numeric)
   main$DF_SQL_SUMMARY[numVars] <- lapply(main$DF_SQL_SUMMARY[numVars], round, digits = 1)
+  
+  main$DF_SQL_SUMMARY$ELAP_PER_EXEC_S <- ifelse(main$DF_SQL_SUMMARY$EXECS==0, 
+                                                paste0('[', main$DF_SQL_SUMMARY$ELAP,']'), 
+                                                main$DF_SQL_SUMMARY$ELAP_PER_EXEC_S)
   
   main$DF_SQL_SUMMARY$ELAP <-  formatC(main$DF_SQL_SUMMARY$ELAP, digits=2,format="fg", big.mark=",")
   main$DF_SQL_SUMMARY$OPTIMIZER_COST <-  formatC(main$DF_SQL_SUMMARY$OPTIMIZER_COST, digits=0,format="fg", big.mark=",")
@@ -2851,6 +2938,7 @@ main$overall_summary_df <- NULL
 main$overall_combined_df <- NULL
 main$DATA_FRAME <- NULL
 main$DF_OS <- NULL
+main$DF_OSSTAT <- NULL
 main$DF_MEMORY <- NULL
 main$DF_MEMORY_SGA_ADVICE <- NULL
 main$DF_MEMORY_PGA_ADVICE <- NULL
@@ -2873,6 +2961,7 @@ main$capture_times <- data.frame()
 
 main$cpu_plot<-NULL
 main$RAC_plot<-NULL
+main$DAYS_OF_DATA<-NULL
 
 
 
@@ -2930,6 +3019,7 @@ main$mainFunction <- function(f){
   
   if(parsedFile==FALSE){
     c(main$DF_OS, main$DF_MAIN,
+      main$DF_OSSTAT,
       main$DF_MEMORY,main$DF_MEMORY_SGA_ADVICE,main$DF_MEMORY_PGA_ADVICE,
       main$DF_SPACE,main$DF_AAS,main$DF_SQL_SUMMARY,main$DF_SQL_BY_SNAPID,
       main$DF_SNAP_ID_DATE,
@@ -2937,15 +3027,32 @@ main$mainFunction <- function(f){
       main$DF_DB_PARAMETERS,main$DF_IO_BY_OBJECT_TYPE,
       #main$DF_TOP_N_EVENTS) := build_data_frames(f,main$current_db_name)
       main$DF_TOP_N_EVENTS) := build_data_frames(f)
-      save_parsed_data()
-      # filter_parsed_data(200,300)
+      save_parsed_data()  
+    
   }
   else{
       load_parsed_data(parsedFile)
-      # filter_parsed_data(200,300)
   }
   
+  main$current_plot_attributes <<- load_plot_attributes()
+  # print(head(main$current_plot_attributes ,n=20))
+  if(nrow(main$current_plot_attributes)<2){
+    
+    main$current_plot_attributes <<- generate_plot_attributes(main$DF_SNAP_ID_DATE )
+    # print(head(main$current_plot_attributes ,n=20))
+  }
+  apply_current_attributes()
+  flog.trace(paste0('Snaps:',attr$filter_snap_min,' - ',attr$filter_snap_max))
+  attr$filter_snap_min <<- as.numeric(attr$filter_snap_min)
+  attr$filter_snap_max <<- as.numeric(attr$filter_snap_max)
   
+  
+  main$DAYS_OF_DATA<-get_os_stat("DAYS")
+
+  filter_parsed_data(attr$filter_snap_min,attr$filter_snap_max)
+  
+  numDaysFiltered <- round(difftime(max(main$DF_MAIN$end), min(main$DF_MAIN$end), unit="days"),1)
+  main$DF_OS$STAT_VALUE[main$DF_OS$STAT_NAME=='DAYS_FILTERED'] <<- numDaysFiltered
 
   
   
@@ -3364,7 +3471,27 @@ main$mainLoop <- function(){
   
   
   write.csv(main$overall_summary_df,'OverallSummary.csv')
+  #print(head(main$plot_attributes,n=20))
   if(length(main$plot_attributes) > 0){
+    if(file.exists('attributes.csv')){
+      DF_OLD_ATTRIBUTES_INT <- read.csv('attributes.csv', head=TRUE,sep=",",stringsAsFactors=FALSE)
+      #print(head(DF_OLD_ATTRIBUTES_INT,n=20))
+    
+      if(!(identical(DF_OLD_ATTRIBUTES_INT,main$plot_attributes))){
+        for (i in 1:100)
+        {
+          newName <- paste("attributes","old",i,"csv",sep=".")
+          if(!(file.exists(newName))){
+            file.rename(from='attributes.csv',
+                        to=newName)
+            break
+          }
+        }
+        
+        
+      }
+    }
+    
     write.csv(main$plot_attributes,'attributes.csv',row.names=FALSE)
   }
   
