@@ -5,7 +5,7 @@
 #debugMoveFiles <- TRUE  | rm(debugMoveFiles)
 #dumpCSV <- TRUE  | rm(dumpCSV)
 #filePatternOverride <- "^awr-hist.+DB110g.+(\\.out|\\.gz)$" | rm(filePatternOverride)
-#plotOverride <- "ALL" [ALL|NONE|SOME|PAGE1|AAS] | rm(plotOverride) | plotOverride <- c("SOME","PAGE1,"AAS")
+#plotOverride <- "ALL" [ALL|NONE|SOME|PAGE1|AAS] | rm(plotOverride) | plotOverride <- c("SOME","PAGE1","AAS")
 #parseOverride <- "ALL" [ALL|NONE|SOME|PAGE1|AAS] | rm(parseOverride) | c("SOME","aas_facet")
 #parseOverride <- c("!TOP-SQL-BY-SNAPID")
 #parseOverride <- c("!TOP-SQL-BY-SNAPID","!TOP-SQL-SUMMARY","!TOP-N-TIMED-EVENTS","!IO-WAIT-HISTOGRAM","!IOSTAT-BY-FUNCTION")
@@ -407,7 +407,7 @@ get_db_name <- function(fileName){
   else{
     theFile <- readLines(fileName,n=20)
     theFileTXT <- paste(theFile, collapse='\n')
-    unlink(theFile)
+    # unlink(theFile)
     
     getInitHeadInfo <- function(headerTxt,attrName){
       strTmp <- str_extract(headerTxt, perl(paste0('\n',attrName,'[[:space:]].+[[:alnum:]]+\n')))
@@ -541,10 +541,12 @@ apply_current_attributes <- function(){
     
     DATE_FILTER_FOUND <- FALSE
     
-    
+    DATE_LOW <- NULL
+    DATE_HIGH <- NULL
     if(nchar(as.character(DF_TEMP_DATE[1,]$value1))>1){
       flog.debug('found begin date_range',name='apply_current_attributes')
       attr$filter_snap_min <<- date_to_snap_id(DF_TEMP_DATE$value1,'low')
+      DATE_LOW <- DF_TEMP_DATE$value1
       flog.debug(paste0('filter_snap_min - ',attr$filter_snap_min),name='apply_current_attributes')
       #attr$filter_snap_min <<- as.vector(DF_TEMP$value1) 
       DATE_FILTER_FOUND <- TRUE
@@ -554,6 +556,7 @@ apply_current_attributes <- function(){
       flog.debug('found end date_range',name='apply_current_attributes')
       attr$filter_snap_max <<- date_to_snap_id(as.character(DF_TEMP_DATE$value2),'high')
       flog.debug(paste0('filter_snap_max - ',attr$filter_snap_max),name='apply_current_attributes')
+      DATE_HIGH <- DF_TEMP_DATE$value2
       #attr$filter_snap_max <<- as.vector(DF_TEMP$value1) 
       DATE_FILTER_FOUND <- TRUE
     }
@@ -561,6 +564,7 @@ apply_current_attributes <- function(){
     
     if(DATE_FILTER_FOUND){
       flog.debug('apply_current_attributes - end',name='apply_current_attributes')
+      flog.info(paste0("Filtering on DATE range ",DATE_LOW," - ",DATE_HIGH ),name='status')
       return(TRUE)
     }
     
@@ -568,24 +572,38 @@ apply_current_attributes <- function(){
     DF_TEMP <- get_attrs('snap_id_filter')
     SNAP_ID_FILTER_FOUND <- FALSE
     
-    
+    SNAP_LOW <- NULL
+    SNAP_HIGH <- NULL
     if(nchar(as.character(DF_TEMP[1,]$value1))>1){
       flog.debug('found begin snap',name='apply_current_attributes')
+      attr$filter_snap_min <<- as.vector(DF_TEMP$value1)
+      SNAP_LOW <- attr$filter_snap_min
       SNAP_ID_FILTER_FOUND <- TRUE
     }
     if(nchar(as.character(DF_TEMP[1,]$value2))>1){
       flog.debug('found end snap',name='apply_current_attributes')
       attr$filter_snap_max <<- as.vector(DF_TEMP$value2) 
+      SNAP_HIGH <- attr$filter_snap_max
       SNAP_ID_FILTER_FOUND <- TRUE
     }
   }
   
   
   if(SNAP_ID_FILTER_FOUND){
+    
+    
     flog.debug('apply_current_attributes - end',name='apply_current_attributes')
+    flog.info(paste0("Filtering on SNAP ID range ",SNAP_LOW," - ",SNAP_HIGH ),name='status')
     return(TRUE)
   }
   
+  
+  
+  
+  ## Filter by date
+  
+  #attr$filter_snap_min <- 220
+  #attr$filter_snap_max <- 228
   min_date <- max(main$DF_MAIN$end) - days(MAX_DAYS)
   
   min_snap_id <- date_to_snap_id(min_date,'low')
@@ -593,11 +611,6 @@ apply_current_attributes <- function(){
   flog.debug(paste0('min_snap_id - ',min_snap_id),name='apply_current_attributes')
   attr$filter_snap_min <<- min_snap_id
   
-  
-  ## Filter by date
-  
-  #attr$filter_snap_min <- 220
-  #attr$filter_snap_max <- 228
   flog.debug('apply_current_attributes - end',name='apply_current_attributes')
   return(TRUE)
 }
@@ -981,7 +994,7 @@ build_data_frames <- function(fileName) {
   theFile <- readLines(fileName)
   theFileTXT <- paste(theFile,collapse="\n")
   flog.debug(length(theFile))
-  unlink(theFile)
+  #unlink(theFile)
   rm(theFile)
   
   
@@ -1000,11 +1013,11 @@ build_data_frames <- function(fileName) {
       dir.create(errorDir,showWarnings = FALSE)
     }
     
-    file.copy(fileName, paste0(dirname(fileName),"/error/")
+    file.copy(fileName, paste0(dirname(fileName),"/error/",basename(fileName)))
               
               #file.rename(from=fileName,
               #           to=paste0(dirname(fileName),"/error/",basename(fileName))
-    )
+    #)
     #}
     
     if(debugMode){
@@ -1644,7 +1657,7 @@ plot_aas_chart <- function(DF_AAS_INT){
   barChartWidthFudgeFactor <- NULL
   
   if(snapIntervalMode < 20){
-    barChartWidthFudgeFactor <- 0.5
+    barChartWidthFudgeFactor <- 0.15
   }
   else{
     barChartWidthFudgeFactor <- 0.05
@@ -1697,6 +1710,8 @@ plot_aas_chart <- function(DF_AAS_INT){
   last_level <- as.character(levels(DF_AAS_INT2$WAIT_CLASS)[length(levels(DF_AAS_INT2$WAIT_CLASS))])
   DF_SNAP_ID_SUBSET2$WAIT_CLASS <- last_level
   ymax2 <- max(c(main$cpu_cores+(main$cpu_cores*0.2),(max(DF_AAS_INT2$AVG_SESS)+(max(DF_AAS_INT2$AVG_SESS)*0.2))))
+  
+  #SUMMARY_DF_TMP <- SUMMARY_DF_TMP[order(SUMMARY_DF_TMP$aas,decreasing = TRUE),]
   
   
   plot_aas_wait_class2_line <- ggplot()+
@@ -1878,8 +1893,10 @@ plot_aas_percent <- function(DF_AAS_INT){
     DF_TOP_N_AGG1$pct_time <- (DF_TOP_N_AGG1$TOTAL_TIME_S/total_time)
     
     DF_TOP_N_AGG1$EVENT_NAME <- substr(str_trim(DF_TOP_N_AGG1$EVENT_NAME),1,25)
+    DF_TOP_N_AGG1$WAIT_CLASS <- as.character(DF_TOP_N_AGG1$WAIT_CLASS)
+    DF_TOP_N_AGG1 <- DF_TOP_N_AGG1[order(DF_TOP_N_AGG1$WAIT_CLASS,decreasing = TRUE),]
     
-    DF_TOP_N_AGG1$WAIT_CLASS <- factor(DF_TOP_N_AGG1$WAIT_CLASS)
+    #DF_TOP_N_AGG1$WAIT_CLASS <- factor(DF_TOP_N_AGG1$WAIT_CLASS)
     
     DF_TOP_N_AGG1 <- subset(DF_TOP_N_AGG1,pct_time > 0.01)
     aas_colors <- c("Administrative" = "#6c6e69", "Application" = "#bf2a05", "Cluster" = "#ccc4af", "Commit" = "#e36a05",
@@ -1888,8 +1905,8 @@ plot_aas_percent <- function(DF_AAS_INT){
                     "System I/O" = "#0993de","User I/O" = "#054ae1")
     gg_aas_colors <- scale_fill_manual("", values = aas_colors)
     
-    aas_pct_plot2 <- ggplot(data=DF_TOP_N_AGG1, aes(x=EVENT_NAME, y=pct_time),aes(color=WAIT_CLASS)) +
-      geom_bar(stat="identity",aes(fill=WAIT_CLASS))+
+    aas_pct_plot2 <- ggplot(data=DF_TOP_N_AGG1, aes(x=EVENT_NAME, y=pct_time),order = desc(WAIT_CLASS)) +
+      geom_bar(stat="identity",aes(fill=WAIT_CLASS,order = desc(WAIT_CLASS)))+
       geom_text(aes(label=paste(round(pct_time * 100, 2), "%", sep = "")),size=2.5, vjust=-0.2)+
       gg_aas_colors+
       scale_y_continuous(labels = percent_format())+
@@ -2078,6 +2095,24 @@ plot_io_histograms <- function(DF_IO_WAIT_HIST_INT){
   
   barWidth <- (400000/length(unique(main$DF_IO_WAIT_HIST$SNAP_ID)))*2
   
+  snapIntervalMode <- Mode(main$DF_SNAP_ID_DATE$dur_m)
+  # print(paste0("snapIntervalMode-",snapIntervalMode))
+  barChartWidthFudgeFactor <- NULL
+  
+  if(snapIntervalMode < 20){
+    barChartWidthFudgeFactor <- 0.15
+  }
+  else{
+    barChartWidthFudgeFactor <- 0.05
+  }
+  
+  #barWidth <- as.numeric(median(main$DF_SNAP_ID_DATE$dur_m))
+  #barWidth <- barWidth + (barWidth*0.1)
+  
+  DF_IO_WAIT_HIST_INT$barChartWidth <- snapIntervalMode*60
+  DF_IO_WAIT_HIST_INT$barChartWidth <- DF_IO_WAIT_HIST_INT$barChartWidth + (DF_IO_WAIT_HIST_INT$barChartWidth * barChartWidthFudgeFactor)
+  
+  
   flog.debug(paste0("Num snap_id for IO_HIST: ",length(unique(main$DF_IO_WAIT_HIST$SNAP_ID))))
   
   io_hist_area_plot <- ggplot()+
@@ -2087,7 +2122,7 @@ plot_io_histograms <- function(DF_IO_WAIT_HIST_INT){
     #             aes(y = WAIT_COUNT)+
     main$gg_hour_bars+
     geom_bar(data=DF_IO_WAIT_HIST_INT,aes(x = end, y = WAIT_COUNT,
-                                          fill = WAIT_TIME_MILLI),stat = "identity", position = "stack",alpha=1,width=barWidth)+
+                                          fill = WAIT_TIME_MILLI,width=barChartWidth),stat = "identity", position = "stack",alpha=1)+
     facet_grid(EVENT_NAME ~ .,scales="free_y")+
     gg_io_hist_colors2+
     
@@ -2138,6 +2173,8 @@ plot_iostat_by_function <- function(DF_IOSTAT_FUNCTION_INT){
   iostat2.melt[with(iostat2.melt, grepl("LG_R_REQS", variable)),]$variable<-"Large Read IOPs"
   iostat2.melt[with(iostat2.melt, grepl("LG_W_REQS", variable)),]$variable<-"Large Write IOPs *"
   
+  iostat2.melt[with(iostat2.melt, grepl("Buffer Cache Reads", FUNCTION_NAME)),]$FUNCTION_NAME<-"Buffer Cache Reads (from disk)"
+  
   iostat2.melt <- subset(iostat2.melt,value > 0 )
   
   
@@ -2175,7 +2212,7 @@ plot_iostat_by_function <- function(DF_IOSTAT_FUNCTION_INT){
   
   
   #http://docs.oracle.com/cd/E24628_01/server.121/e17635/tdppt_realtime.htm#CBBEFAAC   
-  iostat_colors <- c("ARCH" = "#cc6617", "Archive Manager" = "#9ccecc", "Buffer Cache Reads" = "#0133ff", "Data Pump" = "#747254",
+  iostat_colors <- c("ARCH" = "#cc6617", "Archive Manager" = "#9ccecc", "Buffer Cache Reads (from disk)" = "#0133ff", "Data Pump" = "#747254",
                      "DBWR" = "#993309","Direct Reads" = "#00cc2e","Direct Writes" = "#9aff9a","LGWR" = "#cc330c",
                      "Others" = "#ff6699","Recovery" = "#5c460c","RMAN" = "#fcfe84",
                      "Smart Scan" = "#800040","Streams AQ" = "#9c9274","XDB" = "#c4b69c")
@@ -2419,17 +2456,128 @@ plot_cpu_sd <- function(DF_MAIN_INT){
 #cpu_plot <- plot_cpu(main$DF_MAIN)
 
 
+plot_cpu_host_db <- function(DF_MAIN_INT){
+  flog.debug('plot_cpu_host_db - start',name='plot_cpu_host_db')
+  
+  
+  
+  DF_MAIN_INT$cpu_per_s_pct <- round((DF_MAIN_INT$cpu_per_s / get_os_stat("NUM_CPU_CORES"))*100,1)
+  DF_MAIN_INT$cpu_per_s_sd_pct <- round((DF_MAIN_INT$cpu_per_s_sd / get_os_stat("NUM_CPU_CORES"))*100,1)
+  
+  DF_INST_INT <- data.frame(unique(DF_MAIN_INT$inst))
+  DF_SNAP_ID_SUBSET2 <- merge(DF_INST_INT,main$DF_SNAP_ID_SUBSET)
+  
+  vals <- expand.grid(end = unique(main$DF_SNAP_ID_SUBSET$end),
+                      inst = unique(DF_MAIN_INT$inst))
+  
+  DF_SNAP_ID_SUBSET2 <- merge(vals,main$DF_SNAP_ID_SUBSET)
+  
+  x.melt <- melt(DF_MAIN_INT, id.var = c("end","inst","os_cpu_sd","cpu_per_s_sd_pct"), measure.var = c("os_cpu", "cpu_per_s_pct"))
+  
+  x.melt$sd <- ifelse(x.melt$variable=="os_cpu",x.melt$os_cpu_sd,x.melt$cpu_per_s_sd_pct)
+  
+  x.melt$variable<-gsub( "cpu_per_s_pct" , "DB CPU Avg" , x.melt$variable)
+  
+  x.melt$variable<-gsub( "os_cpu" , "OS CPU Avg" , x.melt$variable)
+  # add 2 minutes to the DB CPU Avg rows to keep the lines for std dev from over-plotting.
+  x.melt[with(x.melt, grepl("DB CPU Avg", variable)),]$end<-x.melt[with(x.melt, grepl("DB CPU Avg", variable)),]$end + minutes(2)
+  
+  
+  max_vals <- data.frame()
+  gg_maxvals_point <- theme()
+  gg_maxvals_text <- theme()
+  
+  get_maxvals_int <- function(df_in){
+    max_vals_int <- ddply(df_in, .(variable,inst,format(end,"%y/%m/%d")), subset, subset = rank(-value) <= 1)
+    max_vals_int$label <- formatC(max_vals_int$value, format="d", big.mark=",")
+    
+    #gg_maxvals_point <<- geom_point(data=max_vals_int, aes(x=end, y=value, fill=variable), size=2, shape=21)
+    gg_maxvals_point_int <- geom_point(data=max_vals_int, aes(x=end, y=value, fill=variable), size=2, shape=21)
+    
+    gg_maxvals_text_int <- geom_text(data=max_vals_int, aes(x=end, y=value, color=variable,label=label),size=3, vjust=-.8, hjust=1.5)
+    return(list(max_vals_int,gg_maxvals_point_int,gg_maxvals_text_int))
+  }
+  
+  
+  tryCatch(c(max_vals,gg_maxvals_point,gg_maxvals_text) :=  get_maxvals_int(x.melt),
+           error = function(e) {
+             #traceback()
+             gg_maxvals_point <- theme()
+             gg_maxvals_text <- theme()
+             
+           }
+  )
+  
+  DF_ANNOTATE_INT <- data.frame(x=quantile(x.melt$end,0.10),y=115,inst=min(x.melt$inst),
+                                labs="Standard Deviation shown as vertical lines over points")
+  
+  p <- ggplot(data=x.melt, aes(x=end, y=value),aes(group=variable,color=variable)) +
+    main$gg_hour_bars+
+    geom_point(aes(group=variable,color=variable), size=0.6,shape=1,alpha=0.8)+
+    geom_linerange(aes(ymin=value-1.96*sd,ymax=value+1.96*sd,color=variable), alpha=0.5,size=0.1)+
+    attr$themeScaleColour+attr$themeScaleFill+
+    stat_smooth(method = "loess",n=300,size=.2,alpha=.1,linetype="dashed",formula=y~poly(x,2),
+                aes(group=variable,color=variable,fill=variable))+
+    ylab('CPU Percent')+
+    ylim(0,115)+
+    gg_maxvals_point+gg_maxvals_text+
+    
+    geom_text(data=DF_SNAP_ID_SUBSET2,aes(x=end,y=0,label=SNAP_ID),angle=-45,size=1.5,hjust=-.5,alpha=0.2)+
+    geom_point(data=DF_SNAP_ID_SUBSET2,aes(x=end,y=0),alpha=0.2,size=1)+
+    facet_grid(inst ~ .)+
+    theme(axis.title.x  = element_blank())+
+    theme(panel.background = element_rect(colour = "#777777"))+
+    xlim(min(x.melt$end),max(x.melt$end))+
+    labs(title=paste("OS CPU % and Database CPU % for ",main$current_db_name,sep=""))+
+    
+    attr$vertical_line + attr$vertical_text +
+    #scale_x_datetime(labels = date_format_tz("%a, %b %d %I %p", tz="UTC"),breaks = date_breaks("2 hour"),
+    scale_x_datetime(labels = date_format_tz("%a, %b %d %I %p", tz="UTC"),breaks = attr$date_break_major_var,
+                     minor_breaks = attr$date_break_minor_var,
+                     limits = c(min(x.melt$end),max(x.melt$end))
+    )+
+    main$gg_avg_max_fill+main$gg_avg_max_color+
+    geom_text(data=DF_ANNOTATE_INT,aes(x=x,y=y,label=labs),size=2,alpha=.4)
+  #annotate("text", x = median(x.melt$end), y = 105, label = "Standard Deviation shown as vertical lines over points",size=2,alpha=.4)
+  # theme(axis.text.x=element_text(angle=-30, hjust=-.1,vjust=1,size=6))
+  #theme(panel.grid.major = element_line("#eeeeee", size = 0.2,linetype = "dotted"))+
+  #theme(panel.grid.minor = element_line("#efefef", size = 0.1,linetype = "dotted"))
+  #main$gg_bottom_panel
+  
+  #p
+  #p_gt <- ggplot_gtable(ggplot_build(p))
+  flog.debug('plot_cpu_host_db - end',name='plot_cpu_host_db')
+  
+  return(p)
+  #}
+}
+
+
 plot_cpu <- function(DF_MAIN_INT){
   
   # tyler made a 1-0ff change for army ERP
   #p_gt <- plot_cpu_no_sd(DF_MAIN_INT)
   #return(p_gt)
   
-  if("cpu_per_s" %in% colnames(DF_MAIN_INT)){
-    p_gt <- plot_cpu_sd(DF_MAIN_INT)
+  if(data_frame_col_not_null(DF_MAIN_INT,'h_cpu_per_s')){
+    
+    p_gt <- plot_cpu_host_db(DF_MAIN_INT)
+  }
+  else if("cpu_per_s" %in% colnames(DF_MAIN_INT)){
+    if(sum(DF_MAIN_INT$os_cpu)>0){
+      p_gt <- plot_cpu_sd(DF_MAIN_INT)
+    }
+    else{
+      p_gt <- NULL
+    }
   }
   else{
-    p_gt <- plot_cpu_no_sd(DF_MAIN_INT)
+    if(sum(DF_MAIN_INT$os_cpu)>0){
+      p_gt <- plot_cpu_no_sd(DF_MAIN_INT)
+    }
+    else{
+      p_gt <- NULL
+    }
   }
   
   return(p_gt)
@@ -3132,7 +3280,7 @@ main$mainFunction <- function(f){
   
   flog.trace(str(tblText3),name='mainFunction')
   
-  if(okToPrintPlot('aas1') | okToPrintPlot('page1')){
+  if(okToPrintPlot('aas') | okToPrintPlot('page1')){
   #if(okToPrintPlot('aas1')){
     c(aas_pct1, aas_pct2) := plot_aas_percent(main$DF_AAS)
     
@@ -3216,7 +3364,7 @@ main$mainFunction <- function(f){
   }
   
   #flog.remove(main$current_db_name)
-  if(okToPrintPlot('aas1')){ 
+  if(okToPrintPlot('aas')){ 
     
     #grid.newpage()
     #grid.draw(aas_plot)
@@ -3250,7 +3398,9 @@ main$mainFunction <- function(f){
   if(okToPrintPlot('cpu')){ 
     cpu_plot <- NULL
     cpu_plot <- plot_cpu(main$DF_MAIN)
-    print(cpu_plot)
+    if(inherits(cpu_plot,what='ggplot')){
+      print(cpu_plot)
+    }
   }
   
   if(okToPrintPlot('io')){ 
