@@ -1622,8 +1622,11 @@ plot_aas_chart <- function(DF_AAS_INT){
   
   vals <- expand.grid(end = unique(DF_AAS_INT$end),
                       WAIT_CLASS = unique(DF_AAS_INT$WAIT_CLASS))
+  vals <- data.table(vals)
   
-  DF_AAS_INT <- merge(vals,DF_AAS_INT)
+  DF_AAS_INT <- merge(vals,DF_AAS_INT,by=c("end","WAIT_CLASS"))
+  
+  
   rm(vals)
   
   DF_AAS_INT <- subset(DF_AAS_INT,end != TRUE)
@@ -2026,7 +2029,8 @@ plot_io <- function(DF_MAIN_BY_SNAP_INT){
     return(plot_int)
   }
   
-  p <- plot_io_int(subset(x.melt,variable %in% c("Read IOPs Direct *","Write IOPs Direct *","Read IOPs","Write IOPs","Read MB/s","Write MB/s") & stat == "Avg"))
+  #p <- plot_io_int(subset(x.melt,variable %in% c("Read IOPs Direct *","Write IOPs Direct *","Read IOPs","Write IOPs","Read MB/s","Write MB/s") & stat == "Avg"))
+  p <- plot_io_int(subset(x.melt,variable %in% c("Read IOPs Direct *","Write IOPs Direct *","Read IOPs","Write IOPs","Read MB/s","Write MB/s")))
   
   #p_gt <- ggplot_gtable(ggplot_build(p))
   #p_gt$layout$clip[p_gt$layout$name=="panel"] <- "off"
@@ -3285,7 +3289,17 @@ main$mainFunction <- function(f){
     c(aas_pct1, aas_pct2) := plot_aas_percent(main$DF_AAS)
     
     c(aas_plot, aas_plot2_gt,aas_plot2_line) := plot_aas_chart(main$DF_AAS)
+    #l <<- lineprof(c(aas_plot, aas_plot2_gt,aas_plot2_line) := plot_aas_chart(main$DF_AAS))
   }
+  
+  
+  removeIfExists <- function(...) {
+    xchar <- deparse(substitute(...))
+    if(exists(xchar)){
+      rm(list=xchar,envir=sys.frame(-1))
+    }
+  }
+  
   
   
   plotPDF <- TRUE
@@ -3359,6 +3373,13 @@ main$mainFunction <- function(f){
                  )
                }
       )
+      removeIfExists(tblText)
+      removeIfExists(tblText2)
+      removeIfExists(tblText3)
+      removeIfExists(aas_pct1)
+      removeIfExists(aas_pct2)
+      removeIfExists(x)
+      
       flog.debug('print_page1 - end')
     }
   }
@@ -3369,6 +3390,7 @@ main$mainFunction <- function(f){
     #grid.newpage()
     #grid.draw(aas_plot)
     print(aas_plot)
+    removeIfExists(aas_plot)
   }
   
   
@@ -3379,18 +3401,6 @@ main$mainFunction <- function(f){
   
 
   
-  if(okToPrintPlot('iostat_function')){ 
-    iostat_by_function_plot <- NULL
-    if( nrow(main$DF_IOSTAT_FUNCTION)>10){
-      iostat_by_function_plot <-  plot_iostat_by_function(main$DF_IOSTAT_FUNCTION)
-    }
-  }
-  
-
-  
-  
-  
-  
   
   
   
@@ -3400,13 +3410,15 @@ main$mainFunction <- function(f){
     cpu_plot <- plot_cpu(main$DF_MAIN)
     if(inherits(cpu_plot,what='ggplot')){
       print(cpu_plot)
+      #print(plot_cpu(main$DF_MAIN))
     }
+    removeIfExists(cpu_plot)
   }
   
   if(okToPrintPlot('io')){ 
     io_plot <- plot_io(main$DF_MAIN_BY_SNAP)
     print(io_plot)
-    
+    removeIfExists(io_plot)
   }
   
   if(okToPrintPlot('iostat_function')){ 
@@ -3414,6 +3426,7 @@ main$mainFunction <- function(f){
         iostat_by_function_plot <-  plot_iostat_by_function(main$DF_IOSTAT_FUNCTION)
         flog.debug('print_iostat_function - start',name='print')
       print(iostat_by_function_plot)
+      removeIfExists(iostat_by_function_plot)
       flog.debug('print_iostat_function - end',name='print')
     }
   }
@@ -3489,7 +3502,8 @@ main$mainFunction <- function(f){
   
   #memory_sga_advise_plot_tmp <<- memory_sga_advise_plot
   
-  if(okToPrintPlot('memory_plot_sga_advise') && okToPrintPlot('memory_plot_pga_advise')){ 
+  #if(okToPrintPlot('memory_plot_sga_advise') && okToPrintPlot('memory_plot_pga_advise')){ 
+  if(1==2){
     
     memory_sga_advise_plot <- NULL
     
@@ -3572,6 +3586,39 @@ main$mainFunction <- function(f){
     
   }
   
+  
+  # improved list of objects
+  .ls.objects <- function (pos = 1, pattern, order.by,
+                           decreasing=FALSE, head=FALSE, n=5) {
+    napply <- function(names, fn) sapply(names, function(x)
+      fn(get(x, pos = pos)))
+    names <- ls(pos = pos, pattern = pattern)
+    obj.class <- napply(names, function(x) as.character(class(x))[1])
+    obj.mode <- napply(names, mode)
+    obj.type <- ifelse(is.na(obj.class), obj.mode, obj.class)
+    obj.prettysize <- napply(names, function(x) {
+      capture.output(format(utils::object.size(x), units = "auto")) })
+    obj.size <- napply(names, object.size)
+    obj.dim <- t(napply(names, function(x)
+      as.numeric(dim(x))[1:2]))
+    vec <- is.na(obj.dim)[, 1] & (obj.type != "function")
+    obj.dim[vec, 1] <- napply(names, length)[vec]
+    out <- data.frame(obj.type, obj.size, obj.prettysize, obj.dim)
+    names(out) <- c("Type", "Size", "PrettySize", "Rows", "Columns")
+    if (!missing(order.by))
+      out <- out[order(out[[order.by]], decreasing=decreasing), ]
+    if (head)
+      out <- head(out, n)
+    out
+  }
+  
+  # shorthand
+  lsos <- function(..., n=10) {
+    .ls.objects(..., order.by="Size", decreasing=TRUE, head=TRUE, n=n)
+  }
+  
+  print(lsos(pos = environment()))
+  
   flog.debug(paste0('Database - ',main$current_db_name," - end"))
   flog.info(paste0('Finished DB: ',main$current_db_name))
   flog.info(paste0('Finished DB: ',main$current_db_name," - ",main$current_dbid),name='status')
@@ -3582,10 +3629,13 @@ main$mainLoop <- function(){
   for (f in main$awrFiles) {
     if(debugMode){
       print('Running without tryCatch as we are in debug mode')
+      #l <<- lineprof(main$mainFunction(f))
       main$mainFunction(f)
     }
     else{
-      tryCatch(main$mainFunction(f), 
+      tryCatch(
+        #l <<- lineprof(main$mainFunction(f)),
+        main$mainFunction(f), 
                error = function(e) {
                  traceback()
                  flog.appender(appender.file(paste0(f,'.err')), name=f)
@@ -3611,7 +3661,7 @@ main$mainLoop <- function(){
     SUMMARY_DF_TMP <- main$overall_summary_df
     SUMMARY_DF_TMP$link <- paste0('<a href="',SUMMARY_DF_TMP$outFileName,'">',SUMMARY_DF_TMP$outFileName,'</a>')
     #TEST_DF <<- SUMMARY_DF_TMP
-    SUMMARY_DF_TMP <- subset(SUMMARY_DF_TMP,,select=c(name,nodes,platform,cores,version,memused,sizegb,aas,link))
+    #SUMMARY_DF_TMP <- subset(SUMMARY_DF_TMP,select=c(name,nodes,platform,cores,version,memused,sizegb,aas,link))
     
     SUMMARY_DF_TMP <- SUMMARY_DF_TMP[order(SUMMARY_DF_TMP$aas,decreasing = TRUE),]
     sjt.df(SUMMARY_DF_TMP,file=paste0("summary.html"),describe=FALSE,alternateRowColors=TRUE)
@@ -3645,6 +3695,13 @@ main$mainLoop <- function(){
     write.csv(main$plot_attributes,'attributes.csv',row.names=FALSE)
   }
   
+  
+  
+  
+  
+  
+  
+  
   if(debugMode){
     awrM$debug.unitTimes[awrM$debug.unitTimes == ""] <<- NA
     
@@ -3667,6 +3724,24 @@ main$mainLoop <- function(){
 }
 
 #get_db_names()
+#library(lineprof)
+#l <- NULL
 main$mainLoop()
 
+
+
+ #library(lineprof)
+ #l <- lineprof(main$mainLoop())
+# print(l, depth = 3)
+#shine(l)
+
 #====================================================================================================================
+
+
+
+
+
+
+
+
+
