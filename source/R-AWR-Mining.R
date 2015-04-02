@@ -52,6 +52,7 @@ flog.threshold(INFO) #TRACE, DEBUG, INFO, WARN, ERROR, FATAL
 #flog.threshold(DEBUG,name='print') #TRACE, DEBUG, INFO, WARN, ERROR, FATAL 
 # flog.threshold(DEBUG,name='generate_plot_attributes') #TRACE, DEBUG, INFO, WARN, ERROR, FATAL 
 #name: build_data_frames, mainFunction,set_date_break_vars,plot_RAC_activity
+try(rm(main),silent=TRUE)
 
 if(file.exists('settings.R')){
   source('settings.R')
@@ -3436,7 +3437,12 @@ main$mainFunction <- function(f){
   if(okToPrintPlot('io_histogram')){ 
     if( nrow(main$DF_IO_WAIT_HIST)>10){
       c(io_hist_plot, io_hist_area_plot) := plot_io_histograms(main$DF_IO_WAIT_HIST)
-      x <- grid.arrange(io_hist_plot,io_hist_area_plot , ncol = 1, heights=c(1,4))
+      flog.debug('io_histogram - start',name='print')
+      #x <- grid.arrange(io_hist_plot, ncol = 1)
+      #x <- grid.arrange(io_hist_area_plot, ncol = 1)
+      x <- grid.arrange(io_hist_plot,io_hist_area_plot , ncol = 1, heights=c(1,4),as.table=FALSE)
+      #print(io_hist_plot)
+      flog.debug('io_histogram - end',name='print')
     }
   }
   #head(main$DF_IO_WAIT_HIST)
@@ -3617,7 +3623,7 @@ main$mainFunction <- function(f){
     .ls.objects(..., order.by="Size", decreasing=TRUE, head=TRUE, n=n)
   }
   
-  print(lsos(pos = environment()))
+  #print(lsos(pos = environment()))
   
   flog.debug(paste0('Database - ',main$current_db_name," - end"))
   flog.info(paste0('Finished DB: ',main$current_db_name))
