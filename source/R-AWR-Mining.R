@@ -80,7 +80,7 @@ if(exists("debugModeOverride")){
 
 
 
-awrMinerPlotVersion <- '4.0.14'
+awrMinerPlotVersion <- '4.0.16'
 
 filePattern <- "^awr-hist*.*(\\.out|\\.gz)$"
 if(exists("filePatternOverride")){
@@ -137,6 +137,7 @@ attr$vertical_text <- theme()
 attr$date_break_major_var <- date_breaks("1 day")
 attr$date_break_minor_var <- date_breaks("12 hour")
 
+attr$barChartWidth <- NULL
 
 
 
@@ -1411,6 +1412,39 @@ gen_summary_data <- function(){
   
 }
 
+
+computeBarChartWidth <- function(){
+  
+  
+  snapIntervalMode <- Mode(main$DF_SNAP_ID_DATE$dur_m)
+  # print(paste0("snapIntervalMode-",snapIntervalMode))
+  barChartWidthFudgeFactor <- NULL
+  
+  if(snapIntervalMode < 20){
+    barChartWidthFudgeFactor <- 0.15
+  }
+  else{
+    barChartWidthFudgeFactor <- 0.05
+  }
+  
+  #barWidth <- as.numeric(median(main$DF_SNAP_ID_DATE$dur_m))
+  #barWidth <- barWidth + (barWidth*0.1)
+  
+
+  barChartWidth <- snapIntervalMode*60
+  barChartWidth <- barChartWidth + (barChartWidth * barChartWidthFudgeFactor)
+  attr$barChartWidth <<- barChartWidth
+  
+#   main$DF_SNAP_ID_DATE$barChartWidth <- main$DF_SNAP_ID_DATE$dur_m * 60
+#   main$DF_SNAP_ID_DATE$barChartWidth <- ifelse(main$DF_SNAP_ID_DATE$dur_m < 20,
+#                                                main$DF_SNAP_ID_DATE$barChartWidth + (main$DF_SNAP_ID_DATE$barChartWidth *  0.15),
+#                                                main$DF_SNAP_ID_DATE$barChartWidth + (main$DF_SNAP_ID_DATE$barChartWidth *  0.05))
+#   
+#   
+#   main$DF_SNAP_ID_DATE$barChartWidth <- as.numeric(main$DF_SNAP_ID_DATE$barChartWidth)
+  
+}
+
 #====================================================================================================================
 
 
@@ -1610,7 +1644,7 @@ plot_summary_boxplot_main <- function(){
 
 
 
-
+#DF_AAS <- data.table()
 
 
 plot_aas_chart <- function(DF_AAS_INT){
@@ -1673,14 +1707,16 @@ plot_aas_chart <- function(DF_AAS_INT){
   DF_AAS_INT$barChartWidth <- DF_AAS_INT$dur_m*60
   DF_AAS_INT$barChartWidth <- DF_AAS_INT$barChartWidth + (DF_AAS_INT$barChartWidth * barChartWidthFudgeFactor)
   
+  #DF_AAS <<- DF_AAS_INT
+  
   plot_aas_wait_class <- ggplot()+
     main$gg_hour_bars+
-    #geom_area(data=DF_AAS_INT, aes(x = end, y = AVG_SESS,
-    #                               fill = WAIT_CLASS),stat = "identity", position = "stack",alpha=.95)+
-    geom_bar(data=DF_AAS_INT, aes(x = end, y = AVG_SESS,
-                                  fill = WAIT_CLASS,width=barChartWidth),stat = "identity", position = "stack")+
-    #geom_bar(data=DF_IO_WAIT_HIST_INT,aes(x = end, y = WAIT_COUNT,
-    #                                      fill = WAIT_TIME_MILLI),stat = "identity", position = "stack",alpha=1,width=barWidth)+
+    geom_area(data=DF_AAS_INT, aes(x = end, y = AVG_SESS,
+                                   fill = WAIT_CLASS),stat = "identity", position = "stack",alpha=.95)+
+#     geom_bar(data=DF_AAS_INT, aes(x = end, y = AVG_SESS,
+#                                   fill = WAIT_CLASS,width=barChartWidth),stat = "identity", position = "stack")+
+   # geom_bar(data=DF_AAS_INT, aes(x = end, y = AVG_SESS,
+    #                              fill = WAIT_CLASS),stat = "identity", position = "stack")+
     gg_aas_colors+
     theme(axis.title.x  = element_blank(),axis.title.y  = element_blank(),
           legend.key.size =    unit(0.6, "lines"))+
@@ -2064,11 +2100,28 @@ plot_io_histograms <- function(DF_IO_WAIT_HIST_INT){
   
   
   
+  # This is to fill in missing data
+  # Create a data frame with all possible values of the following columns
   vals <- expand.grid(SNAP_ID = unique(DF_IO_WAIT_HIST_INT$SNAP_ID),
-                      WAIT_TIME_MILLI = unique(DF_IO_WAIT_HIST_INT$WAIT_TIME_MILLI))
+                      WAIT_TIME_MILLI = unique(DF_IO_WAIT_HIST_INT$WAIT_TIME_MILLI),
+                      EVENT_NAME =unique(DF_IO_WAIT_HIST_INT$EVENT_NAME)
+  )
+  # These two data frames are just to add in the 2 missing columns of WAIT_CLASS and end that we elimintaded
+  wait.class.fill <- unique(DF_IO_WAIT_HIST_INT %>% select(EVENT_NAME,WAIT_CLASS))
+  end.fill <- unique(DF_IO_WAIT_HIST_INT %>% select(SNAP_ID,end))
   
-  DF_IO_WAIT_HIST_INT <- merge(vals,DF_IO_WAIT_HIST_INT)
+  # Join in WAIT_CLASS and end
+  vals <- left_join(tbl_dt(vals),wait.class.fill,copy = TRUE,by=c("EVENT_NAME"))
+  vals <- left_join(tbl_dt(vals),end.fill,copy = TRUE,by=c("SNAP_ID"))
   
+  # Join vals to our original frame so we have original plus missing rows
+  DF_IO_WAIT_HIST_INT <- left_join(tbl_dt(vals),DF_IO_WAIT_HIST_INT)
+  # Set value of WAIT_COUNT in new (missing) rows to zero
+  DF_IO_WAIT_HIST_INT[is.na(DF_IO_WAIT_HIST_INT$WAIT_COUNT)]$WAIT_COUNT <- 0
+  
+  
+  
+
   DF_IO_WAIT_HIST_INT <- data.table(DF_IO_WAIT_HIST_INT)
   setkey(DF_IO_WAIT_HIST_INT,end, EVENT_NAME, WAIT_TIME_MILLI)
   DF_IO_WAIT_HIST_INT <- DF_IO_WAIT_HIST_INT[, list(WAIT_COUNT = sum(WAIT_COUNT)), by = list(end, EVENT_NAME, WAIT_TIME_MILLI)]
@@ -2086,7 +2139,7 @@ plot_io_histograms <- function(DF_IO_WAIT_HIST_INT){
   
   gg_io_hist_colors2 <- scale_fill_manual(values = io_hist_colors2,name="wait ms" )
   
-  io_hist_plot <- ggplot(DF_IO_WAIT_HIST_INT_GROUP,aes(x=factor(WAIT_TIME_MILLI),fill = WAIT_TIME_MILLI,))+
+  io_hist_plot <- ggplot(DF_IO_WAIT_HIST_INT_GROUP,aes(x=factor(WAIT_TIME_MILLI),fill = WAIT_TIME_MILLI))+
     geom_bar(stat ='identity',aes(y=WAIT_PCT),width=1)+
     geom_text(aes(label=round(WAIT_PCT*100,0),y=WAIT_PCT),size=2)+
     facet_grid(. ~ EVENT_NAME,scales="free_y")+
@@ -2126,8 +2179,12 @@ plot_io_histograms <- function(DF_IO_WAIT_HIST_INT){
     #   geom_bar(stat = "identity", position = "stack",right=FALSE,drop=TRUE,
     #             aes(y = WAIT_COUNT)+
     main$gg_hour_bars+
-    geom_bar(data=DF_IO_WAIT_HIST_INT,aes(x = end, y = WAIT_COUNT,
-                                          fill = WAIT_TIME_MILLI,width=barChartWidth),stat = "identity", position = "stack",alpha=1)+
+#     geom_bar(data=DF_IO_WAIT_HIST_INT,aes(x = end, y = WAIT_COUNT,
+#                                           fill = WAIT_TIME_MILLI,width=barChartWidth),stat = "identity", position = "stack",alpha=1)+
+  geom_area(data=DF_IO_WAIT_HIST_INT,aes(x = end, y = WAIT_COUNT,
+                                        fill = WAIT_TIME_MILLI),stat = "identity", position = "stack",alpha=1)+  
+#   geom_bar(data=DF_IO_WAIT_HIST_INT,aes(x = end, y = WAIT_COUNT,
+#                                           fill = WAIT_TIME_MILLI),stat = "identity", position = "stack",alpha=1)+
     facet_grid(EVENT_NAME ~ .,scales="free_y")+
     gg_io_hist_colors2+
     
@@ -2156,22 +2213,22 @@ plot_io_histograms <- function(DF_IO_WAIT_HIST_INT){
 
 plot_iostat_by_function <- function(DF_IOSTAT_FUNCTION_INT){
   
-  
-  #DF_IOSTAT_FUNCTION_INT <- main$DF_IOSTAT_FUNCTION
-  # multiply writes by 2
-  #DF_IOSTAT_FUNCTION_INT$SM_W_REQS <- 2*DF_IOSTAT_FUNCTION_INT$SM_W_REQS
-  #DF_IOSTAT_FUNCTION_INT$LG_W_REQS <- 2*DF_IOSTAT_FUNCTION_INT$LG_W_REQS
   iostat.melt <- melt(DF_IOSTAT_FUNCTION_INT,id.var = c("SNAP_ID","FUNCTION_NAME"),measure.var = c("SM_R_REQS","SM_W_REQS", "LG_R_REQS", "LG_W_REQS"))
+  iostat.melt<- merge(iostat.melt,main$DF_SNAP_ID_DATE,by="SNAP_ID")
   
-  expanded_vals <- expand.grid(SNAP_ID = unique(iostat.melt$SNAP_ID),
-                               FUNCTION_NAME = unique(iostat.melt$FUNCTION_NAME))
+  #iostat2.melt.tmp <<- iostat.melt 
   
+  vals <- expand.grid(SNAP_ID = unique(iostat.melt$SNAP_ID),
+                      FUNCTION_NAME = unique(iostat.melt$FUNCTION_NAME),
+                      variable = unique(iostat.melt$variable)
+  )
   
+  end.fill <- unique(iostat.melt %>% select(SNAP_ID,end))
+  vals <- left_join(tbl_dt(vals),end.fill,copy = TRUE,by=c("SNAP_ID"))
+  iostat2.melt <- left_join(tbl_dt(vals),iostat.melt,copy = TRUE)
+  iostat2.melt[is.na(iostat2.melt$value)]$value <- 0
   
-  iostat.melt <- merge(iostat.melt,expanded_vals)
-  
-  iostat2.melt<- merge(iostat.melt,main$DF_SNAP_ID_DATE,by="SNAP_ID")
-  #iostat.melt.ext <<- iostat2.melt
+
   iostat2.melt <- transform(iostat2.melt, variable = as.character(variable))
   iostat2.melt[with(iostat2.melt, grepl("SM_R_REQS", variable)),]$variable<-"Small Read IOPs"
   iostat2.melt[with(iostat2.melt, grepl("SM_W_REQS", variable)),]$variable<-"Small Write IOPs *"
@@ -2180,7 +2237,7 @@ plot_iostat_by_function <- function(DF_IOSTAT_FUNCTION_INT){
   
   iostat2.melt[with(iostat2.melt, grepl("Buffer Cache Reads", FUNCTION_NAME)),]$FUNCTION_NAME<-"Buffer Cache Reads (from disk)"
   
-  iostat2.melt <- subset(iostat2.melt,value > 0 )
+  #iostat2.melt <- subset(iostat2.melt,value > 0 )
   
   
   #convert absolute values to per-second values
@@ -2226,34 +2283,15 @@ plot_iostat_by_function <- function(DF_IOSTAT_FUNCTION_INT){
   gg_iostat_colors <- scale_fill_manual("", values = iostat_colors)
   
   
-  
-  snapIntervalMode <- Mode(main$DF_SNAP_ID_DATE$dur_m)
-  
-  barChartWidthFudgeFactor <- NULL
-  
-  if(snapIntervalMode < 20){
-    barChartWidthFudgeFactor <- 0.5
-  }
-  else{
-    barChartWidthFudgeFactor <- 0.05
-  }
-  
-  barChartWidth <- snapIntervalMode * 60
-  barChartWidth <- barChartWidth + (barChartWidth * barChartWidthFudgeFactor)
-  
-  
-  #iostat2.melt$barChartWidth <- iostat2.melt$dur_m*60
-  #iostat2.melt$barChartWidth <- iostat2.melt$barChartWidth + (iostat2.melt$barChartWidth * barChartWidthFudgeFactor)
-  
-  
-  
-  
   iostat_plot_int <- ggplot()+
     main$gg_hour_bars+
-    #geom_area(data=iostat2.melt, aes(x = end, y = value_per_s,
-     #                                fill = FUNCTION_NAME),stat = "identity", position = "stack",alpha=.95)+
-    geom_bar(data=iostat2.melt, aes(x = end, y = value_per_s,
-                                  fill = FUNCTION_NAME),stat = "identity", position = "stack",width=barChartWidth)+
+#     geom_bar(stat = "identity", position = "stack")+
+#   geom_bar(data=iostat2.melt, aes(x = end, y = value_per_s,
+#                                   fill = FUNCTION_NAME),stat = "identity", position = "stack",width=4000)+
+#   geom_bar(data=iostat2.melt, aes(x = end, y = value_per_s,
+#                                   fill = FUNCTION_NAME),stat = "identity", position = "stack")+
+    geom_area(data=iostat2.melt, aes(x = end, y = value_per_s,
+                                    fill = FUNCTION_NAME),stat = "identity", position = "stack")+
     geom_point(data=max_vals, aes(x=end, y=value_per_s), size=2, shape=21)+
     geom_text(data=max_vals, aes(x=end, y=value_per_s,label=label),size=2, vjust=-.5, hjust=1)+
     gg_iostat_colors+
@@ -3206,7 +3244,7 @@ main$mainFunction <- function(f){
   
   numDaysFiltered <- round(difftime(max(main$DF_MAIN$end), min(main$DF_MAIN$end), unit="days"),1)
   main$DF_OS$STAT_VALUE[main$DF_OS$STAT_NAME=='DAYS_FILTERED'] <<- numDaysFiltered
-
+  computeBarChartWidth()
   
   
   # call write to .Rda
@@ -3508,8 +3546,8 @@ main$mainFunction <- function(f){
   
   #memory_sga_advise_plot_tmp <<- memory_sga_advise_plot
   
-  #if(okToPrintPlot('memory_plot_sga_advise') && okToPrintPlot('memory_plot_pga_advise')){ 
-  if(1==2){
+  if(okToPrintPlot('memory_plot_sga_advise') && okToPrintPlot('memory_plot_pga_advise')){ 
+  #if(1==2){
     
     memory_sga_advise_plot <- NULL
     
