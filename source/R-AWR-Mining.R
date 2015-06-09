@@ -828,8 +828,8 @@ date_to_snap_id <- function(dateIn,lowHigh = 'low'){
 
 getSectionInt <- function(inFile,blockName,decSep='.',searchPatternIn=NULL,replacePatternIn=NULL){
   flog.debug(paste0("getSection - ",blockName," - start"),name="getSection")
-  beginBlock <- paste0('~~BEGIN-',blockName,'~~')
-  endBlock <- paste0('~~END-',blockName,'~~')
+  beginBlock <- paste0('~~[ ]*BEGIN-',blockName,'[ ]*~~')
+  endBlock <- paste0('~~[ ]*END-',blockName,'[ ]*~~')
   thePattern <- paste0(beginBlock,'(.*)',endBlock)
   body <- str_extract(inFile, thePattern)
   #print(str(body))
@@ -1000,7 +1000,7 @@ build_data_frames <- function(fileName) {
   rm(theFile)
   
   
-  numSections <- str_count(theFileTXT, "~~BEGIN")
+  numSections <- str_count(theFileTXT, "~~[ ]*BEGIN")
   flog.info(paste0("Number of sections: ",numSections),name='status')
   
   oraErrors <- str_count(theFileTXT, perl("\nERROR at line .+\n"))
