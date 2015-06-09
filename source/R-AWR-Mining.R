@@ -2919,6 +2919,10 @@ plot_memory_sga_advise <- function(df_in){
   
   DF_MEMORY_SGA_ADVICE_TMP <- subset(DF_MEMORY_SGA_ADVICE_TMP,ESTD_PHYSICAL_READS > 0)
   
+  if(nrow(DF_MEMORY_SGA_ADVICE_TMP) ==0){
+    return(FALSE)
+  }
+  
   
   DF_MEMORY_SGA_ADVICE_1_TMP <- subset(DF_MEMORY_SGA_ADVICE_TMP,SIZE_FACTOR==1)
   DF_MEMORY_SGA_ADVICE_1_TMP <- DF_MEMORY_SGA_ADVICE_1_TMP[c("end","SNAP_ID","INSTANCE_NUMBER","ESTD_PHYSICAL_READS")]
@@ -3576,22 +3580,31 @@ main$mainFunction <- function(f){
     }
     
     
-    if( nrow(main$DF_MEMORY_SGA_ADVICE)>10 && nrow(main$DF_MEMORY_PGA_ADVICE)>10){
-      #print(memory_sga_advise_plot)
-      if(inherits(memory_sga_advise_plot,what='ggplot') && inherits(memory_pga_advise_plot,what='ggplot')){
-        flog.debug('print_memory_advice_plot - start',name='print')
-        
-        x <- grid.arrange(memory_sga_advise_plot ,memory_pga_advise_plot, ncol = 2, widths=c(1,1))
-        
-        flog.debug('print_memory_advice_plot - stop',name='print')
+    tryCatch({
+      if( nrow(main$DF_MEMORY_SGA_ADVICE)>10 && nrow(main$DF_MEMORY_PGA_ADVICE)>10){
+        #print(memory_sga_advise_plot)
+        if(inherits(memory_sga_advise_plot,what='ggplot') && inherits(memory_pga_advise_plot,what='ggplot')){
+          flog.debug('print_memory_advice_plot - start',name='print')
+          
+          x <- grid.arrange(memory_sga_advise_plot ,memory_pga_advise_plot, ncol = 2, widths=c(1,1))
+          
+          flog.debug('print_memory_advice_plot - stop',name='print')
+        }
+        else if(inherits(memory_sga_advise_plot,what='ggplot')){
+          x <- grid.arrange(memory_sga_advise_plot , ncol = 1, widths=c(1))
+        }
+        else if(inherits(memory_pga_advise_plot,what='ggplot')){
+          x <- grid.arrange(memory_pga_advise_plot , ncol = 1, widths=c(1))
+        }
       }
-      else if(inherits(memory_sga_advise_plot,what='ggplot')){
-        x <- grid.arrange(memory_sga_advise_plot , ncol = 1, widths=c(1))
+      },
+      error = function(e) {
+        #memory_pga_advise_plot <- NULL
+        #browser()
       }
-      else if(inherits(memory_pga_advise_plot,what='ggplot')){
-        x <- grid.arrange(memory_pga_advise_plot , ncol = 1, widths=c(1))
-      }
-    }
+    )
+    
+    
   }
   
   if(okToPrintPlot('db_parameters')){
