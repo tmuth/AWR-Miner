@@ -1,7 +1,7 @@
 plot_cpu_per_second <- function(DF_MAIN_INT){
   flog.debug('plot_cpu_per_sec - start',name='plot_cpu_per_sec')
   
-  DF_MAIN_INT <- main$DF_MAIN
+  #DF_MAIN_INT <- main$DF_MAIN
   
   #DF_MAIN_INT$cpu_per_s_pct <- round((DF_MAIN_INT$cpu_per_s / get_os_stat("NUM_CPU_CORES"))*100,1)
   #DF_MAIN_INT$cpu_per_s_sd_pct <- round((DF_MAIN_INT$cpu_per_s_sd / get_os_stat("NUM_CPU_CORES"))*100,1)
@@ -80,7 +80,7 @@ plot_cpu_per_second <- function(DF_MAIN_INT){
     theme(axis.title.x  = element_blank())+
     theme(panel.background = element_rect(colour = "#777777"))+
     xlim(min(x.melt$end),max(x.melt$end))+
-    labs(title=paste("OS CPU % and Database CPU % for ",main$current_db_name,sep=""))+
+    labs(title=paste("OS CPU Seconds Per Second and Database CPU Seconds Per Second for ",main$current_db_name,sep=""))+
     
     attr$vertical_line + attr$vertical_text +
     #scale_x_datetime(labels = date_format_tz("%a, %b %d %I %p", tz="UTC"),breaks = date_breaks("2 hour"),
@@ -88,10 +88,10 @@ plot_cpu_per_second <- function(DF_MAIN_INT){
                      minor_breaks = attr$date_break_minor_var,
                      limits = c(min(x.melt$end),max(x.melt$end))
     )+
-    gg_cpu_colors_fill+gg_cpu_colors_color+
-    geom_text(data=DF_ANNOTATE_INT,aes(x=x,y=y,label=labs),size=2,alpha=.4)+
-    cpu_cores_line+
-    geom_text(data=df_cpu_cores_label, aes(x=end, y=value,label=paste0("CPU Cores - ",df_cpu_cores_label$value)),size=2, vjust=-.8, hjust=.5,color="red",alpha=0.4)
+    gg_cpu_colors_fill+gg_cpu_colors_color
+    #geom_text(data=DF_ANNOTATE_INT,aes(x=x,y=y,label=labs),size=2,alpha=.4)+
+    #cpu_cores_line+
+    #geom_text(data=df_cpu_cores_label, aes(x=end, y=value,label=paste0("CPU Cores - ",df_cpu_cores_label$value)),size=2, vjust=-.8, hjust=.5,color="red",alpha=0.4)
   #annotate("text", x = median(x.melt$end), y = 105, label = "Standard Deviation shown as vertical lines over points",size=2,alpha=.4)
   # theme(axis.text.x=element_text(angle=-30, hjust=-.1,vjust=1,size=6))
   #theme(panel.grid.major = element_line("#eeeeee", size = 0.2,linetype = "dotted"))+
@@ -102,6 +102,16 @@ plot_cpu_per_second <- function(DF_MAIN_INT){
   p_gt <- ggplot_gtable(ggplot_build(p))
   flog.debug('plot_cpu - end',name='plot_cpu')
   
-  return(plot_cpu_per_sec)
+  return(p_gt)
   #}
 }
+
+foo <- subset(main$DF_MAIN,end >= ymd_hms('2014-08-31 19:37:58') & end <= ymd_hms('2014-09-01 11:38:02'))
+foo <- subset(foo,inst==1)
+
+x <- plot_cpu_per_second(foo)
+
+
+pdf("cpu-per-sec.pdf", width = 11, height = 8.5,useDingbats=FALSE)
+grid.draw(x)
+dev.off()

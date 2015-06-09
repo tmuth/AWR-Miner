@@ -1,4 +1,4 @@
-list.of.packages <- c("futile.logger","ggplot2", "plyr","gridExtra","scales","reshape","xtable","ggthemes","stringr","data.table","lubridate","gplots")
+list.of.packages <- c("futile.logger","ggplot2", "plyr","dplyr","lazyeval","gridExtra","scales","reshape","xtable","ggthemes","stringr","data.table","lubridate","gplots")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) {
   options(repos="http://cran.cnr.Berkeley.edu")

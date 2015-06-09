@@ -98,15 +98,27 @@ pdf("Combined-IOPs4.pdf", width = 11, height = 8.5,useDingbats=FALSE)
 DF_IOPS_COMBINED_MAX <- ddply(DF_IOPS_COMBINED, .(end), summarise,total_iops=sum(total_iops))
 max_vals <- ddply(DF_IOPS_COMBINED_MAX, .(format(end,"%y/%m/%d")), subset, subset = rank(-total_iops) <= 1)
 
+
+pal12 = c("#A6CEE3", "#1F78B4", "#B2DF8A", "#33A02C", "#FB9A99", 
+          "#E31A1C", "#FDBF6F", "#FF7F00", "#CAB2D6", "#6A3D9A", 
+          "#FFFF99", "#B15928") 
+
+pal12 = c("#b61818","#ea910b","#e4ea0f","#54752e","#06879d","#044a9f","#75049f") 
+
 ggplot(data=DF_IOPS_COMBINED,aes(x=end,y=total_iops))+
   #geom_line(aes(color=db), size=.2)
   #geom_area(aes(fill=db),stat='identity',position='stack',alpha=0.9)+
   geom_bar(aes(fill=db),stat='identity',position='stack',alpha=0.9)+
   geom_point(data=max_vals, aes(x=end, y=total_iops), size=2, shape=21)+
   geom_text(data=max_vals, aes(x=end, y=total_iops,label=total_iops),size=3, vjust=-.8, hjust=1.5,alpha=0.7)+
-  scale_fill_stata()+
+  scale_fill_manual( values = colorRampPalette(pal12)(length(unique(DF_CPU_COMBINED$db))) )+
   labs(title="Combined Average IOPs")+
-  scale_x_datetime(labels = date_format("%a, %b %d %I%p"),breaks = date_breaks("1 day"))
+  scale_x_datetime(labels = date_format("%a, %b %d %I%p"),breaks = date_breaks("1 day"))+
+  theme(panel.grid.major.x = element_line("#aaaaaa", size = .1,linetype = "dotted"),
+        strip.text.y = element_text(size = 7),
+        legend.key.size = unit(.15, "cm"),
+        legend.text=element_text(size=3)
+  )
 
 max_vals <- ddply(DF_IOPS_COMBINED, .(db,format(end,"%y/%m/%d")), subset, subset = rank(-total_iops) <= 1)
 
@@ -116,10 +128,16 @@ ggplot(data=DF_IOPS_COMBINED,aes(x=end,y=total_iops,group=db))+
   geom_bar(aes(fill=db),stat='identity',position='stack',alpha=0.9)+
   geom_point(data=max_vals, aes(x=end, y=total_iops), size=2, shape=21)+
   geom_text(data=max_vals, aes(x=end, y=total_iops,label=total_iops),size=2, vjust=-.8, hjust=1.5,alpha=0.7)+
-  scale_fill_stata()+
+  scale_fill_manual( values = colorRampPalette(pal12)(length(unique(DF_CPU_COMBINED$db))) )+
   facet_grid(db ~ . )+
   labs(title="Combined Average IOPs - Facet by Database")+
-  scale_x_datetime(labels = date_format("%a, %b %d %I%p"),breaks = date_breaks("1 day"))
+  scale_x_datetime(labels = date_format("%a, %b %d %I%p"),breaks = date_breaks("1 day"))+
+  theme(panel.grid.major.x = element_line("#aaaaaa", size = .1,linetype = "dotted"),
+        strip.text.y = element_text(size = 3),
+        legend.position="none",
+        axis.text.y = element_text(size=5)
+  )
+
 
 ## *********************************************************
 # DF_IOPS_COMBINED_MAX <- ddply(DF_IOPS_COMBINED, .(end), summarise,total_iops_direct=sum(total_iops_direct))
@@ -158,9 +176,14 @@ ggplot(data=DF_IOPS_COMBINED,aes(x=end,y=total_iops_max))+
   geom_bar(aes(fill=db),stat='identity',position='stack')+
   geom_point(data=max_vals, aes(x=end, y=total_iops_max), size=2, shape=21)+
   geom_text(data=max_vals, aes(x=end, y=total_iops_max,label=total_iops_max),size=3, vjust=-.8, hjust=1.5,alpha=0.7)+
-  scale_fill_stata()+
+  scale_fill_manual( values = colorRampPalette(pal12)(length(unique(DF_CPU_COMBINED$db))) )+
   labs(title="Combined Maximum IOPs")+
-  scale_x_datetime(labels = date_format("%a, %b %d %I%p"),breaks = date_breaks("1 day"))
+  scale_x_datetime(labels = date_format("%a, %b %d %I%p"),breaks = date_breaks("1 day"))+
+  theme(panel.grid.major.x = element_line("#aaaaaa", size = .1,linetype = "dotted"),
+        strip.text.y = element_text(size = 7),
+        legend.key.size = unit(.15, "cm"),
+        legend.text=element_text(size=3)
+  )
 
 rm(max_vals)
 max_vals <- ddply(DF_IOPS_COMBINED, .(db,format(end,"%y/%m/%d")), subset, subset = rank(-total_iops_max) <= 1)
@@ -171,10 +194,15 @@ ggplot(data=DF_IOPS_COMBINED,aes(x=end,y=total_iops_max,group=db))+
   geom_bar(aes(fill=db),stat='identity',position='stack')+
   geom_point(data=max_vals, aes(x=end, y=total_iops_max), size=2, shape=21)+
   geom_text(data=max_vals, aes(x=end, y=total_iops_max,label=total_iops_max),size=2, vjust=-.8, hjust=1.5,alpha=0.7)+
-  scale_fill_stata()+
+  scale_fill_manual( values = colorRampPalette(pal12)(length(unique(DF_CPU_COMBINED$db))) )+
   facet_grid(db ~ . )+
   labs(title="Combined Maximum IOPs - Facet by Database")+
-  scale_x_datetime(labels = date_format("%a, %b %d %I%p"),breaks = date_breaks("1 day"))
+  scale_x_datetime(labels = date_format("%a, %b %d %I%p"),breaks = date_breaks("1 day"))+
+  theme(panel.grid.major.x = element_line("#aaaaaa", size = .1,linetype = "dotted"),
+        strip.text.y = element_text(size = 3),
+        legend.position="none",
+        axis.text.y = element_text(size=5)
+  )
 
 dev.off()
 

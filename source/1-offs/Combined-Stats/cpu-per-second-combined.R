@@ -59,8 +59,8 @@ getCPUdf <- function(file){
 }
 #rm(main)
 
-#rdaFiles <- list.files(pattern="*debugVars.Rda")
-rdaFiles <- list.files(pattern="EDWDBA-7239-7447-1-debugVars.Rda")
+rdaFiles <- list.files(pattern="*debugVars.Rda")
+#rdaFiles <- list.files(pattern="EDWDBA-7239-7447-1-debugVars.Rda")
 
 for (f in rdaFiles) {
   print(f)
@@ -86,9 +86,6 @@ quant_high <- quantile(DF_CPU_COMBINED$cpu_per_s.cpu_per_s_sd,probs=c(quant_val[
 
 pdf("Combined-DB-CPU-per-Second.pdf", width = 11, height = 8.5,useDingbats=FALSE)
 
-DF_CPU_COMBINED_MAX <- ddply(DF_CPU_COMBINED, .(end), summarise,cpu_per_s.cpu_per_s_sd=sum(cpu_per_s.cpu_per_s_sd))
-max_vals <- ddply(DF_CPU_COMBINED_MAX, .(end=format(end,"%y/%m/%d")), subset, subset = rank(-cpu_per_s.cpu_per_s_sd) <= 1)
-
 
 
 #DF_ANNOTATE_INT <- data.frame(x=quantile(DF_CPU_COMBINED$end,0.10),y=quantile(DF_CPU_COMBINED$AVG_SESS,probs=(0.99),type=4),
@@ -112,15 +109,20 @@ DF_CPU_COMBINED$db <- factor(as.character(DF_CPU_COMBINED$db),levels=DF_CPU_COMB
 
 
 
+DF_CPU_COMBINED_MAX <- ddply(DF_CPU_COMBINED, .(end), summarise,cpu_per_s.cpu_per_s_sd=sum(cpu_per_s.cpu_per_s_sd))
+max_vals <- ddply(DF_CPU_COMBINED_MAX, .(end=format(end,"%y/%m/%d")), subset, subset = rank(-cpu_per_s.cpu_per_s_sd) <= 1)
+
+
 ggplot(data=DF_CPU_COMBINED,aes(x=end,y=cpu_per_s.cpu_per_s_sd))+
   #geom_line(aes(color=db), size=.2)
   #geom_area(aes(fill=db),stat='identity',position='stack',alpha=0.9)+
-  geom_bar(aes(fill=db),stat='identity',position='stack',alpha=0.9)+
+  geom_bar(aes(fill="#A6CEE3"),stat='identity',alpha=0.9)+
   geom_point(data=max_vals, aes(x=end, y=cpu_per_s.cpu_per_s_sd), size=2, shape=21)+
   geom_text(data=max_vals, aes(x=end, y=cpu_per_s.cpu_per_s_sd,label=cpu_per_s.cpu_per_s_sd),size=3, vjust=-.8, hjust=1.5,alpha=0.7)+
   #scale_fill_stata()+
   scale_fill_manual( values = colorRampPalette(pal12)(length(unique(DF_CPU_COMBINED$db))) )+
-  labs(title="Combined Database CPU Seconds Per Second")+
+  #labs(title="Combined Database CPU Seconds Per Second")+
+  labs(title=paste0("Combined Database CPU Seconds Per Second for all DBs") )+
   scale_x_datetime(labels = date_format("%a, %b %d %I%p"),breaks = date_breaks("1 day"))+
   ylim(0,quant_high_sum[[1]])+
   ylab("DB CPU Seconds Per Second")+
@@ -128,33 +130,77 @@ ggplot(data=DF_CPU_COMBINED,aes(x=end,y=cpu_per_s.cpu_per_s_sd))+
   theme(panel.grid.major.x = element_line("#aaaaaa", size = .1,linetype = "dotted"),
         strip.text.y = element_text(size = 7),
         legend.key.size = unit(.15, "cm"),
-        legend.text=element_text(size=5)
+        legend.text=element_text(size=3)
   )
 
+
+
+
+plotStackedBar <- function(DF_IN){
+
+  numberOfDBs <- length(unique(DF_IN$db))
+  
+  DF_CPU_COMBINED_MAX <- ddply(DF_IN, .(end), summarise,cpu_per_s.cpu_per_s_sd=sum(cpu_per_s.cpu_per_s_sd))
+  max_vals <- ddply(DF_CPU_COMBINED_MAX, .(end=format(end,"%y/%m/%d")), subset, subset = rank(-cpu_per_s.cpu_per_s_sd) <= 1)
+  
+  
+  ggplot(data=DF_IN,aes(x=end,y=cpu_per_s.cpu_per_s_sd))+
+    #geom_line(aes(color=db), size=.2)
+    #geom_area(aes(fill=db),stat='identity',position='stack',alpha=0.9)+
+    geom_bar(aes(fill=db),stat='identity',position='stack',alpha=0.9)+
+    geom_point(data=max_vals, aes(x=end, y=cpu_per_s.cpu_per_s_sd), size=2, shape=21)+
+    geom_text(data=max_vals, aes(x=end, y=cpu_per_s.cpu_per_s_sd,label=cpu_per_s.cpu_per_s_sd),size=3, vjust=-.8, hjust=1.5,alpha=0.7)+
+    #scale_fill_stata()+
+    scale_fill_manual( values = colorRampPalette(pal12)(length(unique(DF_IN$db))) )+
+    #labs(title="Combined Database CPU Seconds Per Second")+
+    labs(title=paste0("Combined Database CPU Seconds Per Second for top ",numberOfDBs," DBs") )+
+    scale_x_datetime(labels = date_format("%a, %b %d %I%p"),breaks = date_breaks("1 day"))+
+    ylim(0,quant_high_sum[[1]])+
+    ylab("DB CPU Seconds Per Second")+
+    geom_text(data=DF_ANNOTATE_INT,aes(x=x,y=y,label=labs),size=2,alpha=.4)+
+    theme(panel.grid.major.x = element_line("#aaaaaa", size = .1,linetype = "dotted"),
+          strip.text.y = element_text(size = 7),
+          legend.key.size = unit(.15, "cm"),
+          legend.text=element_text(size=3)
+    )
+}
 #max_vals <- ddply(DF_CPU_COMBINED, .(db,end=format(end,"%y/%m/%d")), subset, subset = rank(-cpu_per_s.cpu_per_s_sd) <= 1)
 
 
-ggplot(data=DF_CPU_COMBINED,aes(x=end,y=cpu_per_s.cpu_per_s_sd,group=db))+
-  #geom_line(aes(color=db), size=.2)
-  #geom_area(aes(fill=db),stat='identity',position='stack',alpha=0.9)+
-  geom_bar(aes(fill=db),stat='identity',position='stack',alpha=0.9)+
-  #geom_point(data=max_vals, aes(x=end, y=cpu_per_s.cpu_per_s_sd), size=2, shape=21)+
-  #geom_text(data=max_vals, aes(x=end, y=cpu_per_s.cpu_per_s_sd,label=cpu_per_s.cpu_per_s_sd),size=2, vjust=-.8, hjust=1.5,alpha=0.7)+
-  #scale_fill_stata()+
-  scale_fill_manual( values = colorRampPalette(pal12)(length(unique(DF_CPU_COMBINED$db))) )+
-  facet_grid(db ~ . )+
-  labs(title="Combined Database CPU Seconds Per Second - Facet by Database")+
-  ylab("DB CPU Seconds Per Second")+
-  scale_x_datetime(labels = date_format("%a, %b %d %I%p"),breaks = date_breaks("1 day"))+
-  ylim(0,quant_high[[1]])+
-  theme(panel.grid.major.x = element_line("#aaaaaa", size = .1,linetype = "dotted"),
-        strip.text.y = element_text(size = 4),
-        legend.position="none",
-        axis.text.y = element_text(size=5)
-  )
+#plotStackedBar(DF_CPU_COMBINED)
 
 
 
+plotFacetedBar <- function(DF_IN){
+  
+  numberOfDBs <- length(unique(DF_IN$db))
+  
+  ggplot(data=DF_IN,aes(x=end,y=cpu_per_s.cpu_per_s_sd,group=db))+
+    #geom_line(aes(color=db), size=.2)
+    #geom_area(aes(fill=db),stat='identity',position='stack',alpha=0.9)+
+    geom_bar(aes(fill=db),stat='identity',position='stack',alpha=0.9)+
+    #geom_point(data=max_vals, aes(x=end, y=cpu_per_s.cpu_per_s_sd), size=2, shape=21)+
+    #geom_text(data=max_vals, aes(x=end, y=cpu_per_s.cpu_per_s_sd,label=cpu_per_s.cpu_per_s_sd),size=2, vjust=-.8, hjust=1.5,alpha=0.7)+
+    #scale_fill_stata()+
+    scale_fill_manual( values = colorRampPalette(pal12)(length(unique(DF_IN$db))) )+
+    facet_grid(db ~ . )+
+    #labs(title="Combined Database CPU Seconds Per Second - Facet by Database")+
+    labs(title=paste0("Combined Database CPU Seconds Per Second - Facet by Database for top ",numberOfDBs," DBs") )+
+    ylab("DB CPU Seconds Per Second")+
+    scale_x_datetime(labels = date_format("%a, %b %d %I%p"),breaks = date_breaks("1 day"))+
+    ylim(0,quant_high[[1]])+
+    theme(panel.grid.major.x = element_line("#aaaaaa", size = .1,linetype = "dotted"),
+          strip.text.y = element_text(size = 3),
+          legend.position="none",
+          axis.text.y = element_text(size=5)
+    )
+}
+
+#plotFacetedBar(DF_CPU_COMBINED)
+
+
+  
+  
 # # get the mean CPU per sec by db
 # DF_CPU_COMBINED_MEAN<- ddply(DF_CPU_COMBINED2, .(db), summarise,cpu_per_s.cpu_per_s_sd=mean(cpu_per_s.cpu_per_s_sd))
 # # reorder the DBs by their mean CPU per sec
@@ -169,19 +215,41 @@ ggplot(data=DF_CPU_COMBINED,aes(x=end,y=cpu_per_s.cpu_per_s_sd,group=db))+
   
   
   
+plotBoxPlots <- function(DF_IN){  
   
-ggplot(data=DF_CPU_COMBINED, aes(x=db, y=cpu_per_s.cpu_per_s_sd),aes(fill=db))+
-  #geom_violin(aes(fill="red"),colour="#ff0000",size=0.5,alpha=0.6) +
-  #geom_violin(colour="#000000") +
-  geom_boxplot(aes(fill=db),alpha=.6,show_guide=FALSE,notch = FALSE,outlier.colour = "orange", outlier.size = 1,outlier.alpha=.4,outlier.shape=5)+
-  geom_jitter(alpha=.2,size=1,position = position_jitter(width = .2,height=0),aes(colour="gray"))+
-  scale_fill_manual( values = colorRampPalette(pal12)(length(unique(DF_CPU_COMBINED$db))) )+
-  labs(title="Boxplot of Database CPU Seconds Per Second")+
-  ylab("DB CPU Seconds Per Second")+
-  xlab("Database Name")+
-  theme(legend.position="none")
+  numberOfDBs <- length(unique(DF_IN$db))
   
+  ggplot(data=DF_IN, aes(x=db, y=cpu_per_s.cpu_per_s_sd),aes(fill=db))+
+    #geom_violin(aes(fill="red"),colour="#ff0000",size=0.5,alpha=0.6) +
+    #geom_violin(colour="#000000") +
+    
+    geom_boxplot(aes(fill=db),alpha=.6,show_guide=FALSE,notch = FALSE,outlier.colour = "orange", outlier.size = 1,outlier.alpha=.4,outlier.shape=5)+
+    geom_jitter(alpha=.2,size=1,position = position_jitter(width = .2,height=0),aes(colour="gray"))+
+    scale_fill_manual( values = colorRampPalette(pal12)(length(unique(DF_IN$db))) )+
+    labs(title=paste0("Boxplot of Database CPU Seconds Per Second for top ",numberOfDBs," DBs") )+
+    ylab("DB CPU Seconds Per Second")+
+    xlab("Database Name")+
+    theme(legend.position="none")
+  
+}
 
+#plotBoxPlots(DF_CPU_COMBINED)
+
+
+DF_CPU_COMBINED_MEAN_MEDIUM <- head(DF_CPU_COMBINED_MEAN,n=30)
+DF_CPU_COMBINED_MEDIUM <- subset(DF_CPU_COMBINED,db %in% DF_CPU_COMBINED_MEAN_MEDIUM$db)
+plotStackedBar(DF_CPU_COMBINED_MEDIUM)
+plotFacetedBar(DF_CPU_COMBINED_MEDIUM)
+plotBoxPlots(DF_CPU_COMBINED_MEDIUM)
+
+
+
+
+DF_CPU_COMBINED_MEAN_SMALL <- head(DF_CPU_COMBINED_MEAN,n=5)
+DF_CPU_COMBINED_SMALL <- subset(DF_CPU_COMBINED,db %in% DF_CPU_COMBINED_MEAN_SMALL$db)
+plotStackedBar(DF_CPU_COMBINED_SMALL)
+plotFacetedBar(DF_CPU_COMBINED_SMALL)
+plotBoxPlots(DF_CPU_COMBINED_SMALL)
 
 
 
