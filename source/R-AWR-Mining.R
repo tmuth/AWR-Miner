@@ -3540,11 +3540,25 @@ main$mainFunction <- function(f){
   
   if(okToPrintPlot('memory_plot')){
     flog.debug('generate_memory_plot - start',name='generate')
-    memory_plot <- plot_memory(main$DF_MEMORY)
+    tryCatch(memory_plot <- plot_memory(main$DF_MEMORY), 
+             error = function(e) {
+               
+               #browser()
+             }
+             #,finally=print("finished")
+    )
+    
     flog.debug('generate_memory_plot - end',name='generate')
     
     flog.debug('print_memory_plot - start',name='print')
-    print(memory_plot)
+    
+    tryCatch(print(memory_plot), 
+             error = function(e) {
+               
+               #browser()
+             }
+             #,finally=print("finished")
+    )
     flog.debug('print_memory_plot - stop',name='print')
   }
   
@@ -3608,12 +3622,25 @@ main$mainFunction <- function(f){
   }
   
   if(okToPrintPlot('db_parameters')){
-    plot_db_parameters()
+    tryCatch(plot_db_parameters(), 
+             error = function(e) {
+               
+               #browser()
+             }
+             #,finally=print("finished")
+    )
   }
   
   if(okToPrintPlot('sql_text')){
     if(nrow(main$DF_SQL_SUMMARY)> 5){
-      plot_sql_text()
+      
+      tryCatch(plot_sql_text(), 
+               error = function(e) {
+                 
+                 #browser()
+               }
+               #,finally=print("finished")
+      )
     }
   }
   
