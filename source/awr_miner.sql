@@ -1,3 +1,15 @@
+define SQL_TOP_N = 100
+define CAPTURE_HOST_NAMES = 'YES'
+
+-- Last n days of data to capture.
+define NUM_DAYS = 30
+-- Only change the DATE_BEGIN | END parameters to filter to a certain range.
+-- For 99% of the use-cases, just leave these parameters alone. 
+-- If DATE_BEGIN is changed, NUM_DAYS is ignored
+-- Date Format YYYY-MM-DD
+define DATE_BEGIN = '2000-01-01'
+define DATE_END   = '2040-01-01'
+
 set define '&'
 set concat '~'
 set colsep " "
@@ -7,26 +19,27 @@ SET ARRAYSIZE 5000
 REPHEADER OFF
 REPFOOTER OFF
 
+
+define AWR_MINER_VER = 3.0.21
+
+
+
 alter session set optimizer_dynamic_sampling=4;
 alter session set workarea_size_policy = manual;
 alter session set sort_area_size = 268435456;
+alter session set NLS_LENGTH_SEMANTICS=BYTE;
+alter session set cursor_sharing = exact;
+alter session set NLS_DATE_FORMAT = 'yyyy-mm-dd HH24:mi:ss';
+alter session set NLS_TIMESTAMP_FORMAT = 'yyyy-mm-dd HH24:mi:ss';
 
 
 set timing off
 
 set serveroutput on
 set verify off
-column cnt_dbid_1 new_value CNT_DBID noprint
-
-define NUM_DAYS = 30
-define SQL_TOP_N = 100
-define AWR_MINER_VER = 3.0.21
-define CAPTURE_HOST_NAMES = 'YES'
-
-alter session set cursor_sharing = exact;
-
 
 prompt 
+prompt AWR-Miner Version &AWR_MINER_VER
 prompt This script queries views in the AWR Repository that require 
 prompt a license for the Diagnostic Pack. These are the same views used
 prompt to generate an AWR report.
@@ -52,6 +65,8 @@ end;
 
 whenever sqlerror continue
 
+
+column cnt_dbid_1 new_value CNT_DBID noprint
 SELECT count(DISTINCT dbid) cnt_dbid_1
 FROM dba_hist_database_instance;
  --where rownum = 1;
@@ -267,20 +282,86 @@ end;
 
 select :DB_BLOCK_SIZE_1 from dual;
 
-column snap_min1 new_value SNAP_ID_MIN noprint
+--column snap_min1 new_value SNAP_ID_MIN noprint
+column snap_min1 new_value SNAP_ID_MIN
+
+--SELECT min(snap_id) - 1 snap_min1
+--  FROM dba_hist_snapshot
+--  WHERE dbid = &DBID 
+--    and begin_interval_time > (
+--		SELECT max(begin_interval_time) - &NUM_DAYS
+--		  FROM dba_hist_snapshot 
+--		  where dbid = &DBID);
+
 SELECT min(snap_id) - 1 snap_min1
   FROM dba_hist_snapshot
   WHERE dbid = &DBID 
-    and begin_interval_time > (
-		SELECT max(begin_interval_time) - &NUM_DAYS
-		  FROM dba_hist_snapshot 
-		  where dbid = &DBID);
+    and (
+			(
+			'&DATE_BEGIN' = '2000-01-01'
+			and
+			begin_interval_time > (
+			SELECT max(begin_interval_time) - &NUM_DAYS
+			  FROM dba_hist_snapshot 
+			  where dbid = &DBID)
+			 )
+		or
+			('&DATE_BEGIN' != '2000-01-01'
+			 and
+			 begin_interval_time >= trunc(to_date('&DATE_BEGIN','YYYY-MM-DD'))
+			)
+		)
+	 ;
+		  
+		  
+select 'foo' from dual where '&DATE_BEGIN' = '2000-01-01';
 		  
 column snap_max1 new_value SNAP_ID_MAX noprint
 SELECT max(snap_id) snap_max1
   FROM dba_hist_snapshot
-  WHERE dbid = &DBID;
-  
+  WHERE dbid = &DBID
+  and begin_interval_time < trunc(to_date('&DATE_END','YYYY-MM-DD'))+1 
+  and ('&DATE_BEGIN' = '2000-01-01'
+	   or
+		   (
+		   '&DATE_BEGIN' != '2000-01-01'
+			 and
+			 begin_interval_time >= trunc(to_date('&DATE_BEGIN','YYYY-MM-DD'))
+		   )
+	   );
+
+prompt
+rem prompt &SNAP_ID_MIN
+rem prompt &SNAP_ID_MAX
+rem prompt &NUM_DAYS
+
+
+
+whenever sqlerror exit
+set serveroutput on
+
+begin
+	--if length(&SNAP_ID_MIN) > 0 and  length(&SNAP_ID_MAX) > 0  then
+	--dbms_output.put_line('foo'|| REGEXP_REPLACE('&SNAP_ID_MIN','[[:space:]]','')||'bar');
+	--if ('&SNAP_ID_MIN') != ''  then
+	if length(REGEXP_REPLACE('&SNAP_ID_MIN','[[:space:]]','')) > 0 and
+	   length(REGEXP_REPLACE('&SNAP_ID_MAX','[[:space:]]','')) > 0 then
+		null;
+	else
+        dbms_output.put_line('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+        dbms_output.put_line('The chosen date range doesn''t contain any data.');
+        dbms_output.put_line('This script will now exit.');
+		dbms_output.put_line('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+        execute immediate 'bogus statement to force exit';
+    end if;
+end;
+/
+
+
+whenever sqlerror continue
+
+
+ 
 column FILE_NAME new_value SPOOL_FILE_NAME noprint
 select 'awr-hist-'||'&DBID'||'-'||'&DBNAME'||'-'||ltrim('&SNAP_ID_MIN')||'-'||ltrim('&SNAP_ID_MAX')||'.out' FILE_NAME from dual;
 
@@ -396,7 +477,8 @@ BEGIN
 	l_hosts := rtrim(l_hosts,',');
 	dbms_output.put_line(rpad('HOSTS',l_pad_length)||' '||l_hosts);
 	
-	FOR c5 IN (SELECT sys_context('USERENV', 'MODULE') module FROM DUAL)
+
+	FOR c5 IN (SELECT REGEXP_REPLACE(sys_context('USERENV', 'MODULE'),'^(.+?)@.+$','\1') module FROM DUAL)
     loop
         dbms_output.put_line(rpad('MODULE',l_pad_length)||' '||c5.module);
     end loop; --c5  
@@ -407,6 +489,22 @@ BEGIN
 	dbms_output.put_line('~~END-OS-INFORMATION~~');
 END;
 /
+
+prompt 
+prompt 
+
+
+
+-- ##############################################################################################
+
+REPHEADER PAGE LEFT '~~BEGIN-PATCH-HISTORY~~'
+REPFOOTER PAGE LEFT '~~END-PATCH-HISTORY~~'
+column ACTION_TIME format a24
+column comments format a80
+select * from (
+  select rownum rnum, h.* from DBA_REGISTRY_HISTORY h order by action_time desc)
+where rownum <= 10;
+
 
 prompt 
 prompt 
@@ -599,7 +697,8 @@ SELECT snap_id,
   MAX(DECODE(STAT_NAME,'BUSY_TIME', value,NULL)) "busy",
   MAX(DECODE(STAT_NAME,'USER_TIME', value,NULL)) "user",
   MAX(DECODE(STAT_NAME,'SYS_TIME', value,NULL)) "sys",
-  MAX(DECODE(STAT_NAME,'OS_CPU_WAIT_TIME', value,NULL)) "cpu_wait"
+  MAX(DECODE(STAT_NAME,'OS_CPU_WAIT_TIME', value,NULL)) "cpu_wait",
+  MAX(DECODE(STAT_NAME,'cpu_count', value,NULL)) "cpu_count"
 FROM
   (SELECT snap_id,
     INSTANCE_NUMBER,
@@ -607,9 +706,16 @@ FROM
     value
   FROM DBA_HIST_OSSTAT
     where dbid = &DBID
-  --WHERE dbid = 85532427
-    and snap_id between &SNAP_ID_MIN and &SNAP_ID_MAX
-  --AND snap_id BETWEEN 100 AND 120
+      and snap_id between &SNAP_ID_MIN and &SNAP_ID_MAX
+  union all
+  SELECT SNAP_ID,
+  INSTANCE_NUMBER,
+  PARAMETER_NAME STAT_NAME,
+  to_number(VALUE) value
+ FROM DBA_HIST_PARAMETER 
+where dbid = &DBID
+  and snap_id between &SNAP_ID_MIN and &SNAP_ID_MAX
+  and PARAMETER_NAME = 'cpu_count'
   )
 GROUP BY snap_id,
   INSTANCE_NUMBER
@@ -1143,7 +1249,7 @@ REPHEADER PAGE LEFT '~~BEGIN-TOP-SQL-SUMMARY~~'
 REPFOOTER PAGE LEFT '~~END-TOP-SQL-SUMMARY~~'	
 
 SELECT * FROM(
-SELECT s.module,s.action,s.sql_id,avg(s.optimizer_cost) optimizer_cost,
+SELECT substr(REGEXP_REPLACE(s.module,'^(.+?)@.+$','\1'),1,30) module,s.action,s.sql_id,avg(s.optimizer_cost) optimizer_cost,
 decode(t.command_type,11,'ALTERINDEX',15,'ALTERTABLE',170,'CALLMETHOD',9,'CREATEINDEX',1,'CREATETABLE',
 7,'DELETE',50,'EXPLAIN',2,'INSERT',26,'LOCKTABLE',47,'PL/SQLEXECUTE',
 3,'SELECT',6,'UPDATE',189,'UPSERT') command_name,
@@ -1186,7 +1292,7 @@ column module format a33
 column action format a33
 
 select * from(
-SELECT s.snap_id,PARSING_SCHEMA_NAME,PLAN_HASH_VALUE plan_hash,substr(regexp_replace(s.module,'([[:alnum:]\.\-])@.+\(TNS.+','\1'),1,30) module,
+SELECT s.snap_id,PARSING_SCHEMA_NAME,PLAN_HASH_VALUE plan_hash,substr(REGEXP_REPLACE(s.module,'^(.+?)@.+$','\1'),1,30) module,
 substr(s.action,1,30) action, 
 s.sql_id,
 avg(s.optimizer_cost) optimizer_cost,
