@@ -128,9 +128,9 @@ loadParsedDF <- function(fileName,DF_NAME,sumMetric){
 }
 
 
-foo <- loadParsedDF("FINPROD-274063292-64870-65052-parsed.Rda","DF_AAS","AVG_SESS")
+#foo <- loadParsedDF("FINPROD-274063292-64870-65052-parsed.Rda","DF_AAS","AVG_SESS")
 
-head(foo)
+#head(foo)
 
 
 getAllDataFrames <- function(fileList,dfName,sumMetric){
