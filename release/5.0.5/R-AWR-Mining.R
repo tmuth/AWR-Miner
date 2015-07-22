@@ -3933,7 +3933,7 @@ main$mainFunction <- function(f){
   if(okToPrintPlot('sql_aggregates')){
     if(nrow(main$DF_SQL_BY_SNAPID)> 10){
     
-      tryCatch({
+      #tryCatch({
         flog.debug('generate_sql_aggregates_plot - start',name='generate')
         c(sql_pct_by_cmd_plot,sql_pct_by_cmd_by_schema_plot,hist_sql_plot,hist_sql_by_schema_plot) := plot_sql_aggregates(main$DF_SQL_BY_SNAPID)
         flog.debug('generate_sql_aggregates_plot - end',name='generate')
@@ -3942,11 +3942,12 @@ main$mainFunction <- function(f){
         grid.arrange(sql_pct_by_cmd_plot,sql_pct_by_cmd_by_schema_plot, ncol = 1, heights=c(1,1))
         grid.arrange(hist_sql_plot, hist_sql_by_schema_plot, ncol = 1, heights=c(1,4))
         flog.debug('print_sql_aggregates_plot - end',name='print')
-      },
-       error = function(e) {
-            #browser()
-      }
-      )
+      #},
+      #  error = function(e) {
+        #memory_pga_advise_plot <- NULL
+        #browser()
+      #}
+      #)
     }
   }
   
