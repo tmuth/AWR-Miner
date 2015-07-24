@@ -10,11 +10,11 @@
 #parseOverride <- c("!TOP-SQL-BY-SNAPID")
 #parseOverride <- c("!TOP-SQL-BY-SNAPID","!TOP-SQL-SUMMARY","!TOP-N-TIMED-EVENTS","!IO-WAIT-HISTOGRAM","!IOSTAT-BY-FUNCTION")
 #plotOverride <- "NONE"
-
 #parseOverride <- c("SOME","OS-INFORMATION","MEMORY")
+#moveDoneOnlyOverride <- TRUE|FALSE | rm(moveDoneOnlyOverride)
 
 
-list.of.packages <- c("futile.logger","ggplot2", "plyr","gridExtra","scales","reshape","xtable","ggthemes","stringr","data.table","lubridate","gplots","gtools","dplyr","sjPlot","readr")
+list.of.packages <- c("futile.logger","ggplot2", "plyr","gridExtra","scales","reshape","xtable","ggthemes","stringr","data.table","lubridate","gplots","gtools","dplyr","sjPlot")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) {
   options(repos="http://cran.cnr.Berkeley.edu")
@@ -91,6 +91,14 @@ if(exists("filePatternOverride")){
   }
 }
 
+moveDoneOnly<- FALSE
+if(exists("moveDoneOnlyOverride")){
+  if(!is.null(moveDoneOnlyOverride)){
+    if(moveDoneOnlyOverride){
+      moveDoneOnly <- TRUE
+    }
+  }
+}
 
 appender.status.fn <- function(lineIn) {
   strFormat <- function(stringIn){
@@ -696,6 +704,37 @@ save_parsed_data <- function(){
   flog.debug('save_parsed_data - end',name='save_parsed_data')
 }
 
+fileName_to_parsedName <- function(fileNameIn){
+  namePattern <- "awr-hist-([0-9]+)-([a-zA-Z0-9_]+)-([0-9]+)-([0-9]+).*"
+  fileDBID <- gsub(pattern = namePattern, replacement="\\1", fileNameIn)
+  fileDBName <- gsub(pattern = namePattern, replacement="\\2", fileNameIn)
+  fileSnapMin <- as.numeric(gsub(pattern = namePattern, replacement="\\3", fileNameIn))
+  fileSnapMin.1 <- as.numeric(gsub(pattern = namePattern, replacement="\\3", fileNameIn))+1
+  fileSnapMax <- gsub(pattern = namePattern, replacement="\\4", fileNameIn)
+  parsedFileName <- paste0(fileDBName,"-",fileDBID,"-",fileSnapMin,"-",fileSnapMax,"-parsed.Rda")
+  parsedFileName.1 <- paste0(fileDBName,"-",fileDBID,"-",fileSnapMin.1 ,"-",fileSnapMax,"-parsed.Rda")
+  
+  
+  return(list(parsedFileName,parsedFileName.1))
+}
+
+moveToDone <- function(fileName,parsedFile){
+  # tyler added to move files to a done dir
+  doneDir <- paste0(dirname(fileName),"/done")
+  if (!file.exists(doneDir)){
+    dir.create(doneDir)
+  }
+  
+  file.rename(from=parsedFile,
+              to=paste0(doneDir,"/",basename(parsedFile))
+  )
+  
+  file.rename(from=fileName,
+              to=paste0(doneDir,"/",basename(fileName))
+  )
+  
+  
+}
 
 
 parsed_data_exists <- function(fileNameIn){
@@ -705,31 +744,25 @@ parsed_data_exists <- function(fileNameIn){
     return(FALSE)
   }
   else{
-    namePattern <- "awr-hist-([0-9]+)-([a-zA-Z0-9_]+)-([0-9]+)-([0-9]+).*"
-    fileDBID <- gsub(pattern = namePattern, replacement="\\1", fileNameIn)
-    fileDBName <- gsub(pattern = namePattern, replacement="\\2", fileNameIn)
-    fileSnapMin <- as.numeric(gsub(pattern = namePattern, replacement="\\3", fileNameIn))
-    fileSnapMin.1 <- as.numeric(gsub(pattern = namePattern, replacement="\\3", fileNameIn))+1
-    fileSnapMax <- gsub(pattern = namePattern, replacement="\\4", fileNameIn)
+    c(parsedFileName,parsedFileName.1) := fileName_to_parsedName(fileNameIn)
     
-    #     print(fileDBID)
-    #     print(fileDBName)
-    #     print(fileSnapMin)
-    #     print(fileSnapMax)
-    
-    # DHLS-1376736500-100-412-parsed.Rda
-    parsedFileName <- paste0(fileDBName,"-",fileDBID,"-",fileSnapMin,"-",fileSnapMax,"-parsed.Rda")
-    parsedFileName.1 <- paste0(fileDBName,"-",fileDBID,"-",fileSnapMin.1 ,"-",fileSnapMax,"-parsed.Rda")
-    #print(parsedFileName)
     flog.debug(paste0("Looking for parsed file: ",parsedFileName),name='parsed_data_exists')
     flog.debug('parsed_data_exists - end',name='parsed_data_exists')
+    
+    
     if (file.exists(parsedFileName)){
       flog.info(paste0("Found parsed data file ",parsedFileName),name='status')
+      
+      #moveToDone(fileNameIn,parsedFileName)
+      
       return(parsedFileName)
       
     }
     else if (file.exists(parsedFileName.1)){
       flog.info(paste0("Found parsed data file ",parsedFileName.1),name='status')
+      
+      #moveToDone(fileNameIn,parsedFileName.1)
+      
       return(parsedFileName.1)
     }
     else{
@@ -871,7 +904,8 @@ getSectionInt <- function(inFile,blockName,decSep='.',searchPatternIn=NULL,repla
   dashesVectorLengths <- lapply(dashesVector,function(x){return(nchar(x)+1)})
   
   #extract the titles separately as read.fwf + header=TRUE requires a separator, which we don't have
-  theTitles <- str_extract(body, perl("^\n([[:alnum:]_ ])+\n"))
+  theTitles <- str_replace_all(body, perl("(\nNA\n)"),"\n")
+  theTitles <- str_extract(theTitles, perl("^\n([[:alnum:]_ ])+\n"))
   theTitlesOrig <- theTitles
   #print(theTitles)
   theTitles <- str_replace_all(theTitles,'\n','')
@@ -879,8 +913,8 @@ getSectionInt <- function(inFile,blockName,decSep='.',searchPatternIn=NULL,repla
   #print(theTitles)
   theTitles <- str_split(theTitles,' +')
   #print(theTitles)
-  #theColNames <- unlist(theTitles[[1]])
-  theColNames <- unlist(theTitles)
+  theColNames <- unlist(theTitles[[1]])
+  #theColNames <- unlist(theTitles)
   
   
   #body <- gsub("([0-9]{2}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2})","'\\1'", body) # find dates and enclose in quotes so it doesn't break into 2 columns
@@ -903,10 +937,10 @@ getSectionInt <- function(inFile,blockName,decSep='.',searchPatternIn=NULL,repla
  
   
   body <- str_replace_all(body,theTitlesOrig,'')
-  theBody <<- body
+  #theBody <<- body
   numRows <- str_count(body,'\n')
   #numRows <- 10
-  #theBody <<- body
+  theBody <<- body
   theColNames <<- theColNames
   theWidths <<- dashesVectorLengths
   #dfInt = read.table(text=body,header = TRUE,skip=0,nrows=numRows,fill=TRUE,blank.lines.skip=TRUE,strip.white=TRUE,stringsAsFactors=FALSE,dec=decSep)
@@ -929,7 +963,7 @@ getSectionInt <- function(inFile,blockName,decSep='.',searchPatternIn=NULL,repla
   dfInt <- dfInt[!index2,]
   #print(dfInt)
   
-  
+  flog.debug(paste0("data.frame rows: ",nrow(dfInt)))
   flog.debug(paste0("getSection - ",blockName," - end"),name="getSection")
   #dfInt <- na.omit(dfInt)
   
@@ -997,6 +1031,9 @@ get_capture_times <- function(inFileTXT){
 add_missing_dates <- function(DF_SNAP_ID_DATE_INT){
 
   #date1 <<- DF_SNAP_ID_DATE_INT
+  flog.debug("add_missing_dates - start",name="add_missing_dates")
+  
+  flog.debug(head(DF_SNAP_ID_DATE_INT))
   time.min <- floor_date(min(DF_SNAP_ID_DATE_INT$end),"day")
   time.max <- floor_date(max(DF_SNAP_ID_DATE_INT$end),"day")
 
@@ -1026,7 +1063,7 @@ add_missing_dates <- function(DF_SNAP_ID_DATE_INT){
     select(-tmp)
     
   
-  
+  flog.debug("add_missing_dates - end",name="add_missing_dates")
   return(DF_SNAP_ID_DATE_INT.full)
 }
 
@@ -1037,8 +1074,8 @@ build_data_frames <- function(fileName) {
   flog.info(paste0("dbname-dbid: ",main$current_db_name,'-',main$current_dbid),name='status')
   flog.info(fileName,name='status')
   flog.info(paste0("File size (kb): ",round(file.info(fileName)[1,"size"]/1024)),name='status')
-  theFile <- readLines(fileName)
-  #theFile <- read_lines(fileName)
+  #theFile <- readLines(fileName)
+  theFile <- read_lines(fileName)
   theFileTXT <- paste(theFile,collapse="\n")
   flog.debug(length(theFile))
   #unlink(theFile)
@@ -1077,6 +1114,8 @@ build_data_frames <- function(fileName) {
   
   
   DF_TEMP <- getSection(theFileTXT,'MEMORY')
+  
+  DF_TEMP_OUT <<- DF_TEMP
   countDecimals <- sum(str_count(DF_TEMP$PGA,'\\.'))+sum(str_count(DF_TEMP$SGA,'\\.'))
   countCommas <- sum(str_count(DF_TEMP$PGA,'\\,'))+sum(str_count(DF_TEMP$SGA,'\\,'))
   
@@ -1213,7 +1252,7 @@ build_data_frames <- function(fileName) {
   setkey(DF_MAIN_INT,snap,end)
   
   
-  DF_SNAP_ID_DATE_INT <- add_missing_dates(DF_SNAP_ID_DATE_INT)
+  #DF_SNAP_ID_DATE_INT <- add_missing_dates(DF_SNAP_ID_DATE_INT)
   
   
 
@@ -4144,7 +4183,18 @@ main$mainLoop <- function(){
 #get_db_names()
 #library(lineprof)
 #l <- NULL
-main$mainLoop()
+
+if(moveDoneOnly){
+  for (f in main$awrFiles) {
+    parsedFile <- parsed_data_exists(f)
+    if(typeof(parsedFile)=='character'){
+      moveToDone(f,parsedFile)
+    }
+  }
+}else
+  {
+  main$mainLoop()
+}
 
 
 
