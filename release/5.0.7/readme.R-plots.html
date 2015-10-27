@@ -1,0 +1,55 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<h1 id="awr-miner">AWR-Miner</h1>
+<p>A tool to mine and graph the AWR Repository of an Oracle 10.1+ database for performance data</p>
+<h1 id="basic-instructions">Basic Instructions</h1>
+<ul>
+<li>Install R 3.x+</li>
+<li>Install RStudio</li>
+<li>Open R-AWR-Mining.R file in RStudio</li>
+<li>Set the working directory to the location of the .out or .out.gz files in RStudio via the &quot;Session&quot; menu &gt; &quot;Set Working Directory&quot;. You could also use ctrl+shift+H</li>
+<li>&quot;Source&quot; the R-AWR-Mining.R in RStudio via the Source button in the top+right or press ctrl+shift+s</li>
+<li>AWR-Miner will plot all files in this working directory</li>
+</ul>
+<h1 id="options">Options</h1>
+<p>Options can be set interactively in an IDE like RStudio in the &quot;console&quot; section or through a file named very specifically <em>settings.R</em>. Using settings.R is the more reliable and preferred method.</p>
+<p>The <em>settings.R</em> file should be placed in the same directory as the .out files. This allows you to have a different settings.R file for each directory of files.</p>
+<p>The following options can be added to settings.R</p>
+<h2 id="file-pattern-override">File Pattern Override</h2>
+<p><code>filePatternOverride &lt;- &quot;^awr-hist.+FOO.+(\\.out|\\.gz)$&quot;</code><br />The example above would only look for .out or .gz files with a name that contains &quot;FOO&quot;. This an easy way to limit parsing to just a file or subset of files without having to move files into new directories. The default file patterh is:<br /><code>&quot;^awr-hist*.*(\\.out|\\.gz)$&quot;</code></p>
+<h2 id="debug-mode">Debug Mode</h2>
+<p><code>debugModeOverride &lt;- TRUE</code><br /><code>rm(debugModeOverride)</code><br />Debug mode is useful for a number of situations, including:</p>
+<ul>
+<li>dumping parsed data out to .Rda format files</li>
+<li>errors encountered with a particular file</li>
+<li>timing of specific components</li>
+</ul>
+<p>In debug mode, the parsed data for each database is saved as highly compressed .Rda files. These are also used for the &quot;combined stats&quot; scripts.</p>
+<p>The following are sub-options of debug mode, ie you must be in debug mode first for these to work.</p>
+<h3 id="debug-mode-dumpcsv">Debug Mode &gt; dumpCSV</h3>
+<p><code>dumpCSV &lt;- TRUE</code><br />This also dumps all data frames to comma separated files.</p>
+<h3 id="debug-mode-debugmovefiles">Debug Mode &gt; debugMoveFiles</h3>
+<p><code>debugMoveFiles &lt;- TRUE</code><br />This option moves all completed .out files into a <em>done</em> subdirectory. If you have a lot of files, but only a few have errors, this allows you to separate the valid files from the ones that have errors.</p>
+<p><em>End of Debug Mode Options</em></p>
+<h2 id="parse-override">Parse Override</h2>
+<pre><code>parseOverride &lt;- c(&quot;!TOP-SQL-BY-SNAPID&quot;) # default, don&#39;t parse TOP-SQL-BY-SNAPID
+parseOverride &lt;- &quot;ALL&quot; [ALL|NONE|SOME|PAGE1|AAS]
+parseOverride &lt;- c(&quot;SOME&quot;,&quot;aas_facet&quot;)
+rm(parseOverride)</code></pre>
+<p>This is useful if there is a section with errors that won't parse. Also if you just want to extract certain data. It can cause errors, so if just extracting data to .Rda or .csv, <code>set plotOverride &lt;- &quot;NONE&quot;</code></p>
+<h2 id="plot-override">Plot Override</h2>
+<pre><code>plotOverride &lt;- &quot;ALL&quot; [ALL|NONE|SOME|PAGE1|AAS] | 
+plotOverride &lt;- &quot;NONE&quot; # Don&#39;t plot anything, often combined with parse override and debug mode to dump data
+plotOverride &lt;- c(&quot;SOME&quot;,&quot;PAGE1,&quot;AAS&quot;)
+rm(plotOverride)</code></pre>
+<p>This allows you to control what is output to PDF. It's useful for debugging.</p>
+</body>
+</html>
