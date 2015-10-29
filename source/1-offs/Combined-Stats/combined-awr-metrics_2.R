@@ -61,10 +61,7 @@ getAASdf <- function(file){
   )
   
   
-  if(dbName=="SAAS"){
-    DF_AAS_TEMP$end <- DF_AAS_TEMP$end - days(21)
-                                      
-  }
+  
   
   #DF_TEMP$total_iops_direct <<- DF_TEMP$read_iops_direct + DF_TEMP$write_iops_direct
   #DF_TEMP$total_iops_direct_max <<- DF_TEMP$read_iops_direct_max + DF_TEMP$write_iops_direct_max
@@ -131,7 +128,7 @@ loadParsedDF <- function(fileName,DF_NAME,sumMetric){
 }
 
 
-#main_df  <- loadParsedDF("FINPROD-274063292-64870-65052-parsed.Rda","DF_AAS","AVG_SESS")
+#foo <- loadParsedDF("FINPROD-274063292-64870-65052-parsed.Rda","DF_AAS","AVG_SESS")
 
 #head(foo)
 

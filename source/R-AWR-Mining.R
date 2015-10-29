@@ -3349,9 +3349,14 @@ plot_db_parameters <- function(){
   
   
   dbParametersCombined <- cbind(main$DF_DB_PARAMETERS[c(seq(1,80)),],main$DF_DB_PARAMETERS[c(seq(81,160)),],main$DF_DB_PARAMETERS[c(seq(161,240)),])
-  
-  
   textplot(dbParametersCombined,cex=.5,lspace=.01,show.colnames=TRUE,show.rownames=FALSE,cmar=3,rmar=.5,family="mono",hadj=1,mar=c(0,.001,0,0),fixed.width=TRUE,halign="left")
+  
+  if(nrow(main$DF_DB_PARAMETERS) > 240){
+    dbParametersCombined <- cbind(main$DF_DB_PARAMETERS[c(seq(241,320)),],main$DF_DB_PARAMETERS[c(seq(321,400)),],main$DF_DB_PARAMETERS[c(seq(401,480)),])
+    textplot(dbParametersCombined,cex=.5,lspace=.01,show.colnames=TRUE,show.rownames=FALSE,cmar=3,rmar=.5,family="mono",hadj=1,mar=c(0,.001,0,0),fixed.width=TRUE,halign="left")
+    
+  }
+  
   flog.debug('plot_db_parameters - end')
 }
 
