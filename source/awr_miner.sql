@@ -20,10 +20,10 @@ REPHEADER OFF
 REPFOOTER OFF
 
 
-define AWR_MINER_VER = 3.0.21
+define AWR_MINER_VER = 5.0.7
 
 
-
+set termout off
 alter session set optimizer_dynamic_sampling=4;
 alter session set workarea_size_policy = manual;
 alter session set sort_area_size = 268435456;
@@ -31,7 +31,7 @@ alter session set NLS_LENGTH_SEMANTICS=BYTE;
 alter session set cursor_sharing = exact;
 alter session set NLS_DATE_FORMAT = 'yyyy-mm-dd HH24:mi:ss';
 alter session set NLS_TIMESTAMP_FORMAT = 'yyyy-mm-dd HH24:mi:ss';
-
+set termout on
 
 set timing off
 
@@ -166,10 +166,14 @@ whenever sqlerror continue
 
 declare
   l_stat_rows number := 1;
+  l_last_analyzed_days number:= 0;
+  l_last_analyzed_threshold constant number:= 60;
   l_actual_rows number;
   l_pct_change number := 0;
 begin
-  select nvl(NUM_ROWS,1) into l_stat_rows from sys.DBA_TAB_STATISTICS where owner = 'SYS' and table_name = 'WRM$_SNAPSHOT';
+  select nvl(NUM_ROWS,1) nrows,round(sysdate - S.LAST_ANALYZED) last_analyzed_days 
+		 into l_stat_rows,l_last_analyzed_days from sys.DBA_TAB_STATISTICS s where owner = 'SYS' and table_name = 'WRM$_SNAPSHOT';
+  
   select count(*) num_rows into l_actual_rows from sys.dba_hist_snapshot;
     
   if l_stat_rows is null or l_stat_rows < 1 then
@@ -181,11 +185,14 @@ begin
   l_pct_change := abs(round((l_actual_rows-l_stat_rows)/l_stat_rows,3))*100;
   --dbms_output.put_line('% Change: '||l_pct_change);
   
-  if l_pct_change >= 30 then
+  if l_pct_change >= 30 or l_last_analyzed_days > l_last_analyzed_threshold then
     dbms_output.put_line(' ');
 	dbms_output.put_line('*******************************************************************************');
 	dbms_output.put_line('****************************** WARNING !!! ************************************');
     dbms_output.put_line('It appears that statistics on the SYS schema may be invalid.');
+	if l_last_analyzed_days > l_last_analyzed_threshold then
+		dbms_output.put_line(q'!Statistics haven't been collect for !'||l_last_analyzed_days||q'! days!');
+	end if;
     dbms_output.put_line('This can have serious, negative performance implications for this script ');
     dbms_output.put_line('as well as AWR, ASH, and ADDM. Please review My Oracle Support Doc ID 457926.1');
     dbms_output.put_line('for details on gathering stats on SYS objects.');
@@ -208,8 +215,6 @@ prompt Either type of change will cause the analysis engine to fail to parse the
 
 prompt Press Enter to run AWR-Miner now
 pause
-
-
 
 
 
@@ -335,6 +340,51 @@ rem prompt &SNAP_ID_MIN
 rem prompt &SNAP_ID_MAX
 rem prompt &NUM_DAYS
 
+whenever sqlerror exit
+set serveroutput on
+begin
+    if length('&DBID') > 4 then
+		null;
+	else
+        dbms_output.put_line('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+        dbms_output.put_line('You must choose a database ID.');
+        dbms_output.put_line('This script will now exit.');
+		dbms_output.put_line('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+        execute immediate 'bogus statement to force exit';
+    end if;
+end;
+/
+
+whenever sqlerror continue
+
+
+whenever sqlerror exit
+set serveroutput on
+declare
+	l_snapshot_count number := 0;
+begin
+	for c1 in (SELECT count(*) cnt
+				 FROM dba_hist_snapshot
+				WHERE dbid = &DBID)
+	loop
+		l_snapshot_count := c1.cnt;
+	end loop; --c1
+
+
+
+    if l_snapshot_count > 2 then
+		null;
+	else
+        dbms_output.put_line('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+        dbms_output.put_line('There is no AWR data for this DBID');
+        dbms_output.put_line('This script will now exit.');
+		dbms_output.put_line('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+        execute immediate 'bogus statement to force exit';
+    end if;
+end;
+/
+
+whenever sqlerror continue
 
 
 whenever sqlerror exit
@@ -508,6 +558,17 @@ where rownum <= 10;
 
 prompt 
 prompt 
+
+REPHEADER PAGE LEFT '~~BEGIN-MODULE~~'
+REPFOOTER PAGE LEFT '~~END-MODULE~~'
+SELECT REGEXP_REPLACE(sys_context('USERENV', 'MODULE'),'^(.+?)@.+$','\1') module FROM DUAL;
+
+REPHEADER PAGE LEFT '~~BEGIN-SNAP-HISTORY~~'
+REPFOOTER PAGE LEFT '~~END-SNAP-HISTORY~~'
+SELECT min(snap_id) snap_min, max(snap_id) snap_max,count(*) cnt,count(distinct INSTANCE_NUMBER) inst_count,
+       sum(ERROR_COUNT) ERROR_COUNT
+  FROM dba_hist_snapshot
+  WHERE dbid = &DBID;
 
 
 -- ##############################################################################################
@@ -697,7 +758,12 @@ SELECT snap_id,
   MAX(DECODE(STAT_NAME,'BUSY_TIME', value,NULL)) "busy",
   MAX(DECODE(STAT_NAME,'USER_TIME', value,NULL)) "user",
   MAX(DECODE(STAT_NAME,'SYS_TIME', value,NULL)) "sys",
+  MAX(DECODE(STAT_NAME,'IOWAIT_TIME', value,NULL)) "iowait",
+  MAX(DECODE(STAT_NAME,'NICE_TIME', value,NULL)) "nice",
   MAX(DECODE(STAT_NAME,'OS_CPU_WAIT_TIME', value,NULL)) "cpu_wait",
+  MAX(DECODE(STAT_NAME,'RSRC_MGR_CPU_WAIT_TIME', value,NULL)) "rsrc_mgr_wait",
+  MAX(DECODE(STAT_NAME,'VM_IN_BYTES', value,NULL)) "vm_in",
+  MAX(DECODE(STAT_NAME,'VM_OUT_BYTES', value,NULL)) "vm_out",
   MAX(DECODE(STAT_NAME,'cpu_count', value,NULL)) "cpu_count"
 FROM
   (SELECT snap_id,
@@ -1249,7 +1315,7 @@ REPHEADER PAGE LEFT '~~BEGIN-TOP-SQL-SUMMARY~~'
 REPFOOTER PAGE LEFT '~~END-TOP-SQL-SUMMARY~~'	
 
 SELECT * FROM(
-SELECT substr(REGEXP_REPLACE(s.module,'^(.+?)@.+$','\1'),1,30) module,s.action,s.sql_id,avg(s.optimizer_cost) optimizer_cost,
+SELECT substr(REGEXP_REPLACE(s.module,'^(.+?)@.+$','\1'),1,30) module,s.action,s.sql_id,
 decode(t.command_type,11,'ALTERINDEX',15,'ALTERTABLE',170,'CALLMETHOD',9,'CREATEINDEX',1,'CREATETABLE',
 7,'DELETE',50,'EXPLAIN',2,'INSERT',26,'LOCKTABLE',47,'PL/SQLEXECUTE',
 3,'SELECT',6,'UPDATE',189,'UPSERT') command_name,
@@ -1295,7 +1361,6 @@ select * from(
 SELECT s.snap_id,PARSING_SCHEMA_NAME,PLAN_HASH_VALUE plan_hash,substr(REGEXP_REPLACE(s.module,'^(.+?)@.+$','\1'),1,30) module,
 substr(s.action,1,30) action, 
 s.sql_id,
-avg(s.optimizer_cost) optimizer_cost,
 decode(t.command_type,11,'ALTERINDEX',15,'ALTERTABLE',170,'CALLMETHOD',9,'CREATEINDEX',1,'CREATETABLE',
 7,'DELETE',50,'EXPLAIN',2,'INSERT',26,'LOCKTABLE',47,'PL/SQLEXECUTE',
 3,'SELECT',6,'UPDATE',189,'UPSERT') command_name,sum(EXECUTIONS_DELTA) execs,sum(BUFFER_GETS_DELTA) buffer_gets,sum(ROWS_PROCESSED_DELTA) rows_proc,

@@ -14,7 +14,7 @@
 #moveDoneOnlyOverride <- TRUE|FALSE | rm(moveDoneOnlyOverride)
 
 
-list.of.packages <- c("futile.logger","ggplot2", "plyr","gridExtra","scales","reshape","xtable","ggthemes","stringr","data.table","lubridate","gplots","gtools","dplyr","sjPlot")
+list.of.packages <- c("futile.logger","ggplot2", "plyr","gridExtra","scales","reshape","xtable","ggthemes","stringr","data.table","lubridate","gplots","gtools","dplyr","sjPlot","grid")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) {
   options(repos="http://cran.cnr.Berkeley.edu")
@@ -80,7 +80,7 @@ if(exists("debugModeOverride")){
 
 
 
-awrMinerPlotVersion <- '5.0.5'
+awrMinerPlotVersion <- '5.0.7'
 
 filePattern <- "^awr-hist*.*(\\.out|\\.gz)$"
 if(exists("filePatternOverride")){
@@ -704,6 +704,25 @@ save_parsed_data <- function(){
   flog.debug('save_parsed_data - end',name='save_parsed_data')
 }
 
+
+fileName_to_pdfName <- function(fileNameIn){
+  namePattern <- "awr-hist-([0-9]+)-([a-zA-Z0-9_]+)-([0-9]+)-([0-9]+).*"
+  #fileDBID <- gsub(pattern = namePattern, replacement="\\1", fileNameIn)
+  fileDBName <- gsub(pattern = namePattern, replacement="\\2", fileNameIn)
+  fileSnapMin <- as.numeric(gsub(pattern = namePattern, replacement="\\3", fileNameIn))
+  fileSnapMin.1 <- as.numeric(gsub(pattern = namePattern, replacement="\\3", fileNameIn))+1
+  fileSnapMax <- gsub(pattern = namePattern, replacement="\\4", fileNameIn)
+  pdfName <- paste0(fileDBName,"-",fileSnapMin,"-",fileSnapMax,"-1-plot.pdf")
+  pdfName.1 <- paste0(fileDBName,"-",fileSnapMin.1 ,"-",fileSnapMax,"-1-plot.pdf")
+  if (file.exists(pdfName)){
+    return(pdfName)
+  } else if(file.exists(pdfName.1)){
+    return(pdfName.1)
+  } else{
+    return(FALSE)
+  }
+}
+
 fileName_to_parsedName <- function(fileNameIn){
   namePattern <- "awr-hist-([0-9]+)-([a-zA-Z0-9_]+)-([0-9]+)-([0-9]+).*"
   fileDBID <- gsub(pattern = namePattern, replacement="\\1", fileNameIn)
@@ -732,6 +751,18 @@ moveToDone <- function(fileName,parsedFile){
   file.rename(from=fileName,
               to=paste0(doneDir,"/",basename(fileName))
   )
+  
+  pdfName <- fileName_to_pdfName(fileName)
+  
+  if(typeof(pdfName) == 'logical'){
+    flog.info(paste0("No PDF for ",fileName),name='status')
+  }
+  
+  if(typeof(pdfName) == 'character'){
+    file.rename(from=pdfName,
+                to=paste0(doneDir,"/",basename(pdfName))
+    )
+  }
   
   
 }
@@ -798,13 +829,22 @@ filter_parsed_data <- function(snapIdMinIn,snapIdMaxIn){
     tmp <- get(objName,envir=main)
     if(inherits(tmp,what='data.frame')){
       if(!(objName %in% c('overall_summary_df','capture_times','current_plot_attributes','plot_attributes'))){        
-      #if((objName %in% c('DF_MAIN','DF_AAS'))){        
-           
+        #if((objName %in% c('DF_MAIN','DF_AAS'))){        
+        
         flog.debug(paste0(objName,' - ',nrow(tmp)),name='filter_parsed_data')
         if(data_frame_col_not_null(tmp,'SNAP_ID')){
-          #print('SNAP_ID')
-          #tmp <- tmp[SNAP_ID >= snapIdMinIn & SNAP_ID <= snapIdMaxIn]
-          tmp <- subset(tmp,SNAP_ID >= snapIdMinIn & SNAP_ID <= snapIdMaxIn)
+          if(objName == 'DF_SPACE'){
+            tmp2 <- subset(tmp,SNAP_ID >= snapIdMinIn & SNAP_ID <= snapIdMaxIn)
+            if(nrow(tmp2)==0){
+              tmp <- tail(tmp,n=1)
+            }
+            else{ #nrow(tmp2)==0
+              tmp <- subset(tmp,SNAP_ID >= snapIdMinIn & SNAP_ID <= snapIdMaxIn)
+            } #nrow(tmp2)==0
+          } else{ #objName == 'DF_SPACE'
+            tmp <- subset(tmp,SNAP_ID >= snapIdMinIn & SNAP_ID <= snapIdMaxIn)
+          }
+          
         } else if(data_frame_col_not_null(tmp,'snap')){
           #print('snap')
           #tmp <- tmp[snap >= snapIdMinIn & snap <= snapIdMaxIn]
@@ -886,7 +926,7 @@ getSectionInt <- function(inFile,blockName,decSep='.',searchPatternIn=NULL,repla
   body <- gsub('\n~~.+~~','\n', body)
   body <- gsub('\n\n', '\n', body)
   
-  theBodyRaw <<- body
+  
   # Get the dashes which we'll use to get a vector of column lengths
   dashesLine <- str_extract(body, '\n[- ]+\n')
   if(is.na(dashesLine)){
@@ -904,8 +944,7 @@ getSectionInt <- function(inFile,blockName,decSep='.',searchPatternIn=NULL,repla
   dashesVectorLengths <- lapply(dashesVector,function(x){return(nchar(x)+1)})
   
   #extract the titles separately as read.fwf + header=TRUE requires a separator, which we don't have
-  theTitles <- str_replace_all(body, perl("(\nNA\n)"),"\n")
-  theTitles <- str_extract(theTitles, perl("^\n([[:alnum:]_ ])+\n"))
+  theTitles <- str_extract(body, regex("^\n([[:alnum:]_ ])+\n",multiline=TRUE))
   theTitlesOrig <- theTitles
   #print(theTitles)
   theTitles <- str_replace_all(theTitles,'\n','')
@@ -913,8 +952,8 @@ getSectionInt <- function(inFile,blockName,decSep='.',searchPatternIn=NULL,repla
   #print(theTitles)
   theTitles <- str_split(theTitles,' +')
   #print(theTitles)
-  theColNames <- unlist(theTitles[[1]])
-  #theColNames <- unlist(theTitles)
+  #theColNames <- unlist(theTitles[[1]])
+  theColNames <- unlist(theTitles)
   
   
   #body <- gsub("([0-9]{2}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2})","'\\1'", body) # find dates and enclose in quotes so it doesn't break into 2 columns
@@ -934,21 +973,15 @@ getSectionInt <- function(inFile,blockName,decSep='.',searchPatternIn=NULL,repla
   
   
   
- 
+  
   
   body <- str_replace_all(body,theTitlesOrig,'')
-  #theBody <<- body
+  
   numRows <- str_count(body,'\n')
   #numRows <- 10
-  theBody <<- body
-  theColNames <<- theColNames
-  theWidths <<- dashesVectorLengths
+  
   #dfInt = read.table(text=body,header = TRUE,skip=0,nrows=numRows,fill=TRUE,blank.lines.skip=TRUE,strip.white=TRUE,stringsAsFactors=FALSE,dec=decSep)
   dfInt = read.fwf(file=textConnection(body),skip=0,nrows=numRows,col.names=theColNames,fill=TRUE,blank.lines.skip=TRUE,strip.white=TRUE,stringsAsFactors=FALSE,widths=unlist(dashesVectorLengths[[1]]),dec=decSep)
-  #dfInt = read_fwf(file=textConnection(body),skip=0,n_max=numRows,col_names=theColNames,fill=TRUE,blank.lines.skip=TRUE,strip.white=TRUE,stringsAsFactors=FALSE,widths=unlist(dashesVectorLengths[[1]]))
-  #dfInt <- read_table(body,col_names=theColNames)
-  
-  #print(head(dfInt))
   #trim leading and trailing spaces from every column in the data frame
   #dfInt2 <- dfInt
   #dfInt<-colwise(str_trim)(dfInt2)
@@ -963,7 +996,7 @@ getSectionInt <- function(inFile,blockName,decSep='.',searchPatternIn=NULL,repla
   dfInt <- dfInt[!index2,]
   #print(dfInt)
   
-  flog.debug(paste0("data.frame rows: ",nrow(dfInt)))
+  
   flog.debug(paste0("getSection - ",blockName," - end"),name="getSection")
   #dfInt <- na.omit(dfInt)
   
@@ -973,27 +1006,117 @@ getSectionInt <- function(inFile,blockName,decSep='.',searchPatternIn=NULL,repla
 }
 
 
+
+getTheSection <- function(inFile,blockName){
+  beginBlock <- paste0('~~[ ]*BEGIN-',blockName,'[ ]*~~')
+  endBlock <- paste0('~~[ ]*END-',blockName,'[ ]*~~')
+  thePattern <- paste0(beginBlock,'(.*)',endBlock)
+  body <- str_extract(inFile, thePattern)
+  body <- gsub('\r\n', '\n', body)
+  body <- gsub('\n\n', '\n', body)
+  #
+  body <- gsub('~~.+~~\n','\n', body)
+  body <- gsub('\n~~.+~~','\n', body)
+  body <- gsub('\n\n', '\n', body)
+  body <- gsub('^\n', '', body)
+  
+  return(body)
+}
+
+getSectionInt.new <- function(inFile,blockName,decSep='.',searchPatternIn=NULL,replacePatternIn=NULL){
+  #theFile3 <- read_file(fileName)#
+  flog.debug(paste0("getSectionInt.new - ",blockName," - start"),name="getSectionInt.new")
+  body <- getTheSection(inFile,blockName)
+  
+  theTitles <- str_extract(body, "^ ([[:alnum:]_ ])+\n")
+  body <- str_replace_all(body,theTitles,'')
+  body <- paste0(theTitles,body)
+  
+  
+  dashesTest <- str_extract(body, '\n[- ]+\n')
+  if(is.na(dashesTest)){
+    body <- gsub('\n[= ]+\n', '\n', body)
+  } else{
+    body <- gsub('\n[- ]+\n', '\n', body)
+  }
+  
+  beginString <- substring(body,1,1000)
+  
+  if(str_detect(beginString,' end ')){
+    body <- str_replace_all(body,'([0-9]{2}/[0-9]{2}/[0-9]{2}) ([0-9]{2}\\:[0-9]{2})','\\1T\\2')
+  }
+  
+  dfInt2 = data.table(read_table(body,col_names=TRUE))
+  
+  if(str_detect(beginString,' end ')){
+    dfInt2$end <- as.POSIXct(dfInt2$end , format = "%y/%m/%dT%H:%M",tz="UTC")
+  }
+  
+  flog.debug(paste0("getSectionInt.new - ",blockName," - end"),name="getSectionInt.new")
+  #str(dfInt2)
+  
+  
+  #dfInt2 = data.table(read_table(body2,col_names=TRUE))
+  
+  
+  #colNameTxt <- names(dfInt2)[1]
+  #colName <- parse(text=names(dfInt2)[1])
+  #setkeyv(dfInt2,colNameTxt)
+  #dfInt2 <- dfInt2[!like(eval(colName),"--")]
+  #dfInt2 <- dfInt2[!(eval(colName)=="----------")]
+  #dfInt2 <- type_convert(dfInt2)
+  return(dfInt2)
+}
+
+parseMode <- "old"
+
 getSection <- function(inFile,blockName,decSep='.',searchPatternIn=NULL,replacePatternIn=NULL){
   df_int_try <- data.frame()
   if(!okToParse(blockName)){
     return(df_int_try)
   }
   
-  if(debugMode){
-    df_int_try <- getSectionInt(inFile,blockName,decSep,searchPatternIn,replacePatternIn)
+  
+  
+  
+  if(parseMode=="new"){
+    
+    if(debugMode){
+      df_int_try <- getSectionInt.new(inFile,blockName,decSep,searchPatternIn,replacePatternIn)
+    }
+    else{
+      
+      tryCatch(df_int_try <- getSectionInt.new(inFile,blockName,decSep,searchPatternIn,replacePatternIn), 
+               error = function(e) {
+                 #traceback()
+                 return(df_int_try)
+                 #flog.remove(name=main$current_db_name)
+                 #browser()
+                 
+               }
+               #,finally=print("finished")
+      )
+    }
   }
   else{
-    
-    tryCatch(df_int_try <- getSectionInt(inFile,blockName,decSep,searchPatternIn,replacePatternIn), 
-             error = function(e) {
-               #traceback()
-               return(df_int_try)
-               #flog.remove(name=main$current_db_name)
-               #browser()
-               
-             }
-             #,finally=print("finished")
-    )
+  
+  
+    if(debugMode){
+      df_int_try <- getSectionInt(inFile,blockName,decSep,searchPatternIn,replacePatternIn)
+    }
+    else{
+      
+      tryCatch(df_int_try <- getSectionInt(inFile,blockName,decSep,searchPatternIn,replacePatternIn), 
+               error = function(e) {
+                 #traceback()
+                 return(df_int_try)
+                 #flog.remove(name=main$current_db_name)
+                 #browser()
+                 
+               }
+               #,finally=print("finished")
+      )
+    }
   }
   return(df_int_try)
 }
@@ -1001,7 +1124,7 @@ getSection <- function(inFile,blockName,decSep='.',searchPatternIn=NULL,replaceP
 
 
 get_capture_times <- function(inFileTXT){
-  
+  flog.debug("get_capture_times - start",name="get_capture_times")
   timingVector <- str_extract_all(inFileTXT, "~~END.+?\nElapsed.+?\n")
   timingVector <- unlist(timingVector)
   
@@ -1022,7 +1145,7 @@ get_capture_times <- function(inFileTXT){
   #timing_DF$seconds <- seconds(hms(timing_DF$elapsed))
   
   #foo <- sum(timing_DF$seconds)
-  
+  flog.debug("get_capture_times - end",name="get_capture_times")
   return(timing_DF)
 }
 
@@ -1074,18 +1197,26 @@ build_data_frames <- function(fileName) {
   flog.info(paste0("dbname-dbid: ",main$current_db_name,'-',main$current_dbid),name='status')
   flog.info(fileName,name='status')
   flog.info(paste0("File size (kb): ",round(file.info(fileName)[1,"size"]/1024)),name='status')
-  #theFile <- readLines(fileName)
-  theFile <- read_lines(fileName)
-  theFileTXT <- paste(theFile,collapse="\n")
-  flog.debug(length(theFile))
-  #unlink(theFile)
-  rm(theFile)
+  
+  if(parseMode=="new"){
+    theFileTXT <- read_file(file.path(fileName))
+  }
+  else{
+    theFile <- readLines(fileName)
+    #theFile <- read_lines(fileName)
+    theFileTXT <- paste(theFile,collapse="\n")
+    flog.debug(length(theFile))
+    #unlink(theFile)
+    rm(theFile)
+  }
+  
+  
   
   
   numSections <- str_count(theFileTXT, "~~[ ]*BEGIN")
   flog.info(paste0("Number of sections: ",numSections),name='status')
   
-  oraErrors <- str_count(theFileTXT, perl("\nERROR at line .+\n"))
+  oraErrors <- str_count(theFileTXT, regex("\nERROR at line .+\n"))
   
   
   if(oraErrors > 0){
@@ -1115,7 +1246,7 @@ build_data_frames <- function(fileName) {
   
   DF_TEMP <- getSection(theFileTXT,'MEMORY')
   
-  DF_TEMP_OUT <<- DF_TEMP
+  #DF_TEMP_OUT <<- DF_TEMP
   countDecimals <- sum(str_count(DF_TEMP$PGA,'\\.'))+sum(str_count(DF_TEMP$SGA,'\\.'))
   countCommas <- sum(str_count(DF_TEMP$PGA,'\\,'))+sum(str_count(DF_TEMP$SGA,'\\,'))
   
@@ -1223,8 +1354,6 @@ build_data_frames <- function(fileName) {
   
   
   # Normalize dates by snap_id
-  
-  
   options(tz="")
   
   DF_SNAP_ID_DATE_INT <- ddply(DF_MAIN_INT, .(snap), summarise, 
@@ -1233,32 +1362,18 @@ build_data_frames <- function(fileName) {
   
   DF_SNAP_ID_DATE_INT <- data.table(DF_SNAP_ID_DATE_INT)
   
-  #names(DF_SNAP_ID_DATE_INT)[names(DF_SNAP_ID_DATE_INT)=="snap"] <- "SNAP_ID"
-  
+
   setnames(DF_SNAP_ID_DATE_INT,"snap","SNAP_ID")
   DF_SNAP_ID_DATE_INT$SNAP_ID <- as.numeric(DF_SNAP_ID_DATE_INT$SNAP_ID)
-  # Tyler just added to fix issue with hours_bars
-  #DF_MAIN_INT$end <- as.POSIXct(strptime(DF_MAIN_INT$end,format="%y/%m/%d %H:%M",tz=""),tz="")
-  #DF_MAIN_INT$end <- as.POSIXct(strptime(DF_MAIN_INT$end,format="%y/%m/%d %H:%M",tz=""),tz="")
   DF_MAIN_INT$end <- as.POSIXct(DF_MAIN_INT$end,format="%y/%m/%d %H:%M",tz="UTC")
   
-  # load / generate attributes (attributes.csv) so we can use them to filter
-  
-  
-  
-  
+
   setkey(DF_SNAP_ID_DATE_INT,SNAP_ID,end)
   setkey(DF_AAS_INT,SNAP_ID)
   setkey(DF_MAIN_INT,snap,end)
   
   
-  #DF_SNAP_ID_DATE_INT <- add_missing_dates(DF_SNAP_ID_DATE_INT)
-  
-  
-
-  
-  #DF_SNAP_ID_DATE_INT<-filter_n_days(DF_SNAP_ID_DATE_INT)
-  #DF_SNAP_ID_DATE_INT <- subset(DF_SNAP_ID_DATE_INT, SNAP_ID >= attr$filter_snap_min & SNAP_ID <= attr$filter_snap_max)
+  DF_SNAP_ID_DATE_INT <- add_missing_dates(DF_SNAP_ID_DATE_INT)
   
   numDaysTotal <- difftime(max(DF_MAIN_INT$end), min(DF_MAIN_INT$end), unit="days")
 
@@ -1267,26 +1382,20 @@ build_data_frames <- function(fileName) {
   
   flog.trace("DF_AAS_INT2.1",head(DF_AAS_INT),name="build_data_frames",capture=TRUE)
   
-  #   DF_AAS_INT<-data.frame(DF_AAS_INT)
-  #DF_AAS_INT<-filter_n_days(DF_AAS_INT)
-  #DF_TOP_N_EVENTS_INT<-filter_n_days(DF_TOP_N_EVENTS_INT)
+
   flog.trace("DF_AAS_INT2.2",head(DF_AAS_INT),name="build_data_frames",capture=TRUE)
-  #DF_MEMORY_INT<-filter_n_days(DF_MEMORY_INT)
-  #DF_MEMORY_SGA_ADVICE_INT<-filter_n_days(DF_MEMORY_SGA_ADVICE_INT)
-  #DF_MEMORY_PGA_ADVICE_INT<-filter_n_days(DF_MEMORY_PGA_ADVICE_INT)
-  
-  
-  #DF_SQL_BY_SNAPID_INT<-filter_n_days(DF_SQL_BY_SNAPID_INT)
+
   
   flog.trace("DF_SNAP_ID_DATE_INT1",head(DF_SNAP_ID_DATE_INT),name="build_data_frames",capture=TRUE)
   flog.trace("DF_AAS_INT2.3",head(DF_AAS_INT),name="build_data_frames",capture=TRUE)
   
   flog.trace("DF_SNAP_ID_DATE_INT1",str(DF_SNAP_ID_DATE_INT),name="build_data_frames",capture=TRUE)
   flog.trace("DF_AAS_INT2.3",str(DF_AAS_INT),name="build_data_frames",capture=TRUE)
-  
-  #DF_AAS_INT<-data.frame(DF_AAS_INT)
-  #DF_SNAP_ID_DATE_INT<-data.frame(DF_SNAP_ID_DATE_INT)
+
   flog.trace("DF_AAS_INT2.4",head(DF_AAS_INT),name="build_data_frames",capture=TRUE)
+  DF_AAS_OUT <<- DF_AAS_INT
+  DF_SNAP_ID_DATE_OUT <<- DF_SNAP_ID_DATE_INT
+  
   DF_AAS_INT <- merge(DF_AAS_INT,DF_SNAP_ID_DATE_INT)
   
   DF_MEMORY_INT <- merge(DF_MEMORY_INT,DF_SNAP_ID_DATE_INT)
@@ -1303,16 +1412,7 @@ build_data_frames <- function(fileName) {
   if(data_frame_col_not_null(DF_AAS_INT,"WAIT_CLASS")){
     DF_AAS_INT[with(DF_AAS_INT, grepl("DB CPU", WAIT_CLASS)),]$WAIT_CLASS<-"CPU"
   }
-  # due to a bug in the 2.7 sql script
-  #DF_AAS_INT[with(DF_AAS_INT, grepl("Administrati", WAIT_CLASS)),]$WAIT_CLASS<-"Administrative"
-  
-  #min_snap_id <- min(subset(DF_MAIN_INT, end >= max(DF_MAIN_INT$end)-as.difftime(MAX_DAYS, unit="days"))$snap)
-  #DF_MAIN_INT <- subset(DF_MAIN_INT, end >= max(DF_MAIN_INT$end)-as.difftime(MAX_DAYS, unit="days"))
-  # tyler changed for Pearson
-  
-  #flog.debug(summary(DF_AAS_INT))
-  
-  #print(head(DF_OS_INT))
+
   
   flog.debug("build_data_frames - end",name="build_data_frames")
   return(list(DF_OS_INT,DF_MAIN_INT,DF_OSSTAT_INT,
@@ -2399,11 +2499,13 @@ plot_iostat_by_function <- function(DF_IOSTAT_FUNCTION_INT){
   
   #iostat2.melt <- subset(iostat2.melt,value > 0 )
   
-  
+  iostat2.melt <- filter(iostat2.melt,value >= 0)
   #convert absolute values to per-second values
   iostat2.melt$value_per_s <- round(iostat2.melt$value / (iostat2.melt$dur_m*60),0)
   iostat2.melt$value_per_s <- ifelse(is.na(iostat2.melt$value_per_s),0,iostat2.melt$value_per_s)
-  iostat <<- iostat2.melt
+  
+  
+  #iostat <<- iostat2.melt
   # find the FUNCTIONS for which we have no data and remove them
   iostat2.totals <- ddply(iostat2.melt, .(FUNCTION_NAME), summarise, 
                           value=sum(as.numeric(value)))
@@ -2438,7 +2540,8 @@ plot_iostat_by_function <- function(DF_IOSTAT_FUNCTION_INT){
   iostat_colors <- c("ARCH" = "#cc6617", "Archive Manager" = "#9ccecc", "Buffer Cache Reads (from disk)" = "#0133ff", "Data Pump" = "#747254",
                      "DBWR" = "#993309","Direct Reads" = "#00cc2e","Direct Writes" = "#9aff9a","LGWR" = "#cc330c",
                      "Others" = "#ff6699","Recovery" = "#5c460c","RMAN" = "#fcfe84",
-                     "Smart Scan" = "#800040","Streams AQ" = "#9c9274","XDB" = "#c4b69c")
+                     "Smart Scan" = "#800040","Streams AQ" = "#9c9274","XDB" = "#c4b69c",
+                     "black","black")
   
   
   gg_iostat_colors <- scale_fill_manual("", values = iostat_colors)
@@ -4114,16 +4217,17 @@ main$mainLoop <- function(){
   
  
   
-  if(okToPrintPlot('summary_html')){
+  #if(okToPrintPlot('summary_html')){
     SUMMARY_DF_TMP <- main$overall_summary_df
     SUMMARY_DF_TMP$link <- paste0('<a href="',SUMMARY_DF_TMP$outFileName,'">',SUMMARY_DF_TMP$outFileName,'</a>')
     #TEST_DF <<- SUMMARY_DF_TMP
     #SUMMARY_DF_TMP <- subset(SUMMARY_DF_TMP,select=c(name,nodes,platform,cores,version,memused,sizegb,aas,link))
-    
-    SUMMARY_DF_TMP <- SUMMARY_DF_TMP[order(SUMMARY_DF_TMP$aas,decreasing = TRUE),]
+    if(nrow(SUMMARY_DF_TMP)>1){
+      SUMMARY_DF_TMP <- SUMMARY_DF_TMP[order(SUMMARY_DF_TMP$aas,decreasing = TRUE),]
+    }
     sjt.df(SUMMARY_DF_TMP,file=paste0("summary.html"),describe=FALSE,alternateRowColors=TRUE)
     rm(SUMMARY_DF_TMP)
-  }
+  #}
   
   
   
