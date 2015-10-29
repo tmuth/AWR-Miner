@@ -2,7 +2,7 @@
 <project name="AWR-Miner" default="build" basedir="../">
   <!-- Sets variables which can later be used. -->
   <!-- The value of a property is accessed via ${} -->
-  <property name="version.major" value="4.0"/>
+  <property name="version.major" value="5.0"/>
   <property name="src.dir" location="source" />
   <property name="build.dir" location="build" />
   <property name="release.dir" location="release" />
@@ -144,6 +144,12 @@
       <regexp pattern="^(define AWR_MINER_VER =).*"/>
       <substitution expression="\1 ${version.major}\.${build.number}"/>
       <fileset dir="${build.dir}/capture"> <include name="awr_miner.sql"/> </fileset>
+    </replaceregexp>
+	
+	<replaceregexp byline="true">
+      <regexp pattern="^(define AWR_MINER_VER =).*"/>
+      <substitution expression="\1 ${version.major}\.${build.number}"/>
+      <fileset dir="${src.dir}"> <include name="awr_miner.sql"/> </fileset>
     </replaceregexp>
     
     <replaceregexp byline="true">
